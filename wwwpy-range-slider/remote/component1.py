@@ -8,7 +8,6 @@ logger = logging.getLogger(__name__)
 
 
 class Component1(wpc.Component, tag_name='component-1'):
-    input1: js.HTMLInputElement = wpc.element()
     _slider1: js.HTMLInputElement = wpc.element()
     _div1: js.HTMLDivElement = wpc.element()
 
