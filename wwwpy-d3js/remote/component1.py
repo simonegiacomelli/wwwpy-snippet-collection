@@ -7,6 +7,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .d3js_component import D3jsComponent
+from .d3js_plot_component import D3jsPlotComponent
 
 
 class Component1(wpc.Component, tag_name='component-1'):
@@ -18,5 +19,9 @@ class Component1(wpc.Component, tag_name='component-1'):
 
 <button data-name="button1">button1</button><div>component-1</div>
 
+
+<d3js-plot-component></d3js-plot-component>
+<hr>
 <d3js-component></d3js-component>
+<hr>
 """

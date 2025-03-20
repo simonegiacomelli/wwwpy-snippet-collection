@@ -9,7 +9,7 @@ from js import console, HTMLElement
 from pyodide.ffi import create_proxy, to_js
 
 
-class D3jsComponent(wpc.Component, tag_name='d3js-component'):
+class D3jsPlotComponent(wpc.Component, tag_name='d3js-plot-component'):
     cb1: HTMLElement = wpc.element()
     taLog: HTMLElement = wpc.element()
     root: HTMLElement = wpc.element()
