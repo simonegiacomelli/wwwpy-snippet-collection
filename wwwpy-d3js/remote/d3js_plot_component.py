@@ -22,20 +22,19 @@ from pathlib import Path
 from types import SimpleNamespace
 from typing import Dict, List, Iterable
 
+
 class D3jsPlotComponent(wpc.Component, tag_name='d3js-plot-component'):
-    cb1: HTMLElement = wpc.element()
     taLog: HTMLElement = wpc.element()
     root: HTMLElement = wpc.element()
 
     def init_component(self):
         # language=HTML
         self.element.innerHTML = """
-            <svg data-name="root"></svg>
-            <br>
-            <label>prevent default <input type='checkbox' data-name='cb1'></label> 
+            <svg data-name="root" style="width: 500px; height: 80px"></svg>
             <br>
             <textarea data-name="taLog" style='font-size: 0.7em' cols='60' rows='15'></textarea>
             """
+
     async def after_init_component(self):
         try:
             await self._after_init_internal()
@@ -58,25 +57,18 @@ class D3jsPlotComponent(wpc.Component, tag_name='d3js-plot-component'):
             if vals is not None:
                 colval = ValueColumn(values=vals.values, **vars(col))
                 columns[col.name] = colval
-                # console.log('=' * 30 + col.name)
                 ColumnPlot(gContent, colval, data.timestamp_values, []).render()
 
-        # brush = d3.brushX().on("end", create_proxy(self.on_brush_end))
-        # brush.extent(to_js([[0, 0], [400, 100]]))
-        # gBrush \
-        #     .call(brush) \
-        #     .call(brush.move, to_js([40, 70])) \
-        #     .lower()
+        brush = d3.brushX().on("end", create_proxy(self.on_brush_end))
+        brush.extent(to_js([[0, 0], [500, 80]]))
+        gBrush \
+            .call(brush) \
+            .call(brush.move, to_js([40, 70])) \
+            .lower()
 
     def on_brush_end(self, event, *args):
-        logger.debug(f'on_brush_end {event}')
         selection = event.selection
-        console.log('on_brush_end selection', selection)
         self.taLog.value += f'on_brush_end selection {selection}\n'
-        start = selection[0]
-        end = selection[1]
-        console.log(start + 1, end + 2)
-
 
 
 def json_to_instance(response, data_json):
