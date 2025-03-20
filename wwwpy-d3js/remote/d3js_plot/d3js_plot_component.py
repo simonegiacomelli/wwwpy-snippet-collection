@@ -28,14 +28,14 @@ class D3jsPlotComponent(wpc.Component, tag_name='d3js-plot-component'):
         self.element.innerHTML = """
             <svg data-name="root" style="width: 500px; height: 80px"></svg>
             <br>
-            <textarea data-name="taLog" style='font-size: 0.7em' cols='60' rows='15'></textarea>
+            <textarea data-name="taLog" style='font-size: 0.7em' cols='60' rows='7'></textarea>
             """
 
     async def after_init_component(self):
         try:
             await self._after_init_internal()
         except Exception as e:
-            self.taLog.value += f'after_init_component {e}\n'
+            self._log(f'after_init_component {e}\n')
 
     async def _after_init_internal(self):
         gBrush = newD3Group(d3.select(self.root))
@@ -63,7 +63,11 @@ class D3jsPlotComponent(wpc.Component, tag_name='d3js-plot-component'):
 
     def on_brush_end(self, event, *args):
         selection = event.selection
-        self.taLog.value += f'on_brush_end selection {selection}\n'
+        self._log(f'on_brush_end selection {selection}')
+
+    def _log(self, msg):
+        self.taLog.value += f'{msg}\n'
+        self.taLog.scrollTop = self.taLog.scrollHeight
 
 
 def json_to_instance(response, data_json):
