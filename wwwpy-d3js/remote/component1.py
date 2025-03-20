@@ -1,4 +1,3 @@
-import inspect
 import wwwpy.remote.component as wpc
 import js
 
@@ -6,8 +5,8 @@ import logging
 
 logger = logging.getLogger(__name__)
 
-from .d3js_component import D3jsComponent
-from .d3js_plot_component import D3jsPlotComponent
+from .d3js_plot.d3js_component import D3jsComponent # noqa
+from .d3js_plot.d3js_plot_component import D3jsPlotComponent #noqa
 
 
 class Component1(wpc.Component, tag_name='component-1'):

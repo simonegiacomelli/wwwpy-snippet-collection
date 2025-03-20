@@ -1,18 +1,14 @@
 import logging
 
 import wwwpy.remote.component as wpc
-from js import d3
-from wwwpy.common.asynclib import create_task_safe
 
-from remote.d3_helpers import newD3Group
-from remote.datachart_args import ApiDatachartCsvDataResponse, ApiDatachartCsvInfoResponse, ValueColumn, ColumnValues
-from remote.itertools import associateby
+from remote.d3js_plot.d3_helpers import newD3Group
+from remote.d3js_plot.datachart_args import ApiDatachartCsvDataResponse, ApiDatachartCsvInfoResponse, ValueColumn, ColumnValues
+from remote.d3js_plot.itertools import associateby
 
 logger = logging.getLogger(__name__)
 
-from js import console, HTMLElement
-
-from js import d3, console, HTMLElement, Date
+from js import d3, HTMLElement, Date
 from pyodide.ffi import create_proxy, to_js
 from pydantic import BaseModel
 
