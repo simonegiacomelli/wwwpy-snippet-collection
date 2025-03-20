@@ -1,16 +1,10 @@
-import asyncio
-import traceback
-
-import wwwpy.remote.component as wpc
-import js
-
 import logging
 
-from wwwpy.remote.jslib import script_load_once
+import wwwpy.remote.component as wpc
+from js import d3
 
 logger = logging.getLogger(__name__)
 
-# from .d3_load import load_d3
 from js import console, HTMLElement
 from pyodide.ffi import create_proxy, to_js
 
@@ -21,8 +15,8 @@ class D3jsComponent(wpc.Component, tag_name='d3js-component'):
     root: HTMLElement = wpc.element()
 
     def init_component(self):
-         # language=HTML
-        self.element.innerHTML =    """
+        # language=HTML
+        self.element.innerHTML = """
             <h2>UseCase02_Widget</h2>
             <svg data-name="root"></svg>
             <br>
@@ -32,13 +26,8 @@ class D3jsComponent(wpc.Component, tag_name='d3js-component'):
             """
 
     async def after_init_component(self):
-        await script_load_once('https://d3js.org/d3.v7.min.js')
-        await self.after_render_async2()
-
-    async def after_render_async2(self):
-        from js import d3
         from .d3_helpers import newD3Group
-
+        # https://observablehq.com/@d3/click-to-recenter-brush
         gBrush = newD3Group(d3.select(self.root))
         brush = d3.brushX().on("end", create_proxy(self.on_brush_end))
         brush.extent(to_js([[0, 0], [400, 100]]))
