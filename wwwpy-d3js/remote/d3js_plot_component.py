@@ -42,7 +42,6 @@ class D3jsPlotComponent(wpc.Component, tag_name='d3js-plot-component'):
             self.taLog.value += f'after_init_component {e}\n'
 
     async def _after_init_internal(self):
-        logger.debug('after_init_component')
         gBrush = newD3Group(d3.select(self.root))
         gContent = gBrush
 
