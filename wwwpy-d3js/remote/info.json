@@ -1,0 +1,143 @@
+{
+  "timestamp_min_max": [
+    "2021-10-14T19:00:00+00:00",
+    "2021-10-14T19:06:12.480000+00:00"
+  ],
+  "columns": [
+    {
+      "name": "ECG",
+      "display_mode": "line",
+      "values_color": {},
+      "circle_size": 2.5,
+      "color": "#6c7b54",
+      "labels": [
+        "ECG Labels",
+        "Press Labels"
+      ]
+    },
+    {
+      "name": "ECG Leads On",
+      "display_mode": "mask",
+      "values_color": {
+        "True": "#5AFF01",
+        "False": "#ff0101"
+      },
+      "circle_size": null,
+      "color": null,
+      "labels": null
+    },
+    {
+      "name": "raw pressure",
+      "display_mode": "line",
+      "values_color": {},
+      "circle_size": null,
+      "color": "#1cf9ef",
+      "labels": [
+        "ECG Labels",
+        "Press Labels"
+      ]
+    },
+    {
+      "name": "PAPs",
+      "display_mode": "line",
+      "values_color": {},
+      "circle_size": null,
+      "color": "#cd5768",
+      "labels": []
+    },
+    {
+      "name": "PAPd",
+      "display_mode": "line",
+      "values_color": {},
+      "circle_size": null,
+      "color": "#22aaa7",
+      "labels": []
+    },
+    {
+      "name": "PAPm",
+      "display_mode": "line",
+      "values_color": {},
+      "circle_size": null,
+      "color": "#18cfdd",
+      "labels": []
+    },
+    {
+      "name": "SV",
+      "display_mode": "line",
+      "values_color": {},
+      "circle_size": null,
+      "color": "#b9c5ef",
+      "labels": []
+    },
+    {
+      "name": "ECG Clean",
+      "display_mode": "line",
+      "values_color": {},
+      "circle_size": null,
+      "color": "#85eae7",
+      "labels": []
+    },
+    {
+      "name": "ECG Labels",
+      "display_mode": "label",
+      "values_color": {
+        "None": "#b52ed8",
+        "Heartbeat": "#1d2e38"
+      },
+      "circle_size": null,
+      "color": null,
+      "labels": null
+    },
+    {
+      "name": "ECG STD",
+      "display_mode": "line",
+      "values_color": {},
+      "circle_size": null,
+      "color": "#a99ab4",
+      "labels": []
+    },
+    {
+      "name": "ECG Rate",
+      "display_mode": "label",
+      "values_color": {},
+      "circle_size": null,
+      "color": "#8a20c9",
+      "labels": []
+    },
+    {
+      "name": "ECG quality",
+      "display_mode": "mask",
+      "values_color": {
+        "True": "#5AFF01",
+        "False": "#ff0101"
+      },
+      "circle_size": null,
+      "color": null,
+      "labels": null
+    },
+    {
+      "name": "Press Labels",
+      "display_mode": "label",
+      "values_color": {
+        "inspiratory": "#1c5d5e",
+        "espiratory": "#7113f5"
+      },
+      "circle_size": null,
+      "color": null,
+      "labels": null
+    },
+    {
+      "name": "Phases",
+      "display_mode": "band",
+      "values_color": {
+        "phase 1": "#d1eb4d",
+        "phase 4": "#59730e",
+        "phase 2": "#d52845",
+        "phase 3": "#37ed5d"
+      },
+      "circle_size": null,
+      "color": null,
+      "labels": null
+    }
+  ]
+}
