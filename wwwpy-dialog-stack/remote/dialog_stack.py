@@ -1,4 +1,3 @@
-
 from __future__ import annotations
 import inspect
 import wwwpy.remote.component as wpc
@@ -23,18 +22,49 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
     </div>
 """
         self.stack = []
+        # Initially hide the dialog overlay since no elements are in the stack
+        self.element.style.display = 'none'
 
     def open(self, guest: js.HTMLElement):
         """This should add self.element to the body (if not already added).
         It should first, remove the guest from the body and from the stack.
         Then it should add the guest to the stack and append it to the host.
         """
+        # Ensure dialog is in the DOM
+        if not self.element.isConnected:
+            js.document.body.appendChild(self.element)
 
+        # Remove guest from DOM and stack if it's there
+        if guest.isConnected:
+            guest.parentNode.removeChild(guest)
+
+        # Remove from stack if it's there
+        if guest in self.stack:
+            self.stack.remove(guest)
+
+        # Add to stack and append to host
+        self.stack.append(guest)
+        self._host.appendChild(guest)
+
+        # Make dialog visible
+        self.element.style.display = 'block'
 
     def close(self, guest: js.HTMLElement):
         """This should remove the guest from the stack and from the host (if currently in the host).
-        If the stack is empty, it should remove self.element from the body.
+        If the stack is empty, it should remove self.element from the body.        
         """
+        # Remove from stack if it's there
+        if guest in self.stack:
+            self.stack.remove(guest)
+
+        # Remove from host if it's a child of host
+        if guest.parentNode == self._host:
+            self._host.removeChild(guest)
+
+        # If stack is empty, remove dialog from body
+        if len(self.stack) == 0 and self.element.isConnected:
+            js.document.body.removeChild(self.element)
+            self.element.style.display = 'none'
 
 
 dialog = Dialog()
