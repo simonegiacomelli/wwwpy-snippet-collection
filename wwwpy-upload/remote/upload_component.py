@@ -207,7 +207,6 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         # Process the files just like in the change event
         for file in files:
             progress = UploadProgressComponent()
-            progress.set_file_info(file)
             self.uploads.appendChild(progress.element)
             asyncio.create_task(upload_file(file, progress.update_progress))
 
@@ -246,13 +245,13 @@ class UploadProgressComponent(wpc.Component):
     </div>
 </div>"""
 
-    def set_file_info(self, file: js.File):
+    def _set_file_info(self, file: js.File):
         """Set the initial file information in the UI."""
         self.file_name.textContent = file.name
 
         # Format file size
         size_kb = file.size / 1024
-        size_display = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb/1024:.1f} MB"
+        size_display = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb / 1024:.1f} MB"
         self.file_size.textContent = size_display
 
         # Set file icon based on file type
@@ -280,6 +279,9 @@ class UploadProgressComponent(wpc.Component):
         percentage = progress.percentage
         self.progress_bar.style.width = f"{percentage}%"
 
+        if progress.starting:
+            self._set_file_info(progress.file)
+
         if progress.completed:
             self.progress_bar.classList.add("completed")
             self.status.textContent = "Upload completed"
@@ -294,6 +296,7 @@ class UploadProgressComponent(wpc.Component):
 
     def _fade_out(self, fade_delay_secs=3):
         """Fade out and remove the progress element after completion."""
+
         async def _remove():
             await asyncio.sleep(1)  # Short delay before starting fade
             self.element.classList.add("fade-out")
@@ -312,6 +315,10 @@ class UploadProgress:
     total_bytes: int
     abort: bool = False  # Flag that can be set to stop the upload
     failure: Exception | None = None
+
+    @property
+    def starting(self) -> bool:
+        return self.bytes_uploaded == 0
 
     @property
     def percentage(self) -> float:
@@ -387,7 +394,7 @@ async def upload_file(
 
         offset = 0
 
-        progress_callback(progress)
+        progress_callback(progress)  # Initial progress report
 
         while offset < total_size and not progress.abort:
             chunk: js.Blob = file.slice(offset, offset + chunk_size)
