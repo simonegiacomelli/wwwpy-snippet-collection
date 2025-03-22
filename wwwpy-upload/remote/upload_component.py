@@ -490,19 +490,77 @@ def _get_icon_html_for(file_type):
         'video': 'M4 6.47L5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4z',
         'pdf': 'M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z',
         'audio': 'M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z',
+        'document': 'M8 16h8v2H8zm0-4h8v2H8zm6-10H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm4 18H6V4h7v5h5v11z',
+        'spreadsheet': 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10h2v7H7zm4-3h2v10h-2zm4 6h2v4h-2z',
+        'presentation': 'M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14zM7 10l5 5 5-5z',
+        'archive': 'M20 6h-8l-2-2H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V8c0-1.1-.9-2-2-2zm-6 6h-2v2h2v2h-2v2h-2v-2H8v-2h2v-2H8v-2h2v-2h2v2h2v2z',
+        'code': 'M9.4 16.6L4.8 12l4.6-4.6L8 6l-6 6 6 6 1.4-1.4zm5.2 0l4.6-4.6-4.6-4.6L16 6l6 6-6 6-1.4-1.4z',
+        'font': 'M9.93 13.5h4.14L12 7.98zM20 2H4c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-4.05 16.5l-1.14-3H9.17l-1.12 3H5.96l5.11-13h1.86l5.11 13h-2.09z',
+        '3d': 'M19.85 10.59C20.79 15.4 17.01 20 12 20c-4.41 0-8-3.59-8-8 0-3.45 2.2-6.4 5.26-7.49l.11-.04C13.88 2.99 18.55 6.48 19.85 10.59zM12 4c4.41 0 8 3.59 8 8s-3.59 8-8 8-8-3.59-8-8 3.59-8 8-8zm0 3c-2.76 0-5 2.24-5 5s2.24 5 5 5 5-2.24 5-5-2.24-5-5-5z',
+        'cad': 'M14 2H6c-1.1 0-1.99.9-1.99 2L4 20c0 1.1.89 2 1.99 2H18c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z',
+        'vector': 'M23 7V1h-6v2H7V1H1v6h2v10H1v6h6v-2h10v2h6v-6h-2V7h2zM3 3h2v2H3V3zm2 18H3v-2h2v2zm12-2H7v-2H5V7h2V5h10v2h2v10h-2v2zm4 2h-2v-2h2v2zM19 5V3h2v2h-2zm-5.27 9h-3.49l-.73 2H7.89l3.4-9h1.4l3.41 9h-1.63l-.74-2zm-3.04-1.26h2.61L12 8.91l-1.31 3.83z',
+        'database': 'M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z',
         'default': 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'
     }
 
     # Determine the icon key based on the file type
     icon_key = 'default'
+
+    # Image files
     if file_type.startswith('image/'):
         icon_key = 'image'
+
+    # Video files
     elif file_type.startswith('video/'):
         icon_key = 'video'
+
+    # PDF files
     elif 'pdf' in file_type:
         icon_key = 'pdf'
+
+    # Audio files
     elif file_type.startswith('audio/'):
         icon_key = 'audio'
+
+    # Document files
+    elif any(doc_type in file_type for doc_type in ['msword', 'wordprocessing', 'document', 'docx', 'doc', 'odt', 'rtf']):
+        icon_key = 'document'
+
+    # Spreadsheet files
+    elif any(sheet_type in file_type for sheet_type in ['spreadsheet', 'excel', 'xlsx', 'xls', 'ods', 'csv']):
+        icon_key = 'spreadsheet'
+
+    # Presentation files
+    elif any(pres_type in file_type for pres_type in ['presentation', 'powerpoint', 'pptx', 'ppt', 'odp']):
+        icon_key = 'presentation'
+
+    # Archive files
+    elif any(arc_type in file_type for arc_type in ['zip', 'rar', 'tar', 'gz', 'archive', 'compression', 'compressed']):
+        icon_key = 'archive'
+
+    # Code/Text files
+    elif any(code_type in file_type for code_type in ['text/', 'javascript', 'python', 'java', 'css', 'html', 'xml', 'json']):
+        icon_key = 'code'
+
+    # Font files
+    elif any(font_type in file_type for font_type in ['font', 'ttf', 'otf', 'woff']):
+        icon_key = 'font'
+
+    # 3D model files
+    elif any(model_type in file_type for model_type in ['model', 'obj', 'stl', 'fbx', '3d']):
+        icon_key = '3d'
+
+    # CAD files
+    elif any(cad_type in file_type for cad_type in ['cad', 'dwg', 'dxf']):
+        icon_key = 'cad'
+
+    # Vector graphic files
+    elif any(vector_type in file_type for vector_type in ['svg', 'vector', 'ai', 'eps']):
+        icon_key = 'vector'
+
+    # Database files
+    elif any(db_type in file_type for db_type in ['database', 'db', 'sqlite', 'sql']):
+        icon_key = 'database'
 
     # Construct and return the SVG HTML
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">\n<path d="{icon_paths[icon_key]}"/>\n</svg>'
