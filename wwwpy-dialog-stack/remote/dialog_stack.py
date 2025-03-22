@@ -4,6 +4,7 @@ import asyncio
 import logging
 import weakref
 from dataclasses import dataclass, field
+from typing import Optional
 
 import js
 import wwwpy.remote.component as wpc
@@ -29,11 +30,13 @@ class DialogLayer:
         if parent is not None:
             parent.close(self.guest, close_value)
 
-    def open(self):
+    def open(self) -> Optional[DialogLayer]:
         """This forwards the open call to the parent_dialog (if still available)."""
         parent = self._parent_dialog()
         if parent is not None:
-            parent.open(self.guest)
+            return parent.open(self.guest)
+        return None
+
 
 
 class Dialog(wpc.Component, tag_name='dialog-stack'):
@@ -70,11 +73,27 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         self.stack = {}
         self.element.style.display = 'none'
 
+    def _ensure_dialog_visible(self):
+        """Helper method to ensure dialog is in DOM and visible"""
+        if not self.element.isConnected:
+            js.document.body.appendChild(self.element)
+        self.element.setAttribute('open', '')
+        self.element.style.display = 'block'
+
+    def _get_guest_id(self, guest: js.HTMLElement) -> str:
+        """Helper method to get or create a unique ID for a guest element"""
+        return guest.id or str(id(guest))
+
+    def _detach_guest(self, guest: js.HTMLElement):
+        """Helper method to detach a guest from its parent if connected"""
+        if guest.isConnected and guest.parentElement:
+            guest.parentElement.removeChild(guest)
+
     def get(self, guest: js.HTMLElement) -> DialogLayer | None:
         """This should return the DialogLayer object for the given guest element.
         If the guest is not in the stack, it should return None.
         """
-        guest_id = guest.id or str(id(guest))
+        guest_id = self._get_guest_id(guest)
         return self.stack.get(guest_id)
 
     def create(self, guest: js.HTMLElement) -> DialogLayer:
@@ -82,33 +101,15 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         It should add the guest to the stack but not to the host.
         If a DialogLayer already exists for the guest, it should return that one instead.
         """
+        guest_id = self._get_guest_id(guest)
 
-
-    def open(self, guest: js.HTMLElement) -> DialogLayer:
-        """This should add self.element to the body (if not already added).
-        It should first, remove the guest from the body and from the stack.
-        Then it should add the guest to the stack and append it to the host.
-        """
-        # Ensure dialog is in the DOM
-        if not self.element.isConnected:
-            js.document.body.appendChild(self.element)
-
-        # Make dialog visible
-        self.element.setAttribute('open', '')
-        self.element.style.display = 'block'
-
-        # Create a unique ID for the guest if it doesn't have one
-        guest_id = guest.id or str(id(guest))
-
-        # Remove guest from parent if it's in the DOM
-        if guest.isConnected and guest.parentElement:
-            guest.parentElement.removeChild(guest)
-
-        # Close existing dialog for this guest if it exists
+        # Check if a layer already exists for this guest
         existing_layer = self.stack.get(guest_id)
         if existing_layer:
-            # If the guest is already in a dialog, close it first
-            existing_layer.closure.set_result(None)
+            # Reset the future if it was already completed
+            if existing_layer.closure.done():
+                existing_layer.closure = asyncio.Future()
+            return existing_layer
 
         # Create new layer
         layer = DialogLayer(
@@ -118,6 +119,22 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
 
         # Add to stack
         self.stack[guest_id] = layer
+
+        return layer
+
+    def open(self, guest: js.HTMLElement) -> DialogLayer:
+        """This should add self.element to the body (if not already added).
+        It should first, remove the guest from the body and from the stack.
+        Then it should add the guest to the stack and append it to the host.
+        """
+        # Make dialog visible
+        self._ensure_dialog_visible()
+
+        # Detach guest from its current parent
+        self._detach_guest(guest)
+
+        # Create or get layer
+        layer = self.create(guest)
 
         # Add guest to host (using slot)
         self.element.appendChild(guest)
@@ -129,7 +146,7 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         If the stack is empty, it should remove self.element from the body.
         It will also set the future to the result of the close_value.
         """
-        guest_id = guest.id or str(id(guest))
+        guest_id = self._get_guest_id(guest)
         layer = self.stack.get(guest_id)
 
         if layer:
@@ -148,10 +165,6 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         if not self.stack:
             self.element.removeAttribute('open')
             self.element.style.display = 'none'
-
-            # Optionally remove from DOM
-            # if self.element.isConnected:
-            #     js.document.body.removeChild(self.element)
 
 
 # Global dialog instance
