@@ -502,7 +502,22 @@ def _get_icon_html_for(file_type):
         'database': 'M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z',
         'default': 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'
     }
-
+    type_identifiers = {
+        'image': ['image/'],
+        'video': ['video/'],
+        'pdf': ['pdf'],
+        'audio': ['audio/'],
+        'document': ['msword', 'wordprocessing', 'document', 'docx', 'doc', 'odt', 'rtf'],
+        'spreadsheet': ['spreadsheet', 'excel', 'xlsx', 'xls', 'ods', 'csv'],
+        'presentation': ['presentation', 'powerpoint', 'pptx', 'ppt', 'odp'],
+        'archive': ['zip', 'rar', 'tar', 'gz', 'archive', 'compression', 'compressed'],
+        'code': ['text/', 'javascript', 'python', 'java', 'css', 'html', 'xml', 'json'],
+        'font': ['font', 'ttf', 'otf', 'woff'],
+        '3d': ['model', 'obj', 'stl', 'fbx', '3d'],
+        'cad': ['cad', 'dwg', 'dxf'],
+        'vector': ['svg', 'vector', 'ai', 'eps'],
+        'database': ['database', 'db', 'sqlite', 'sql']
+    }
     icon_key = 'default'
     if file_type.startswith('image/'):
         icon_key = 'image'
@@ -512,26 +527,11 @@ def _get_icon_html_for(file_type):
         icon_key = 'pdf'
     elif file_type.startswith('audio/'):
         icon_key = 'audio'
-    elif any(doc_type in file_type for doc_type in ['msword', 'wordprocessing', 'document', 'docx', 'doc', 'odt', 'rtf']):
-        icon_key = 'document'
-    elif any(sheet_type in file_type for sheet_type in ['spreadsheet', 'excel', 'xlsx', 'xls', 'ods', 'csv']):
-        icon_key = 'spreadsheet'
-    elif any(pres_type in file_type for pres_type in ['presentation', 'powerpoint', 'pptx', 'ppt', 'odp']):
-        icon_key = 'presentation'
-    elif any(arc_type in file_type for arc_type in ['zip', 'rar', 'tar', 'gz', 'archive', 'compression', 'compressed']):
-        icon_key = 'archive'
-    elif any(code_type in file_type for code_type in ['text/', 'javascript', 'python', 'java', 'css', 'html', 'xml', 'json']):
-        icon_key = 'code'
-    elif any(font_type in file_type for font_type in ['font', 'ttf', 'otf', 'woff']):
-        icon_key = 'font'
-    elif any(model_type in file_type for model_type in ['model', 'obj', 'stl', 'fbx', '3d']):
-        icon_key = '3d'
-    elif any(cad_type in file_type for cad_type in ['cad', 'dwg', 'dxf']):
-        icon_key = 'cad'
-    elif any(vector_type in file_type for vector_type in ['svg', 'vector', 'ai', 'eps']):
-        icon_key = 'vector'
-    elif any(db_type in file_type for db_type in ['database', 'db', 'sqlite', 'sql']):
-        icon_key = 'database'
+    else:
+        for key, identifiers in type_identifiers.items():
+            if any(identifier in file_type for identifier in identifiers):
+                icon_key = key
+                break
 
     # Construct and return the SVG HTML
     svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">\n<path d="{icon_paths[icon_key]}"/>\n</svg>'
