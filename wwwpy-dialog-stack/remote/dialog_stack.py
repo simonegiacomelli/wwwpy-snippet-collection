@@ -29,6 +29,12 @@ class DialogLayer:
         if parent is not None:
             parent.close(self.guest, close_value)
 
+    def open(self):
+        """This forwards the open call to the parent_dialog (if still available)."""
+        parent = self._parent_dialog()
+        if parent is not None:
+            parent.open(self.guest)
+
 
 class Dialog(wpc.Component, tag_name='dialog-stack'):
     """This represents an overlay, that can support a stack of elements to be shown one at the time."""
@@ -70,6 +76,12 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         """
         guest_id = guest.id or str(id(guest))
         return self.stack.get(guest_id)
+
+    def create(self, guest: js.HTMLElement) -> DialogLayer:
+        """This should create a new DialogLayer for the given guest element.
+        It should not add the guest to the stack or to the host.
+        """
+
 
     def open(self, guest: js.HTMLElement) -> DialogLayer:
         """This should add self.element to the body (if not already added).
