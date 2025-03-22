@@ -79,7 +79,8 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
 
     def create(self, guest: js.HTMLElement) -> DialogLayer:
         """This should create a new DialogLayer for the given guest element.
-        It should not add the guest to the stack or to the host.
+        It should add the guest to the stack but not to the host.
+        If a DialogLayer already exists for the guest, it should return that one instead.
         """
 
 
