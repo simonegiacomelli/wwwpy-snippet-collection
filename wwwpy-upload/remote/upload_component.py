@@ -40,6 +40,12 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         100% { transform: scale(1); }
     }
     
+    @keyframes bob {
+        0% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+        100% { transform: translateY(0); }
+    }
+    
     @keyframes progress-animation {
         0% { background-position: 0% 50%; }
         50% { background-position: 100% 50%; }
@@ -81,8 +87,8 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         fill: #0099ff;
     }
     
-    .upload-icon-pulse {
-        animation: pulse 1s infinite;
+    .upload-icon-animation {
+        animation: bob 1s infinite ease-in-out;
     }
     
     .file-button {
@@ -199,21 +205,21 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         event.stopPropagation()
         # Add visual feedback using CSS classes
         self.dropzone.classList.add('dropzone-active')
-        self.upload_icon.classList.add('upload-icon-pulse')
+        self.upload_icon.classList.add('upload-icon-animation')
 
     def dropzone__dragleave(self, event):
         event.preventDefault()
         event.stopPropagation()
         # Reset visual feedback using CSS classes
         self.dropzone.classList.remove('dropzone-active')
-        self.upload_icon.classList.remove('upload-icon-pulse')
+        self.upload_icon.classList.remove('upload-icon-animation')
 
     def dropzone__drop(self, event):
         event.preventDefault()
         event.stopPropagation()
         # Reset visual feedback using CSS classes
         self.dropzone.classList.remove('dropzone-active')
-        self.upload_icon.classList.remove('upload-icon-pulse')
+        self.upload_icon.classList.remove('upload-icon-animation')
 
         # Get files from the drop event
         files = event.dataTransfer.files
