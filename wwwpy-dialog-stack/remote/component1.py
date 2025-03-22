@@ -24,7 +24,7 @@ class Component1(wpc.Component, tag_name='component-1'):
 
 <hr>
 
-<component-2 data-name="div1"></component-2>
+<component-2 data-name="div1" style="display: block"></component-2>
 """
     
     async def _open__click(self, event):
@@ -57,7 +57,7 @@ class Component2(wpc.Component, tag_name='component-2'):
 <div data-name="_child_result">Child result:</div>
 
 <button data-name="_btn_smaller">-</button>
-<span data-name="_width">_width</span>
+<span data-name="_width"></span>
 <button data-name="_btn_bigger">+</button>
 
 <select data-name="select1">
@@ -80,13 +80,25 @@ class Component2(wpc.Component, tag_name='component-2'):
         self._child_result.innerHTML = f"Child result: {result}"
 
     def _add(self, delta):
-        # Get current width
-        current_width = self.element.offsetWidth
+        # Get current width - check if width is already set in style
+        current_style_width = self.element.style.width
+
+        if current_style_width and current_style_width.endswith('px'):
+            # If width is already set in style, parse it
+            current_width = int(float(current_style_width.replace('px', '')))
+        else:
+            # Otherwise use offsetWidth for initial width
+            current_width = self.element.offsetWidth
+
         # Calculate new width
         new_width = current_width + delta
+
+        # Ensure width doesn't go below a reasonable minimum (e.g., 100px)
+        new_width = max(100, new_width)
+
         # Set the new width
         self.element.style.width = f"{new_width}px"
-        self._width.innerHTML = f"current_width={current_width} new_width={new_width}px"
+        self._width.innerHTML = self.element.style.width
 
     async def _btn_bigger__click(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
@@ -95,7 +107,7 @@ class Component2(wpc.Component, tag_name='component-2'):
     async def _btn_smaller__click(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
         self._add(-30)  # Remove 30 pixels
-    
+
 
     
     
