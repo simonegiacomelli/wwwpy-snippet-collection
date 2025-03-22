@@ -45,6 +45,9 @@ class Component2(wpc.Component, tag_name='component-2'):
     _child_result: js.HTMLDivElement = wpc.element()
     _btn_smaller: js.HTMLButtonElement = wpc.element()
     _btn_bigger: js.HTMLButtonElement = wpc.element()
+    span1: js.HTMLSpanElement = wpc.element()
+    _width: js.HTMLSpanElement = wpc.element()
+
     def init_component(self):
         # language=html
         self.element.innerHTML = """
@@ -52,8 +55,12 @@ class Component2(wpc.Component, tag_name='component-2'):
     
 <button data-name="_open_child">Open child dialog</button>
 <div data-name="_child_result">Child result:</div>
+
 <button data-name="_btn_smaller">-</button>
-<button data-name="_btn_bigger">+</button><select data-name="select1">
+<span data-name="_width">_width</span>
+<button data-name="_btn_bigger">+</button>
+
+<select data-name="select1">
         <option value="option1">Option 1</option>
         <option value="option2">Option 2</option>
         <option value="option3">Option 3</option>
@@ -65,19 +72,29 @@ class Component2(wpc.Component, tag_name='component-2'):
 
     async def _close__click(self, event):
         dialog.close(self.element, self.select1.value)
-    
+
     async def _open_child__click(self, event):
         if self._child is None:
             self._child = Component2()
         result = await dialog.open(self._child)
         self._child_result.innerHTML = f"Child result: {result}"
-    
+
+    def _add(self, delta):
+        # Get current width
+        current_width = self.element.offsetWidth
+        # Calculate new width
+        new_width = current_width + delta
+        # Set the new width
+        self.element.style.width = f"{new_width}px"
+        logger.debug(f"Width adjusted from {current_width}px to {new_width}px")
+
     async def _btn_bigger__click(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
-    
+        self._add(30)  # Add 30 pixels
+
     async def _btn_smaller__click(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
-    
+        self._add(-30)  # Remove 30 pixels
     
 
     
