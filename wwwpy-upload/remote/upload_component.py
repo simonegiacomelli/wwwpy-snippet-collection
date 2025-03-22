@@ -541,3 +541,94 @@ def _get_icon_html_for(file_type):
     icon_dict = _get_icon_html_dict()
     svg = icon_dict[icon_key]
     return svg
+
+
+class IconGalleryComponent(wpc.Component, tag_name='wwwpy-icon-gallery'):
+    gallery_container: js.HTMLElement = wpc.element()
+
+    def init_component(self):
+        self.element.attachShadow(dict_to_js({'mode': 'open'}))
+        # language=html
+        self.element.shadowRoot.innerHTML = """
+<style>
+    .icon-gallery {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+        gap: 16px;
+        padding: 16px;
+    }
+    
+    .icon-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 12px;
+        border-radius: 8px;
+        background-color: #f5f5f5;
+        transition: background-color 0.2s ease;
+    }
+    
+    .icon-container {
+        width: 48px;
+        height: 48px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        margin-bottom: 8px;
+    }
+    
+    .icon-container svg {
+        width: 36px;
+        height: 36px;
+        fill: #555;
+    }
+    
+    .icon-label {
+        font-size: 12px;
+        text-align: center;
+        color: #333;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+</style>
+
+<div data-name="gallery_container" class="icon-gallery"></div>
+        """
+
+        # Display the icons as soon as the component is initialized
+        self._display_icons()
+
+    def _display_icons(self):
+        """
+        Get the icon dictionary and display all icons in the gallery.
+        """
+        # Get the icon dictionary
+        icon_dict = _get_icon_html_dict()
+
+        # Create a document fragment for better performance
+        fragment = js.document.createDocumentFragment()
+
+        # Create an item for each icon
+        for icon_name, icon_svg in icon_dict.items():
+            # Create the icon item container
+            icon_item = js.document.createElement('div')
+            icon_item.className = 'icon-item'
+
+            # Create the icon container
+            icon_container = js.document.createElement('div')
+            icon_container.className = 'icon-container'
+            icon_container.innerHTML = icon_svg
+
+            # Create the icon label
+            icon_label = js.document.createElement('div')
+            icon_label.className = 'icon-label'
+            icon_label.textContent = icon_name
+
+            # Append elements to the icon item
+            icon_item.appendChild(icon_container)
+            icon_item.appendChild(icon_label)
+
+            # Add the icon item to the fragment
+            fragment.appendChild(icon_item)
+
+        # Append all icons to the gallery container at once
+        self.gallery_container.appendChild(fragment)
