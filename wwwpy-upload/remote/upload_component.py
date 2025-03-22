@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import asyncio
 import base64
 import logging
@@ -216,49 +217,6 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         self.file_input.value = ''
 
 
-def get_icon_html_for(file_type):
-    """
-    Returns SVG HTML markup for a given file type.
-
-    Args:
-        file_type: String representing the MIME type of the file
-
-    Returns:
-        String containing SVG HTML markup
-    """
-    if file_type.startswith('image/'):
-        return """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-            </svg>
-        """
-    elif file_type.startswith('video/'):
-        return """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M4 6.47L5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4z"/>
-            </svg>
-        """
-    elif 'pdf' in file_type:
-        return """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/>
-            </svg>
-        """
-    elif file_type.startswith('audio/'):
-        return """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
-            </svg>
-        """
-    else:
-        # Default file icon
-        return """
-            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
-            </svg>
-        """
-
-
 class UploadProgressComponent(wpc.Component):
     progress_container: js.HTMLElement = wpc.element()
     progress_bar: js.HTMLElement = wpc.element()
@@ -342,7 +300,7 @@ class UploadProgressComponent(wpc.Component):
         self.file_size.textContent = size_display
 
         # Set file icon based on file type using the refactored function
-        self.file_icon.innerHTML = get_icon_html_for(file.type)
+        self.file_icon.innerHTML = _get_icon_html_for(file.type)
 
     def cancel_button__click(self, event):
         """Handle cancel button click event."""
@@ -350,7 +308,6 @@ class UploadProgressComponent(wpc.Component):
             self._progress.abort = True
             # Hide cancel button when aborted
             self.cancel_button.classList.add("hidden")
-
 
     def update_progress(self, progress: UploadProgress):
         """Callback function to update the UI with upload progress."""
@@ -398,6 +355,7 @@ class UploadProgressComponent(wpc.Component):
             self.element.remove()
 
         asyncio.create_task(_remove())
+
 
 @dataclass
 class UploadProgress:
@@ -514,3 +472,46 @@ async def upload_file(
         logger.exception(e)
         progress.failure = e
         progress_callback(progress)
+
+
+def _get_icon_html_for(file_type):
+    """
+    Returns SVG HTML markup for a given file type.
+
+    Args:
+        file_type: String representing the MIME type of the file
+
+    Returns:
+        String containing SVG HTML markup
+    """
+    if file_type.startswith('image/'):
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+            </svg>
+        """
+    elif file_type.startswith('video/'):
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M4 6.47L5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4z"/>
+            </svg>
+        """
+    elif 'pdf' in file_type:
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/>
+            </svg>
+        """
+    elif file_type.startswith('audio/'):
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+        """
+    else:
+        # Default file icon
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+            </svg>
+        """
