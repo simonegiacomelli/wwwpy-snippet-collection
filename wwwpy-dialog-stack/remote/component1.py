@@ -13,25 +13,33 @@ class Component1(wpc.Component, tag_name='component-1'):
     _open: js.HTMLButtonElement = wpc.element()
     div1: Component2 = wpc.element()
     select1: js.HTMLSelectElement = wpc.element()
+    _result: js.HTMLDivElement = wpc.element()
 
     def init_component(self):
         # language=html
         self.element.innerHTML = """
 <div>component-1</div>
 <button data-name="_open">Open dialog</button>
+<div data-name="_result">Result:</div>
+
 <hr>
 
 <component-2 data-name="div1"></component-2>
 """
     
     async def _open__click(self, event):
-        dialog.open(self.div1.element)
+        layer = dialog.open(self.div1.element)
+        await layer.closure
+        self.element.append(layer.guest)
+        self._result.innerHTML = f"Result: {layer.closure.result()}"
+
 
 
 
 
 class Component2(wpc.Component, tag_name='component-2'):
     _close: js.HTMLButtonElement = wpc.element()
+    select1: js.HTMLSelectElement = wpc.element()
     def init_component(self):
         # language=html
         self.element.innerHTML = """
@@ -45,5 +53,5 @@ class Component2(wpc.Component, tag_name='component-2'):
 """
     
     async def _close__click(self, event):
-        dialog.close(self.element)
+        dialog.close(self.element, self.select1.value)
     
