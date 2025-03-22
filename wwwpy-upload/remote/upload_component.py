@@ -474,16 +474,7 @@ async def upload_file(
         progress_callback(progress)
 
 
-def _get_icon_html_for(file_type):
-    """
-    Returns SVG HTML markup for a given file type.
-
-    Args:
-        file_type: String representing the MIME type of the file
-
-    Returns:
-        String containing SVG HTML markup
-    """
+def _get_icon_html_dict() -> dict[str,str]:
     # Dictionary mapping file types to SVG paths
     icon_paths = {
         'image': 'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z',
@@ -502,6 +493,20 @@ def _get_icon_html_for(file_type):
         'database': 'M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z',
         'default': 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'
     }
+    return {
+        x : f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="{y}"/></svg>' for x,y in icon_paths.items()
+    }
+
+def _get_icon_html_for(file_type):
+    """
+    Returns SVG HTML markup for a given file type.
+
+    Args:
+        file_type: String representing the MIME type of the file
+
+    Returns:
+        String containing SVG HTML markup
+    """
     type_identifiers = {
         'image': ['image/'],
         'video': ['video/'],
@@ -533,6 +538,6 @@ def _get_icon_html_for(file_type):
                 icon_key = key
                 break
 
-    # Construct and return the SVG HTML
-    svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">\n<path d="{icon_paths[icon_key]}"/>\n</svg>'
+    icon_dict = _get_icon_html_dict()
+    svg = icon_dict[icon_key]
     return svg
