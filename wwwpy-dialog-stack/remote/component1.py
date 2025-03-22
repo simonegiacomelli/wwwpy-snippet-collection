@@ -86,7 +86,7 @@ class Component2(wpc.Component, tag_name='component-2'):
         new_width = current_width + delta
         # Set the new width
         self.element.style.width = f"{new_width}px"
-        logger.debug(f"Width adjusted from {current_width}px to {new_width}px")
+        self._width.innerHTML = f"current_width={current_width} new_width={new_width}px"
 
     async def _btn_bigger__click(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
