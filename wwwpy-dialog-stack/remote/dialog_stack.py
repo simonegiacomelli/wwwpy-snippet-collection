@@ -4,7 +4,7 @@ import asyncio
 import logging
 import weakref
 from dataclasses import dataclass, field
-from typing import Optional
+from typing import Optional, List
 
 import js
 import wwwpy.remote.component as wpc
@@ -38,7 +38,6 @@ class DialogLayer:
         return None
 
 
-
 class Dialog(wpc.Component, tag_name='dialog-stack'):
     """This represents an overlay, that can support a stack of elements to be shown one at the time."""
     _host: js.HTMLDivElement = wpc.element()
@@ -70,7 +69,12 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         <slot></slot>
     </div>
 """
-        self.stack = {}
+        # Dictionary to store all layers by guest ID
+        self.layers = {}
+
+        # List to maintain the order of active dialogs (stack)
+        self.active_stack = []
+
         self.element.style.display = 'none'
 
     def _ensure_dialog_visible(self):
@@ -89,22 +93,32 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         if guest.isConnected and guest.parentElement:
             guest.parentElement.removeChild(guest)
 
+    def _show_guest(self, guest: js.HTMLElement):
+        """Helper method to add a guest to the host"""
+        self._ensure_dialog_visible()
+        self.element.appendChild(guest)
+
+    def _hide_guest(self, guest: js.HTMLElement):
+        """Helper method to remove a guest from the host"""
+        if guest.isConnected and guest.parentElement == self.element:
+            self.element.removeChild(guest)
+
     def get(self, guest: js.HTMLElement) -> DialogLayer | None:
-        """This should return the DialogLayer object for the given guest element.
-        If the guest is not in the stack, it should return None.
+        """Returns the DialogLayer object for the given guest element.
+        If the guest is not in the stack, it returns None.
         """
         guest_id = self._get_guest_id(guest)
-        return self.stack.get(guest_id)
+        return self.layers.get(guest_id)
 
     def create(self, guest: js.HTMLElement) -> DialogLayer:
-        """This should create a new DialogLayer for the given guest element.
-        It should add the guest to the stack but not to the host.
-        If a DialogLayer already exists for the guest, it should return that one instead.
+        """Creates a new DialogLayer for the given guest element.
+        It adds the guest to the layers dict but not to the host or active stack.
+        If a DialogLayer already exists for the guest, it returns that one instead.
         """
         guest_id = self._get_guest_id(guest)
 
         # Check if a layer already exists for this guest
-        existing_layer = self.stack.get(guest_id)
+        existing_layer = self.layers.get(guest_id)
         if existing_layer:
             # Reset the future if it was already completed
             if existing_layer.closure.done():
@@ -117,54 +131,73 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
             guest=guest
         )
 
-        # Add to stack
-        self.stack[guest_id] = layer
+        # Add to layers dictionary
+        self.layers[guest_id] = layer
 
         return layer
 
     def open(self, guest: js.HTMLElement) -> DialogLayer:
-        """This should add self.element to the body (if not already added).
-        It should first, remove the guest from the body and from the stack.
-        Then it should add the guest to the stack and append it to the host.
+        """Adds a new dialog to the stack and displays it.
+        If there is a currently active dialog, it will be hidden but kept in the stack.
         """
-        # Make dialog visible
-        self._ensure_dialog_visible()
-
         # Detach guest from its current parent
         self._detach_guest(guest)
 
         # Create or get layer
         layer = self.create(guest)
+        guest_id = self._get_guest_id(guest)
 
-        # Add guest to host (using slot)
-        self.element.appendChild(guest)
+        # Hide the current top of stack if exists
+        if self.active_stack and self.active_stack[-1] != guest_id:
+            current_top_id = self.active_stack[-1]
+            current_top_layer = self.layers.get(current_top_id)
+            if current_top_layer:
+                self._hide_guest(current_top_layer.guest)
+
+        # If this guest is already in the stack somewhere, remove it from its current position
+        if guest_id in self.active_stack:
+            self.active_stack.remove(guest_id)
+
+        # Add to the top of the stack
+        self.active_stack.append(guest_id)
+
+        # Make dialog visible and show the guest
+        self._show_guest(guest)
 
         return layer
 
     def close(self, guest: js.HTMLElement, close_value: any = None):
-        """This should remove the guest from the stack and from the host (if currently in the host).
-        If the stack is empty, it should remove self.element from the body.
-        It will also set the future to the result of the close_value.
+        """Removes a dialog from the stack and shows the previous one if available.
+        Resolves the closure future with the close_value.
         """
         guest_id = self._get_guest_id(guest)
-        layer = self.stack.get(guest_id)
+        layer = self.layers.get(guest_id)
 
         if layer:
-            # Remove from stack
-            del self.stack[guest_id]
+            # Hide the guest
+            self._hide_guest(guest)
 
-            # Remove from host if it's a child of the dialog
-            if guest.isConnected and guest.parentElement == self.element:
-                self.element.removeChild(guest)
+            # Remove from active stack
+            if guest_id in self.active_stack:
+                self.active_stack.remove(guest_id)
+
+            # Remove from layers dictionary
+            del self.layers[guest_id]
 
             # Complete the future with the close value
             if not layer.closure.done():
                 layer.closure.set_result(close_value)
 
-        # If stack is empty, hide dialog
-        if not self.stack:
-            self.element.removeAttribute('open')
-            self.element.style.display = 'none'
+            # Show the previous dialog in the stack if there is one
+            if self.active_stack:
+                previous_id = self.active_stack[-1]
+                previous_layer = self.layers.get(previous_id)
+                if previous_layer:
+                    self._show_guest(previous_layer.guest)
+            else:
+                # If stack is empty, hide dialog
+                self.element.removeAttribute('open')
+                self.element.style.display = 'none'
 
 
 # Global dialog instance
