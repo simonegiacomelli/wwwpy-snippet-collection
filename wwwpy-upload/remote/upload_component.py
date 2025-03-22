@@ -503,62 +503,33 @@ def _get_icon_html_for(file_type):
         'default': 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'
     }
 
-    # Determine the icon key based on the file type
     icon_key = 'default'
-
-    # Image files
     if file_type.startswith('image/'):
         icon_key = 'image'
-
-    # Video files
     elif file_type.startswith('video/'):
         icon_key = 'video'
-
-    # PDF files
     elif 'pdf' in file_type:
         icon_key = 'pdf'
-
-    # Audio files
     elif file_type.startswith('audio/'):
         icon_key = 'audio'
-
-    # Document files
     elif any(doc_type in file_type for doc_type in ['msword', 'wordprocessing', 'document', 'docx', 'doc', 'odt', 'rtf']):
         icon_key = 'document'
-
-    # Spreadsheet files
     elif any(sheet_type in file_type for sheet_type in ['spreadsheet', 'excel', 'xlsx', 'xls', 'ods', 'csv']):
         icon_key = 'spreadsheet'
-
-    # Presentation files
     elif any(pres_type in file_type for pres_type in ['presentation', 'powerpoint', 'pptx', 'ppt', 'odp']):
         icon_key = 'presentation'
-
-    # Archive files
     elif any(arc_type in file_type for arc_type in ['zip', 'rar', 'tar', 'gz', 'archive', 'compression', 'compressed']):
         icon_key = 'archive'
-
-    # Code/Text files
     elif any(code_type in file_type for code_type in ['text/', 'javascript', 'python', 'java', 'css', 'html', 'xml', 'json']):
         icon_key = 'code'
-
-    # Font files
     elif any(font_type in file_type for font_type in ['font', 'ttf', 'otf', 'woff']):
         icon_key = 'font'
-
-    # 3D model files
     elif any(model_type in file_type for model_type in ['model', 'obj', 'stl', 'fbx', '3d']):
         icon_key = '3d'
-
-    # CAD files
     elif any(cad_type in file_type for cad_type in ['cad', 'dwg', 'dxf']):
         icon_key = 'cad'
-
-    # Vector graphic files
     elif any(vector_type in file_type for vector_type in ['svg', 'vector', 'ai', 'eps']):
         icon_key = 'vector'
-
-    # Database files
     elif any(db_type in file_type for db_type in ['database', 'db', 'sqlite', 'sql']):
         icon_key = 'database'
 
