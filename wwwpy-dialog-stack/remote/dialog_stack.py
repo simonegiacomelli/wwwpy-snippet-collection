@@ -4,7 +4,7 @@ import asyncio
 import logging
 import weakref
 from dataclasses import dataclass, field
-from typing import Optional, List
+from typing import Optional, List, Union
 
 import js
 import wwwpy.remote.component as wpc
@@ -12,6 +12,7 @@ from wwwpy.remote import dict_to_js
 
 logger = logging.getLogger(__name__)
 
+ComponentOrElement = Union[wpc.Component , js.HTMLElement]
 
 @dataclass
 class DialogLayer:
@@ -121,11 +122,12 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         guest_id = self._get_guest_id(guest)
         return self.layers.get(guest_id)
 
-    def get_or_create(self, guest: js.HTMLElement) -> DialogLayer:
+    def get_or_create(self, guest: ComponentOrElement) -> DialogLayer:
         """Creates a new DialogLayer for the given guest element.
         It adds the guest to the layers dict but not to the host or active stack.
         If a DialogLayer already exists for the guest, it returns that one instead.
         """
+        guest = _to_element(guest)
         guest_id = self._get_guest_id(guest)
 
         # Check if a layer already exists for this guest
@@ -147,10 +149,11 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
 
         return layer
 
-    def open(self, guest: js.HTMLElement) -> asyncio.Future:
+    def open(self, guest: ComponentOrElement) -> asyncio.Future:
         """Adds a new dialog to the stack and displays it.
         If there is a currently active dialog, it will be hidden but kept in the stack.
         """
+        guest = _to_element(guest)
         # Detach guest from its current parent
         self._detach_guest(guest)
 
@@ -184,6 +187,7 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         """Removes a dialog from the stack and shows the previous one if available.
         Resolves the closure future with the close_value.
         """
+        guest = _to_element(guest)
         guest_id = self._get_guest_id(guest)
         layer = self.layers.get(guest_id)
 
@@ -207,6 +211,9 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
                 self.element.removeAttribute('open')
                 self.element.style.display = 'none'
 
-
+def _to_element(guest: ComponentOrElement) -> js.HTMLElement:
+    if isinstance(guest, wpc.Component):
+        return guest.element
+    return guest
 # Global dialog instance
 dialog = Dialog()
