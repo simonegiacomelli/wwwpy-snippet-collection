@@ -94,7 +94,7 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         font-size: 14px;
         cursor: pointer;
         transition: all 0.2s ease;
-        margin-top: 10px;
+        margin-right: 10px;
         font-weight: 500;
         box-shadow: 0 2px 4px rgba(0, 0, 153, 0.2);
     }
@@ -159,6 +159,19 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         opacity: 0;
         transform: translateY(-10px);
     }
+    
+    .upload-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        margin-top: 10px;
+        gap: 10px;
+    }
+    
+    .drag-label {
+        font-size: 20px;
+    }
 </style>
 
 <div data-name="dropzone" class="dropzone">
@@ -167,8 +180,10 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
             <path d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96zM14 13v4h-4v-4H7l5-5 5 5h-3z"/>
         </svg>
     </div>
-    <p>Drag and drop files here or</p>
-    <button data-name="button" class="file-button">Choose Files</button>
+    <div class="upload-controls">
+        <button data-name="button" class="file-button">Browse</button>
+        <span class="drag-label">or drag files here</span>
+    </div>
     <input data-name="file_input" type="file" multiple class="hidden-input">
 </div>
 <div data-name="uploads"></div>
