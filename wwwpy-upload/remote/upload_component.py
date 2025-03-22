@@ -64,6 +64,11 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         background-color: rgba(0, 153, 255, 0.05);
     }
     
+    .dropzone-active {
+        border-color: #0099ff !important;
+        background-color: rgba(0, 153, 255, 0.1) !important;
+    }
+    
     .upload-icon {
         width: 48px;
         height: 48px;
@@ -74,6 +79,10 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
     
     .dropzone:hover .upload-icon {
         fill: #0099ff;
+    }
+    
+    .upload-icon-pulse {
+        animation: pulse 1s infinite;
     }
     
     .file-button {
@@ -173,27 +182,23 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         # Prevent default to allow drop
         event.preventDefault()
         event.stopPropagation()
-        # Add visual feedback
-        self.dropzone.style.borderColor = '#0099ff'
-        self.dropzone.style.backgroundColor = 'rgba(0, 153, 255, 0.1)'
-        # Add animation
-        self.upload_icon.style.animation = 'pulse 1s infinite'
+        # Add visual feedback using CSS classes
+        self.dropzone.classList.add('dropzone-active')
+        self.upload_icon.classList.add('upload-icon-pulse')
 
     def dropzone__dragleave(self, event):
         event.preventDefault()
         event.stopPropagation()
-        # Reset visual feedback
-        self.dropzone.style.borderColor = '#ccc'
-        self.dropzone.style.backgroundColor = 'rgba(245, 245, 245, 0.6)'
-        self.upload_icon.style.animation = 'none'
+        # Reset visual feedback using CSS classes
+        self.dropzone.classList.remove('dropzone-active')
+        self.upload_icon.classList.remove('upload-icon-pulse')
 
     def dropzone__drop(self, event):
         event.preventDefault()
         event.stopPropagation()
-        # Reset visual feedback
-        self.dropzone.style.borderColor = '#ccc'
-        self.dropzone.style.backgroundColor = 'rgba(245, 245, 245, 0.6)'
-        self.upload_icon.style.animation = 'none'
+        # Reset visual feedback using CSS classes
+        self.dropzone.classList.remove('dropzone-active')
+        self.upload_icon.classList.remove('upload-icon-pulse')
 
         # Get files from the drop event
         files = event.dataTransfer.files
@@ -500,6 +505,7 @@ def _get_icon_html_dict() -> dict[str, str]:
             f'<path d="{path}" stroke-linecap="round" stroke-linejoin="round"/></svg>'
         ) for key, path in icon_paths.items()
     }
+
 
 def _get_icon_html_for(file_type):
     """
