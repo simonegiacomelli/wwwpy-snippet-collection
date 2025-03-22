@@ -475,13 +475,6 @@ async def upload_file(
 
 
 def _get_icon_html_dict() -> dict[str, str]:
-    """
-    Generate a dictionary of SVG icons with improved styling.
-
-    Returns:
-        dict[str, str]: Mapping of file types to styled SVG HTML
-    """
-    # Dictionary mapping file types to SVG paths (Material Design icons)
     icon_paths = {
         'image': 'M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z',
         'video': 'M4 6.47L5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4z',
@@ -499,49 +492,14 @@ def _get_icon_html_dict() -> dict[str, str]:
         'database': 'M3 13h2v-2H3v2zm0 4h2v-2H3v2zm0-8h2V7H3v2zm4 4h14v-2H7v2zm0 4h14v-2H7v2zM7 7v2h14V7H7z',
         'default': 'M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z'
     }
-
-    # Associate file types with colors for better visual distinction
-    icon_colors = {
-        'image': '#4CAF50',     # Green
-        'video': '#F44336',     # Red
-        'pdf': '#FF5722',       # Deep Orange
-        'audio': '#9C27B0',     # Purple
-        'document': '#2196F3',  # Blue
-        'spreadsheet': '#4CAF50', # Green
-        'presentation': '#FF9800', # Orange
-        'archive': '#795548',   # Brown
-        'code': '#607D8B',      # Blue Grey
-        'font': '#9E9E9E',      # Grey
-        '3d': '#E91E63',        # Pink
-        'cad': '#3F51B5',       # Indigo
-        'vector': '#009688',    # Teal
-        'database': '#FFC107',  # Amber
-        'default': '#607D8B'    # Blue Grey
+    return {
+        key: (
+            f'<svg xmlns="http://www.w3.org/2000/svg" '
+            f'viewBox="0 0 24 24" fill="currentColor">'
+            f'<title>{key} icon</title>'
+            f'<path d="{path}" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+        ) for key, path in icon_paths.items()
     }
-
-    # Create SVGs with styling improvements
-    icon_svgs = {}
-    for file_type, path in icon_paths.items():
-        color = icon_colors.get(file_type, '#607D8B')  # Default to Blue Grey if no color defined
-
-        # Create a more visually appealing SVG with:
-        # - Background circle for better visual presence
-        # - Smooth transitions with opacity
-        # - Better accessibility with aria labels
-        icon_svgs[file_type] = f'''
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" aria-labelledby="title-{file_type}" role="img">
-  <title id="title-{file_type}">{file_type.capitalize()} file type icon</title>
-  <defs>
-    <linearGradient id="grad-{file_type}" x1="0%" y1="0%" x2="100%" y2="100%">
-      <stop offset="0%" stop-color="{color}" stop-opacity="0.8"/>
-      <stop offset="100%" stop-color="{color}" stop-opacity="1"/>
-    </linearGradient>
-  </defs>
-  <circle cx="12" cy="12" r="11" fill="url(#grad-{file_type})" opacity="0.1"/>
-  <path d="{path}" fill="{color}" stroke="white" stroke-width="0.2" stroke-opacity="0.6"/>
-</svg>'''.strip()
-
-    return icon_svgs
 
 def _get_icon_html_for(file_type):
     """
