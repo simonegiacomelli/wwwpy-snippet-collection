@@ -100,7 +100,6 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         font-size: 14px;
         cursor: pointer;
         transition: all 0.2s ease;
-        margin-right: 10px;
         font-weight: 500;
         box-shadow: 0 2px 4px rgba(0, 0, 153, 0.2);
     }
