@@ -216,6 +216,49 @@ class UploadComponent(wpc.Component, tag_name='wwwpy-quickstart-upload'):
         self.file_input.value = ''
 
 
+def get_icon_html_for(file_type):
+    """
+    Returns SVG HTML markup for a given file type.
+
+    Args:
+        file_type: String representing the MIME type of the file
+
+    Returns:
+        String containing SVG HTML markup
+    """
+    if file_type.startswith('image/'):
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
+            </svg>
+        """
+    elif file_type.startswith('video/'):
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M4 6.47L5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4z"/>
+            </svg>
+        """
+    elif 'pdf' in file_type:
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/>
+            </svg>
+        """
+    elif file_type.startswith('audio/'):
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/>
+            </svg>
+        """
+    else:
+        # Default file icon
+        return """
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
+            </svg>
+        """
+
+
 class UploadProgressComponent(wpc.Component):
     progress_container: js.HTMLElement = wpc.element()
     progress_bar: js.HTMLElement = wpc.element()
@@ -223,12 +266,49 @@ class UploadProgressComponent(wpc.Component):
     file_size: js.HTMLElement = wpc.element()
     file_icon: js.HTMLElement = wpc.element()
     status: js.HTMLElement = wpc.element()
+    cancel_button: js.HTMLElement = wpc.element()
+
+    # Reference to the progress object to allow cancellation
+    _progress: UploadProgress = None
 
     def init_component(self):
         # language=html
         self.element.innerHTML = """
+<style>
+    .cancel-button {
+        background-color: #f44336;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: background-color 0.2s ease;
+        margin-left: 10px;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+    }
+    
+    .cancel-button:hover {
+        background-color: #d32f2f;
+    }
+    
+    .cancel-button svg {
+        width: 16px;
+        height: 16px;
+        fill: white;
+    }
+    
+    .cancel-button.hidden {
+        display: none;
+    }
+</style>
+
 <div class="upload-item">
     <div data-name="file_icon" class="file-icon">
+        <!-- Default icon, will be replaced -->
         <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
             <path d="M14 2H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6zm2 16H8v-2h8v2zm0-4H8v-2h8v2zm-3-5V3.5L18.5 9H13z"/>
         </svg>
@@ -236,7 +316,14 @@ class UploadProgressComponent(wpc.Component):
     <div style="flex-grow: 1;">
         <div style="display: flex; justify-content: space-between; align-items: center;">
             <div data-name="file_name" style="font-weight: 500; font-size: 14px;"></div>
-            <div data-name="file_size" style="color: #666; font-size: 12px;"></div>
+            <div style="display: flex; align-items: center;">
+                <div data-name="file_size" style="color: #666; font-size: 12px;"></div>
+                <button data-name="cancel_button" class="cancel-button" title="Cancel upload">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/>
+                    </svg>
+                </button>
+            </div>
         </div>
         <div data-name="progress_container" class="modern-progress">
             <div data-name="progress_bar" class="progress-bar" style="width: 0%;"></div>
@@ -254,28 +341,22 @@ class UploadProgressComponent(wpc.Component):
         size_display = f"{size_kb:.1f} KB" if size_kb < 1024 else f"{size_kb / 1024:.1f} MB"
         self.file_size.textContent = size_display
 
-        # Set file icon based on file type
-        if file.type.startswith('image/'):
-            self.file_icon.innerHTML = """
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/>
-                </svg>
-            """
-        elif file.type.startswith('video/'):
-            self.file_icon.innerHTML = """
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M4 6.47L5.76 10H20v8H4V6.47M22 4h-4l2 4h-3l-2-4h-2l2 4h-3l-2-4H8l2 4H7L5 4H4c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V4z"/>
-                </svg>
-            """
-        elif 'pdf' in file.type:
-            self.file_icon.innerHTML = """
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                    <path d="M20 2H8c-1.1 0-2 .9-2 2v12c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-8.5 7.5c0 .83-.67 1.5-1.5 1.5H9v2H7.5V7H10c.83 0 1.5.67 1.5 1.5v1zm5 2c0 .83-.67 1.5-1.5 1.5h-2.5V7H15c.83 0 1.5.67 1.5 1.5v3zm4-3H19v1h1.5V11H19v2h-1.5V7h3v1.5zM9 9.5h1v-1H9v1zM4 6H2v14c0 1.1.9 2 2 2h14v-2H4V6zm10 5.5h1v-3h-1v3z"/>
-                </svg>
-            """
+        # Set file icon based on file type using the refactored function
+        self.file_icon.innerHTML = get_icon_html_for(file.type)
+
+    def cancel_button__click(self, event):
+        """Handle cancel button click event."""
+        if self._progress and self._progress.still_uploading:
+            self._progress.abort = True
+            # Hide cancel button when aborted
+            self.cancel_button.classList.add("hidden")
+
 
     def update_progress(self, progress: UploadProgress):
         """Callback function to update the UI with upload progress."""
+        # Store reference to the progress object to enable cancellation
+        self._progress = progress
+
         percentage = progress.percentage
         self.progress_bar.style.width = f"{percentage}%"
 
@@ -286,13 +367,24 @@ class UploadProgressComponent(wpc.Component):
             self.progress_bar.classList.add("completed")
             self.status.textContent = "Upload completed"
             self.status.style.color = "#4CAF50"
+            # Hide cancel button when complete
+            self.cancel_button.classList.add("hidden")
             self._fade_out()
         elif progress.failure:
             self.progress_bar.classList.add("error")
             self.status.textContent = f"Error: {progress.failure}"
             self.status.style.color = "#f44336"
+            # Hide cancel button on failure
+            self.cancel_button.classList.add("hidden")
+        elif progress.abort:
+            self.progress_bar.classList.add("error")
+            self.status.textContent = "Upload canceled"
+            self.status.style.color = "#f44336"
+            self._fade_out(2)
         else:
             self.status.textContent = f"Uploading: {percentage}%"
+            # Ensure cancel button is visible during upload
+            self.cancel_button.classList.remove("hidden")
 
     def _fade_out(self, fade_delay_secs=3):
         """Fade out and remove the progress element after completion."""
@@ -306,7 +398,6 @@ class UploadProgressComponent(wpc.Component):
             self.element.remove()
 
         asyncio.create_task(_remove())
-
 
 @dataclass
 class UploadProgress:
@@ -412,9 +503,10 @@ async def upload_file(
             # Report progress
             progress_callback(progress)
 
+        if progress.abort:
+            await rpc.upload_abort(file.name)
         # Final progress report
-        if progress.completed:
-            progress_callback(progress)
+        progress_callback(progress)
 
         logger.info(f'Upload completed: {file.name}')
 

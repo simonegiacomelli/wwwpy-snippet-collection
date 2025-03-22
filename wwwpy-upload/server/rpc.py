@@ -21,6 +21,11 @@ async def upload_append(name: str, b64str: str):
         f.write(bytes_append)
     return None
 
+async def upload_abort(name: str):
+    logger.info(f'upload_abort name={name}')
+    file = _resolve_file(name)
+    file.unlink(missing_ok=True)
+    return None
 
 def _resolve_file(name: str) -> Path:
     folder = Path(__file__).parent.parent / 'uploads'
