@@ -28,10 +28,10 @@ class Component1(wpc.Component, tag_name='component-1'):
 """
     
     async def _open__click(self, event):
-        layer = dialog.open(self.div1.element)
-        await layer.closure
-        self.element.append(layer.guest)
-        self._result.innerHTML = f"Result: {layer.closure.result()}"
+        div1 = self.div1
+        result = await dialog.open(div1.element)
+        self._result.innerHTML = f"Result: {result}"
+        self.element.append(div1.element)
 
 
 
@@ -58,13 +58,14 @@ class Component2(wpc.Component, tag_name='component-2'):
 """
         self._title.innerHTML += f" id={id(self)}"
         self._child = None
+
     async def _close__click(self, event):
         dialog.close(self.element, self.select1.value)
     
     async def _open_child__click(self, event):
         if self._child is None:
             self._child = Component2()
-        result = await dialog.open(self._child.element).closure
+        result = await dialog.open(self._child.element)
         self._child_result.innerHTML = f"Child result: {result}"
 
     
