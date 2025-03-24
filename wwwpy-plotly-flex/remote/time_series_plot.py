@@ -4,15 +4,12 @@ import logging
 from datetime import timedelta
 
 import js
-import pandas as pd
 import wwwpy.remote.component as wpc
 from pyodide.ffi import create_proxy
 from wwwpy.remote import dict_to_js
 from wwwpy.remote.jslib import script_load_once
 
 __all__ = ["TimeSeriesPlot"]
-
-from common.decorators import throttle, debounce
 
 logger = logging.getLogger(__name__)
 
@@ -25,7 +22,7 @@ class TimeSeriesPlot(wpc.Component, tag_name="time-series-plot"):
         self.element.innerHTML = """
             <div data-name="plotDiv" style="width: auto; height:400px; margin:auto;"></div>       
         """
-        self._data: pd.DataFrame | None = None
+        self._data = None
 
     async def after_init_component(self):
         await script_load_once("https://cdn.plot.ly/plotly-3.0.0.min.js", charset="utf-8")
@@ -33,12 +30,11 @@ class TimeSeriesPlot(wpc.Component, tag_name="time-series-plot"):
         # Automatically re-generate the plot whenever the browser window is resized.
         js.ResizeObserver.new(create_proxy(self._resize)).observe(self.plotDiv)
 
-    @debounce(timedelta(milliseconds=300))
     def _resize(self, entries, observer):
         """Re-generate plot after resizing its container."""
         self._generate_plot()
 
-    def update_plot(self, data: pd.DataFrame | None):
+    def update_plot(self, data):
         """Update plot content.
 
         Arguments:
@@ -90,5 +86,5 @@ class TimeSeriesPlot(wpc.Component, tag_name="time-series-plot"):
         js.Plotly.newPlot(self.plotDiv, [], dict_to_js(layout))
 
 
-def _to_javascript_date(ts: pd.Timestamp):
+def _to_javascript_date(ts):
     return str(ts).replace(' ', 'T')
