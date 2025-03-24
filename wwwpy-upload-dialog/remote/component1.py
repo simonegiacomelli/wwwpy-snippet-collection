@@ -32,12 +32,11 @@ class Component1(wpc.Component, tag_name='component-1'):
         self.upload1.multiple = True
         self.hotkey = Hotkey(js.window)
         self.hotkey.add('Escape', self._close_dialog)
-        self._stored = self.upload1
 
     async def _upload__click(self, event):
-        dialog.open(self._stored)
+        dialog.open(self.upload1)
 
     def _close_dialog(self, *args):
-        dialog.close(self._stored)
+        dialog.close(self.upload1)
 
 
