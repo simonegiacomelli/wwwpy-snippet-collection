@@ -124,16 +124,10 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
             } 
             
             .transition {
-            position: fixed;
-              pointer-events: none;
-              border: 2px solid #4a90e2;
-              background-color: rgba(74, 144, 226, 0.1);
-              z-index: 200000;
-              display: none;
               transition: all 0.2s ease; 
             }
         </style>      
-        <div class="transition" data-name="overlay"></div>
+        <div class="no-transition" data-name="overlay"></div>
         """
 
     @property
@@ -144,10 +138,10 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
     def transition(self, value: bool):
         if value:
             self.overlay.classList.add('transition')
-            self.overlay.classList.remove('no-transition')
+            # self.overlay.classList.remove('no-transition')
         else:
             self.overlay.classList.remove('transition')
-            self.overlay.classList.add('no-transition')
+            # self.overlay.classList.add('no-transition')
 
     def hide(self):
         self.overlay.style.display = 'none'
