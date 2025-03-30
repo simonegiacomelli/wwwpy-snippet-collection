@@ -17,7 +17,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
     """
 
     # Elements to track
-    highlight_element: js.HTMLDivElement = wpc.element()
+    highlight_overlay: HighlightOverlay = wpc.element()
     toolbar_element: js.HTMLDivElement = wpc.element()
 
     def init_component(self):
@@ -35,16 +35,6 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
               height: 100%;
               pointer-events: none;
               z-index: 200000;
-            }
-
-            .highlight-overlay {
-              position: fixed;
-              pointer-events: none;
-              border: 2px solid #4a90e2;
-              background-color: rgba(74, 144, 226, 0.1);
-              z-index: 200000;
-              transition: all 0.2s ease;
-              display: none;
             }
 
             .toolbar {
@@ -75,10 +65,11 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
               background-color: rgba(255,255,255,0.2);
             }
         </style>
-        <div class="highlight-overlay" data-name="highlight_element"></div>
+        <highlight-overlay data-name="highlight_overlay"></highlight-overlay>
         <div class="toolbar" role="toolbar" aria-label="Element actions" data-name="toolbar_element"></div>
         """
-
+        self.highlight_element = self.highlight_overlay.overlay
+        # self.highlight_element = highlight_overlay
         # Initialize properties
         self._selected_element = None
         self._toolbar_dimensions = None
@@ -197,7 +188,6 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         self.toolbar_element.style.top = f"{toolbar_y}px"
 
 
-
 class WindowMonitor:
 
     def __init__(self, enable_notify: callable):
@@ -240,3 +230,24 @@ class WindowMonitor:
                 listener()
             except Exception as e:
                 logger.error(f"Error in listener: {e}")
+
+
+class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
+    overlay: js.HTMLDivElement = wpc.element()
+
+    def init_component(self):
+        # language=html
+        self.element.innerHTML = """
+        <style>
+            .highlight-overlay {
+             position: fixed;
+              pointer-events: none;
+              border: 2px solid #4a90e2;
+              background-color: rgba(74, 144, 226, 0.1);
+              z-index: 200000;
+              transition: all 0.2s ease;
+              display: none;
+            }
+        </style>      
+        <div class="highlight-overlay" data-name="overlay"></div>
+        """
