@@ -33,6 +33,7 @@ class PushableSidebar extends HTMLElement {
         this._isResizing = false;
         this._startWidth = 0;
         this._startX = 0;
+        this._ticking = false;     // For requestAnimationFrame
 
         // Bind methods to this
         this._handleResize = this._handleResize.bind(this);
@@ -186,16 +187,18 @@ class PushableSidebar extends HTMLElement {
         position: absolute;
         top: 0;
         ${position === 'left' ? 'right' : 'left'}: 0;
-        width: 5px;
+        width: 8px; /* Wider handle for easier grabbing */
         height: 100%;
         cursor: ${position === 'left' ? 'e-resize' : 'w-resize'};
         background-color: transparent;
         transition: background-color 0.2s;
+        z-index: 2; /* Ensure it's above content */
+        touch-action: none; /* Better touch handling */
       }
       
       .resize-handle:hover,
       .resize-handle.active {
-        background-color: rgba(255, 255, 255, 0.1);
+        background-color: rgba(255, 255, 255, 0.2);
       }
       
       /* When collapsed, only show the toggle button */
@@ -359,12 +362,15 @@ class PushableSidebar extends HTMLElement {
         this._resizeHandle.classList.add('active');
 
         // Add event listeners for drag
-        document.addEventListener('mousemove', this._handleResize);
+        document.addEventListener('mousemove', this._handleResize, { passive: true });
         document.addEventListener('mouseup', this._stopResize);
         document.addEventListener('mouseleave', this._stopResize);
 
         // Prevent text selection during resize
         document.body.style.userSelect = 'none';
+
+        // Add a resize class to the body to optimize rendering
+        document.body.classList.add('sidebar-resizing');
 
         e.preventDefault();
     }
@@ -373,29 +379,39 @@ class PushableSidebar extends HTMLElement {
     _handleResize(e) {
         if (!this._isResizing) return;
 
-        let newWidth;
+        // Use requestAnimationFrame to optimize performance
+        if (!this._ticking) {
+            this._ticking = true;
 
-        if (this._config.position === 'left') {
-            newWidth = this._startWidth + (e.clientX - this._startX);
-        } else {
-            newWidth = this._startWidth - (e.clientX - this._startX);
+            requestAnimationFrame(() => {
+                let newWidth;
+
+                if (this._config.position === 'left') {
+                    newWidth = this._startWidth + (e.clientX - this._startX);
+                } else {
+                    newWidth = this._startWidth - (e.clientX - this._startX);
+                }
+
+                // Apply min/max constraints
+                const minWidth = parseInt(this._config.minWidth, 10);
+                const maxWidth = parseInt(this._config.maxWidth, 10);
+
+                if (newWidth < minWidth) newWidth = minWidth;
+                if (newWidth > maxWidth) newWidth = maxWidth;
+
+                // Update the sidebar width - directly set style for better performance
+                this.style.width = `${newWidth}px`;
+
+                // Update body padding directly for better performance
+                if (this._config.position === 'left') {
+                    document.body.style.paddingLeft = `${newWidth}px`;
+                } else {
+                    document.body.style.paddingRight = `${newWidth}px`;
+                }
+
+                this._ticking = false;
+            });
         }
-
-        // Apply min/max constraints
-        const minWidth = parseInt(this._config.minWidth, 10);
-        const maxWidth = parseInt(this._config.maxWidth, 10);
-
-        if (newWidth < minWidth) newWidth = minWidth;
-        if (newWidth > maxWidth) newWidth = maxWidth;
-
-        // Update the sidebar width
-        this.style.width = `${newWidth}px`;
-        this._config.width = `${newWidth}px`;
-
-        // Update body padding to match
-        this._adjustContentPadding();
-
-        e.preventDefault();
     }
 
     // End resize operation
@@ -413,10 +429,21 @@ class PushableSidebar extends HTMLElement {
         // Restore text selection
         document.body.style.userSelect = '';
 
+        // Remove resize class
+        document.body.classList.remove('sidebar-resizing');
+
+        // Store the final width in the config
+        this._config.width = `${parseInt(this.style.width, 10)}px`;
+
         // Save the current width to localStorage if desired
         if (typeof localStorage !== 'undefined') {
             localStorage.setItem('pushable-sidebar-width', this._config.width);
         }
+
+        // Fire an event for the resize completion
+        this.dispatchEvent(new CustomEvent('sidebar-resize-end', {
+            detail: { width: this._config.width }
+        }));
     }
 
     // Public API methods

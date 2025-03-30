@@ -13,6 +13,15 @@
       transition: padding 0.3s ease;
     }
 
+    /* Disable transitions during resize for better performance */
+    body.sidebar-resizing {
+      transition: none !important;
+    }
+
+    body.sidebar-resizing * {
+      transition: none !important;
+    }
+
     .content {
       padding: 20px;
       max-width: 1200px;
