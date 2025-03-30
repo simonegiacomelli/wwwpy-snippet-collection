@@ -123,6 +123,7 @@ class MainComponent(wpc.Component, tag_name='main-component'):
             return
         self.element_selector.set_selected_element(el)
         async def more_snappy():
+            await asyncio.sleep(0.2)
             ep_live = element_path.element_path(el)
             # logger.debug(f'Element path live: {ep_live}')
             ep_source = _rebase_element_path_to_origin_source(ep_live)

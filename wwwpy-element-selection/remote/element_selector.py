@@ -12,7 +12,6 @@ logger = logging.getLogger(__name__)
 
 
 class ElementSelector(wpc.Component, tag_name='element-selector'):
-
     highlight_overlay: HighlightOverlay = wpc.element()
     toolbar_button: ToolbarButton = wpc.element()
 
@@ -30,7 +29,8 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         self._raf_id = None
 
         self._window_monitor = WindowMonitor(lambda: self._selected_element is not None)
-        self._window_monitor.listeners.append(lambda: self.update_highlight())
+        self._window_monitor.listeners.append(lambda: self.update_highlight_no_transitions())
+        self.highlight_overlay.transition = True
 
     def connectedCallback(self):
         self._window_monitor.install()
@@ -46,6 +46,11 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
 
     def get_selected_element(self):
         return self._selected_element
+
+    def update_highlight_no_transitions(self):
+        self.highlight_overlay.transition = False
+        self.update_highlight()
+        self.highlight_overlay.transition = True
 
     def update_highlight(self):
         if not self._selected_element:
@@ -109,18 +114,40 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
         # language=html
         self.element.innerHTML = """
         <style>
-            .highlight-overlay {
-             position: fixed;
+            .no-transition {
+              position: fixed;
               pointer-events: none;
               border: 2px solid #4a90e2;
               background-color: rgba(74, 144, 226, 0.1);
               z-index: 200000;
-              <!-- transition: all 0.2s ease; -->
               display: none;
+            } 
+            
+            .transition {
+            position: fixed;
+              pointer-events: none;
+              border: 2px solid #4a90e2;
+              background-color: rgba(74, 144, 226, 0.1);
+              z-index: 200000;
+              display: none;
+              transition: all 0.2s ease; 
             }
         </style>      
-        <div class="highlight-overlay" data-name="overlay"></div>
+        <div class="transition" data-name="overlay"></div>
         """
+
+    @property
+    def transition(self) -> bool:
+        return self.overlay.classList.contains('transition')
+
+    @transition.setter
+    def transition(self, value: bool):
+        if value:
+            self.overlay.classList.add('transition')
+            self.overlay.classList.remove('no-transition')
+        else:
+            self.overlay.classList.remove('transition')
+            self.overlay.classList.add('no-transition')
 
     def hide(self):
         self.overlay.style.display = 'none'
