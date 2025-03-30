@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-import asyncio
-import wwwpy.remote.component as wpc
+import logging
+from collections.abc import Callable
+
 import js
+import wwwpy.remote.component as wpc
 from pyodide.ffi import create_proxy
 from wwwpy.remote import dict_to_js
-
-import logging
 
 logger = logging.getLogger(__name__)
 
@@ -86,7 +86,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
 
         # Create toolbar buttons
         button_data = [
-            {'label' : 'Parent', 'icon': '←'},
+            {'label': 'Parent', 'icon': '←'},
             {'label': 'Move up', 'icon': '↑'},
             {'label': 'Move down', 'icon': '↓'},
             {'label': 'Edit', 'icon': '✏️'},
@@ -114,28 +114,21 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
                             }
                         }))
                     )
+
                 return button_click_handler
 
             # Add event listener with the proxy function
             button.addEventListener('click', create_proxy(create_button_click_handler(data['label'])))
             self.toolbar_element.appendChild(button)
 
+            self._window_monitor = WindowMonitor(lambda: self._selected_element is not None)
+            self._window_monitor.listeners.append(lambda: self.update_highlight())
+
     def connectedCallback(self):
-        """Called when the component is connected to the DOM"""
-        # Add event listeners for resize and scroll
-        js.window.addEventListener('resize', create_proxy(self.handle_resize))
-        js.window.addEventListener('scroll', create_proxy(self.handle_scroll), dict_to_js({'passive': True}))
+        self._window_monitor.install()
 
     def disconnectedCallback(self):
-        """Called when the component is disconnected from the DOM"""
-        # Clean up event listeners
-        js.window.removeEventListener('resize', create_proxy(self.handle_resize))
-        js.window.removeEventListener('scroll', create_proxy(self.handle_scroll))
-
-        # Cancel any pending animation frame
-        if self._raf_id is not None:
-            js.window.cancelAnimationFrame(self._raf_id)
-            self._raf_id = None
+        self._window_monitor.uninstall()
 
     def set_selected_element(self, element):
         """Set the selected element and update the highlight and toolbar"""
@@ -203,18 +196,30 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         self.toolbar_element.style.left = f"{toolbar_x}px"
         self.toolbar_element.style.top = f"{toolbar_y}px"
 
-    def handle_resize(self, event=None):
-        """Handle the window resize event"""
-        # Clear cached toolbar dimensions on resize
-        self._toolbar_dimensions = None
 
-        if self._selected_element:
-            self.update_highlight()
 
-    async def handle_scroll(self, event=None):
-        """Handle the window scroll event"""
-        # Skip scroll updates if the element isn't selected
-        if not self._selected_element:
+class WindowMonitor:
+
+    def __init__(self, enable_notify: callable):
+        self._enable_notify = enable_notify
+        self.listeners: list[Callable] = []
+        self._raf_id = None
+
+    def install(self):
+        js.window.addEventListener('resize', create_proxy(self._handle_event))
+        js.window.addEventListener('scroll', create_proxy(self._handle_event), dict_to_js({'passive': True}))
+
+    def uninstall(self):
+        js.window.removeEventListener('resize', create_proxy(self._handle_event))
+        js.window.removeEventListener('scroll', create_proxy(self._handle_event))
+
+        # Cancel any pending animation frame
+        if self._raf_id is not None:
+            js.window.cancelAnimationFrame(self._raf_id)
+            self._raf_id = None
+
+    async def _handle_event(self, event=None):
+        if not self._enable_notify():
             return
 
         # Use requestAnimationFrame to ensure smooth updates
@@ -222,7 +227,16 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
             js.window.cancelAnimationFrame(self._raf_id)
 
         def update_on_animation_frame(event):
-            self.update_highlight()
+            self._fire_notify()
             self._raf_id = None
 
         self._raf_id = js.window.requestAnimationFrame(create_proxy(update_on_animation_frame))
+
+    def _fire_notify(self):
+        if not self._enable_notify():
+            return
+        for listener in self.listeners:
+            try:
+                listener()
+            except Exception as e:
+                logger.error(f"Error in listener: {e}")
