@@ -68,9 +68,6 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         <highlight-overlay data-name="highlight_overlay"></highlight-overlay>
         <div class="toolbar" role="toolbar" aria-label="Element actions" data-name="toolbar_element"></div>
         """
-        self.highlight_element = self.highlight_overlay.overlay
-        # self.highlight_element = highlight_overlay
-        # Initialize properties
         self._selected_element: js.HTMLElement | None = None
         self._toolbar_dimensions = None
         self._raf_id = None

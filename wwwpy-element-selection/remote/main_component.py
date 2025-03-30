@@ -112,19 +112,21 @@ class MainComponent(wpc.Component, tag_name='main-component'):
     def _change_selection_from_event(self, event):
         path = event.composedPath()
         el = path[0] if path and len(path) > 0 else event.target
-        js.console.log(f'change selection: {event.clientX}, {event.clientY}', path, event)
+        # js.console.log(f'change selection: {event.clientX}, {event.clientY}', path, event)
 
         self._set_selection(el)
 
     def _set_selection(self, el):
-        js.console.log(f'_set_selection to el:', el)
+        # js.console.log(f'_set_selection to el:', el)
+        if self.element_selector.get_selected_element() == el:
+            return
         self.element_selector.set_selected_element(el)
         ep_live = element_path.element_path(el)
-        logger.debug(f'Element path live: {ep_live}')
+        # logger.debug(f'Element path live: {ep_live}')
         ep_source = _rebase_element_path_to_origin_source(ep_live)
-        logger.debug(f'Element path source: {ep_source}')
+        # logger.debug(f'Element path source: {ep_source}')
         message = 'ep_source is none' if ep_source is None else f'Selection: {_element_path_lbl(ep_source)}'
-        logger.debug(message)
+        # logger.debug(message)
         if ep_source is not None:
             from wwwpy.remote.designer.ui.dev_mode_component import DevModeComponent
             tb = DevModeComponent.instance.toolbox
@@ -199,7 +201,7 @@ def _rebase_element_path_to_origin_source(ep: ElementPath) -> Optional[ElementPa
     """This is similar to rebase_path dumb because we use indexes alone.
     This rebase from Origin.live to Origin.source
     """
-    logger.debug(f'_rebase_element_path_to_origin_source {ep}')
+    # logger.debug(f'_rebase_element_path_to_origin_source {ep}')
     if not ep:
         return None
     if ep.origin == Origin.source:
@@ -207,12 +209,12 @@ def _rebase_element_path_to_origin_source(ep: ElementPath) -> Optional[ElementPa
 
     html = code_strings.html_from(ep.class_module, ep.class_name)
     if not html:
-        logger.debug(f'Cannot find html for {ep.class_module}.{ep.class_name}')
+        # logger.debug(f'Cannot find html for {ep.class_module}.{ep.class_name}')
         return None
 
     cst_node = html_locator.locate_node(html, ep.path)
     if cst_node is None:
-        logger.debug(f'Cannot find node for {ep.path} in {ep.class_module}.{ep.class_name}')
+        # logger.debug(f'Cannot find node for {ep.path} in {ep.class_module}.{ep.class_name}')
         return None
 
     node_path = html_locator.node_path_from_leaf(cst_node)
