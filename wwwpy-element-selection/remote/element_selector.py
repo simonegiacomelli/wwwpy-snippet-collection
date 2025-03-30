@@ -34,7 +34,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
               width: 100%;
               height: 100%;
               pointer-events: none;
-              z-index: 100;
+              z-index: 200000;
             }
 
             .highlight-overlay {
@@ -42,7 +42,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
               pointer-events: none;
               border: 2px solid #4a90e2;
               background-color: rgba(74, 144, 226, 0.1);
-              z-index: 100;
+              z-index: 200000;
               transition: all 0.2s ease;
               display: none;
             }
@@ -53,7 +53,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
               background-color: #333;
               border-radius: 4px;
               padding: 4px;
-              z-index: 101;
+              z-index: 200001;
               box-shadow: 0 2px 5px rgba(0,0,0,0.2);
               white-space: nowrap;
               min-width: max-content;

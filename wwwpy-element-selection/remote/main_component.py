@@ -16,17 +16,19 @@ logger = logging.getLogger(__name__)
 
 
 class MainComponent(wpc.Component, tag_name='main-component'):
-    """Main component to showcase the use of the ElementSelector component."""
+    f"""Main component to showcase the use of the ElementSelector component."""
 
     # Elements
     canvas: js.HTMLDivElement = wpc.element()
     element_selector: ElementSelector = wpc.element()
+    _on_mouse_move: js.HTMLInputElement = wpc.element()
 
     def init_component(self):
-        """Initialize the component"""
-        self.element.attachShadow(dict_to_js({'mode': 'open'}))
+        f"""Initialize the component"""
+        # self.element.attachShadow(dict_to_js({'mode': 'open'}))
+        # self.element.shadowRoot.innerHTML = """
         # language=html
-        self.element.shadowRoot.innerHTML = """
+        self.element.innerHTML = """
         <style>
             :host {
                 display: block;
@@ -68,7 +70,9 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         </style>
         
         <h1>Selection Highlight Demo</h1>
+        <input data-name="_on_mouse_move" placeholder="input1" type="checkbox">
         <p>Click on any element below to select it. A highlight and toolbar will appear without changing the layout.</p>
+
         <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
         
         <div class="content-area" data-name="canvas" id="canvas">
@@ -87,18 +91,31 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         <element-selector data-name="element_selector" id="element-selector"></element-selector>
         """
         self._mouse_move = create_proxy(self._mouse_move)
+        self._mouse_click = create_proxy(self._mouse_click)
 
     def connectedCallback(self):
-        # connect the mouse move
         js.document.addEventListener('mousemove', self._mouse_move)
+        js.document.addEventListener('click', self._mouse_click)
 
     def disconnectedCallback(self):
-        # disconnect the mouse move
         js.document.removeEventListener('mousemove', self._mouse_move)
+        js.document.removeEventListener('click', self._mouse_click)
 
     def _mouse_move(self, event: js.MouseEvent):
+        if not self._on_mouse_move.checked:
+            return
         path = event.composedPath()
         js.console.log(f'Mouse move event: {event.clientX}, {event.clientY}', path, event.target, event)
+        el = path[0] if path and len(path) > 0 else event.target
+
+        self.element_selector.set_selected_element(el)
+
+    def _mouse_click(self, event: js.MouseEvent):
+        if event.target == self._on_mouse_move:
+            return
+        self._on_mouse_move.checked = False
+        path = event.composedPath()
+        js.console.log(f'Mouse click event: {event.clientX}, {event.clientY}', path, event.target, event)
         el = path[0] if path and len(path) > 0 else event.target
 
         self.element_selector.set_selected_element(el)
