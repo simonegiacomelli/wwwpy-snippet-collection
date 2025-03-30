@@ -29,6 +29,9 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         self._toolbar_dimensions = None
         self._raf_id = None
 
+        self._window_monitor = WindowMonitor(lambda: self._selected_element is not None)
+        self._window_monitor.listeners.append(lambda: self.update_highlight())
+
     def connectedCallback(self):
         self._window_monitor.install()
 
@@ -53,7 +56,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         rect = self._selected_element.getBoundingClientRect()
 
         self.highlight_overlay.show(rect)
-        self.toolbar_button.update_toolbar_position(rect)
+        self.toolbar_button.show(rect)
 
 
 class WindowMonitor:
@@ -79,14 +82,15 @@ class WindowMonitor:
         if not self._enable_notify():
             return
 
-        if self._raf_id is not None:
-            js.window.cancelAnimationFrame(self._raf_id)
+        self._fire_notify()
+        # if self._raf_id is not None:
+        #     js.window.cancelAnimationFrame(self._raf_id)
 
-        def update_on_animation_frame(event):
-            self._fire_notify()
-            self._raf_id = None
+        # def update_on_animation_frame(event):
+        #     self._fire_notify()
+        #     self._raf_id = None
 
-        self._raf_id = js.window.requestAnimationFrame(create_proxy(update_on_animation_frame))
+        # self._raf_id = js.window.requestAnimationFrame(create_proxy(update_on_animation_frame))
 
     def _fire_notify(self):
         if not self._enable_notify():
@@ -111,7 +115,7 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
               border: 2px solid #4a90e2;
               background-color: rgba(74, 144, 226, 0.1);
               z-index: 200000;
-              transition: all 0.2s ease;
+              <!-- transition: all 0.2s ease; -->
               display: none;
             }
         </style>      
@@ -174,12 +178,16 @@ class ToolbarButton(wpc.Component, tag_name='toolbar-button'):
         """
         self._toolbar_dimensions = None
         self.toolbar_element = self.element
+        self.element.addEventListener('click', create_proxy(self._handle_click))
+
+    def _handle_click(self, event):
+        event.stopPropagation()
 
     def hide(self):
         self.element.style.display = 'none'
 
-    def update_toolbar_position(self, rect):
-        """Update the position of the toolbar"""
+    def show(self, rect):
+        # self._toolbar_dimensions = None
         # Only measure the toolbar once initially to avoid layout thrashing
         if not self._toolbar_dimensions:
             self.toolbar_element.style.display = 'block'

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import inspect
 from typing import Optional
 
@@ -121,17 +122,19 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         if self.element_selector.get_selected_element() == el:
             return
         self.element_selector.set_selected_element(el)
-        ep_live = element_path.element_path(el)
-        # logger.debug(f'Element path live: {ep_live}')
-        ep_source = _rebase_element_path_to_origin_source(ep_live)
-        # logger.debug(f'Element path source: {ep_source}')
-        message = 'ep_source is none' if ep_source is None else f'Selection: {_element_path_lbl(ep_source)}'
-        # logger.debug(message)
-        if ep_source is not None:
-            from wwwpy.remote.designer.ui.dev_mode_component import DevModeComponent
-            tb = DevModeComponent.instance.toolbox
-            tb._toolbox_state.selected_element_path = ep_live
-            tb._restore_selected_element_path()
+        async def more_snappy():
+            ep_live = element_path.element_path(el)
+            # logger.debug(f'Element path live: {ep_live}')
+            ep_source = _rebase_element_path_to_origin_source(ep_live)
+            # logger.debug(f'Element path source: {ep_source}')
+            message = 'ep_source is none' if ep_source is None else f'Selection: {_element_path_lbl(ep_source)}'
+            # logger.debug(message)
+            if ep_source is not None:
+                from wwwpy.remote.designer.ui.dev_mode_component import DevModeComponent
+                tb = DevModeComponent.instance.toolbox
+                tb._toolbox_state.selected_element_path = ep_live
+                tb._restore_selected_element_path()
+        asyncio.create_task(more_snappy())
 
 
     def element_selector__toolbar_action(self, e):
