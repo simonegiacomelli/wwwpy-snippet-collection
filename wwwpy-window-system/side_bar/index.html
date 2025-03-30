@@ -79,6 +79,9 @@
     <button id="toggle-left">Toggle Left Sidebar</button>
     <button id="toggle-right">Toggle Right Sidebar</button>
     <button id="add-content">Add Content to Left Sidebar</button>
+    <button id="show-left">Show Left Sidebar</button>
+    <button id="hide-left">Hide Left Sidebar</button>
+    <button id="toggle-visibility-right">Toggle Right Sidebar Visibility</button>
   </div>
 </div>
 
@@ -142,6 +145,19 @@
     div.style.borderRadius = '4px';
 
     leftSidebar.appendChild(div);
+  });
+
+  // Hide/show functionality
+  document.getElementById('hide-left').addEventListener('click', () => {
+    leftSidebar.hide();
+  });
+
+  document.getElementById('show-left').addEventListener('click', () => {
+    leftSidebar.show();
+  });
+
+  document.getElementById('toggle-visibility-right').addEventListener('click', () => {
+    rightSidebar.toggleVisibility();
   });
 </script>
 </body>

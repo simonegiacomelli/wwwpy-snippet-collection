@@ -9,6 +9,7 @@
  * - Compatible with arbitrary web pages
  */
 
+// Define the custom element only once
 class PushableSidebar extends HTMLElement {
     constructor() {
         super();
@@ -24,7 +25,8 @@ class PushableSidebar extends HTMLElement {
             maxWidth: '500px',       // Maximum width when resizing
             collapsed: false,        // Initial state
             collapsedWidth: '30px',  // Width when collapsed
-            zIndex: 9999            // z-index for the sidebar
+            zIndex: 9999,            // z-index for the sidebar
+            hidden: false            // Whether sidebar is completely hidden
         };
 
         // State
@@ -42,7 +44,7 @@ class PushableSidebar extends HTMLElement {
     static get observedAttributes() {
         return [
             'position', 'width', 'min-width', 'max-width',
-            'collapsed', 'collapsed-width', 'z-index'
+            'collapsed', 'collapsed-width', 'z-index', 'hidden'
         ];
     }
 
@@ -71,6 +73,9 @@ class PushableSidebar extends HTMLElement {
                 break;
             case 'z-index':
                 this._config.zIndex = newValue;
+                break;
+            case 'hidden':
+                this._config.hidden = newValue === 'true';
                 break;
         }
 
@@ -120,7 +125,7 @@ class PushableSidebar extends HTMLElement {
         const style = document.createElement('style');
         style.textContent = `
       :host {
-        display: block;
+        display: ${this._config.hidden ? 'none' : 'block'};
         position: fixed;
         top: 0;
         ${position}: 0;
@@ -152,13 +157,23 @@ class PushableSidebar extends HTMLElement {
         border-bottom: 1px solid #444;
       }
       
-      .toggle-button {
+      .sidebar-header-buttons {
+        display: flex;
+        align-items: center;
+      }
+      
+      .toggle-button, .close-button {
         background: none;
         border: none;
         cursor: pointer;
         color: #fff;
         font-size: 16px;
         padding: 5px;
+        margin-left: 5px;
+      }
+      
+      .close-button {
+        font-size: 18px;
       }
       
       .sidebar-content {
@@ -198,17 +213,30 @@ class PushableSidebar extends HTMLElement {
         const container = document.createElement('div');
         container.className = 'sidebar-container';
 
-        // Create the header with toggle button
+        // Create the header with toggle and close buttons
         const header = document.createElement('div');
         header.className = 'sidebar-header';
 
+        const buttonContainer = document.createElement('div');
+        buttonContainer.className = 'sidebar-header-buttons';
+
         const toggleButton = document.createElement('button');
         toggleButton.className = 'toggle-button';
+        toggleButton.title = 'Collapse sidebar';
         toggleButton.innerHTML = position === 'left'
             ? (this._config.collapsed ? '&#9658;' : '&#9668;')  // Right or Left arrow
             : (this._config.collapsed ? '&#9668;' : '&#9658;'); // Left or Right arrow
         toggleButton.addEventListener('click', this.toggle);
-        header.appendChild(toggleButton);
+
+        const closeButton = document.createElement('button');
+        closeButton.className = 'close-button';
+        closeButton.title = 'Hide sidebar';
+        closeButton.innerHTML = '&times;'; // × symbol
+        closeButton.addEventListener('click', () => this.hide());
+
+        buttonContainer.appendChild(toggleButton);
+        buttonContainer.appendChild(closeButton);
+        header.appendChild(buttonContainer);
 
         // Create content area for slotted content
         const content = document.createElement('div');
@@ -237,11 +265,21 @@ class PushableSidebar extends HTMLElement {
 
         // Save references
         this._toggleButton = toggleButton;
+        this._closeButton = closeButton;
         this._container = container;
     }
 
     // Update sidebar appearance and behavior based on configuration
     _updateSidebar() {
+        // Handle hidden state
+        if (this._config.hidden) {
+            this.style.display = 'none';
+            this._removePadding();
+            return;
+        } else {
+            this.style.display = 'block';
+        }
+
         // Update the width
         this.style.width = this._config.collapsed
             ? this._config.collapsedWidth
@@ -259,6 +297,13 @@ class PushableSidebar extends HTMLElement {
             this.setAttribute('collapsed', 'true');
         } else {
             this.setAttribute('collapsed', 'false');
+        }
+
+        // Set hidden attribute for CSS styling
+        if (this._config.hidden) {
+            this.setAttribute('hidden', 'true');
+        } else {
+            this.setAttribute('hidden', 'false');
         }
 
         // Update document body padding to make space for the sidebar
@@ -438,10 +483,40 @@ class PushableSidebar extends HTMLElement {
 
         return this;
     }
-}
 
-// Register the custom element
-customElements.define('pushable-sidebar', PushableSidebar);
+    // Hide the sidebar completely
+    hide() {
+        this._config.hidden = true;
+        this.setAttribute('hidden', 'true');
+        this._updateSidebar();
+
+        // Dispatch event
+        this.dispatchEvent(new CustomEvent('sidebar-hide', {
+            detail: { hidden: true }
+        }));
+
+        return this;
+    }
+
+    // Show the sidebar
+    show() {
+        this._config.hidden = false;
+        this.setAttribute('hidden', 'false');
+        this._updateSidebar();
+
+        // Dispatch event
+        this.dispatchEvent(new CustomEvent('sidebar-show', {
+            detail: { hidden: false }
+        }));
+
+        return this;
+    }
+
+    // Toggle visibility (hide/show)
+    toggleVisibility() {
+        return this._config.hidden ? this.show() : this.hide();
+    }
+}
 
 // Register the custom element
 customElements.define('pushable-sidebar', PushableSidebar);
