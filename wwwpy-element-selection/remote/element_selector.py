@@ -86,6 +86,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
 
         # Create toolbar buttons
         button_data = [
+            {'label' : 'Parent', 'icon': '←'},
             {'label': 'Move up', 'icon': '↑'},
             {'label': 'Move down', 'icon': '↓'},
             {'label': 'Edit', 'icon': '✏️'},

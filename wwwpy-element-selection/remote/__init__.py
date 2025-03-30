@@ -2,9 +2,6 @@ from js import document
 
 
 async def main():
-    from wwwpy.remote import shoelace
-    shoelace.setup_shoelace()
-
     from . import element_selector  # register ElementSelector component
     from . import main_component    # register MainComponent
 
