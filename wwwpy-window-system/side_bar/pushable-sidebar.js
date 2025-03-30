@@ -238,7 +238,7 @@ class PushableSidebar extends HTMLElement {
 
         const toggleButton = document.createElement('button');
         toggleButton.className = 'toggle-button';
-        toggleButton.title = 'Collapse sidebar';
+        toggleButton.title = this._state === 'collapsed' ? 'Expand sidebar' : 'Collapse sidebar';
         toggleButton.innerHTML = position === 'left'
             ? (this._state === 'collapsed' ? '&#9658;' : '&#9668;')  // Right or Left arrow
             : (this._state === 'collapsed' ? '&#9668;' : '&#9658;'); // Left or Right arrow
@@ -304,11 +304,13 @@ class PushableSidebar extends HTMLElement {
             ? this._config.collapsedWidth
             : this._config.width;
 
-        // Update toggle button icon
+        // Update toggle button icon and title
         if (this._toggleButton) {
             this._toggleButton.innerHTML = this._config.position === 'left'
                 ? (this._state === 'collapsed' ? '&#9658;' : '&#9668;')
                 : (this._state === 'collapsed' ? '&#9668;' : '&#9658;');
+
+            this._toggleButton.title = this._state === 'collapsed' ? 'Expand sidebar' : 'Collapse sidebar';
         }
 
         // Update document body padding to make space for the sidebar
@@ -480,7 +482,7 @@ class PushableSidebar extends HTMLElement {
         return this._state;
     }
 
-    // Toggle sidebar state in a cycle: hidden -> expanded -> collapsed -> hidden
+    // Toggle sidebar state: expanded <-> collapsed, but hidden -> expanded
     toggle() {
         switch (this._state) {
             case 'hidden':
@@ -490,7 +492,7 @@ class PushableSidebar extends HTMLElement {
                 this.setState('collapsed');
                 break;
             case 'collapsed':
-                this.setState('hidden');
+                this.setState('expanded');
                 break;
         }
         return this;
