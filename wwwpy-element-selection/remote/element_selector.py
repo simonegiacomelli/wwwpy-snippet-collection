@@ -218,7 +218,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         if self._raf_id is not None:
             js.window.cancelAnimationFrame(self._raf_id)
 
-        def update_on_animation_frame():
+        def update_on_animation_frame(event):
             self.update_highlight()
             self._raf_id = None
 

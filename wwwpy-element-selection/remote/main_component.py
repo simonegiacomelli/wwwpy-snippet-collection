@@ -8,6 +8,7 @@ from wwwpy.remote import dict_to_js
 import logging
 
 from . import element_selector  # import to register the element-selector component
+from .element_selector import ElementSelector
 
 logger = logging.getLogger(__name__)
 
@@ -17,12 +18,12 @@ class MainComponent(wpc.Component, tag_name='main-component'):
 
     # Elements
     canvas: js.HTMLDivElement = wpc.element()
-    element_selector: element_selector.ElementSelector = wpc.element()
+    element_selector: ElementSelector = wpc.element()
 
     def init_component(self):
         """Initialize the component"""
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
-
+        # language=html
         self.element.shadowRoot.innerHTML = """
         <style>
             :host {
