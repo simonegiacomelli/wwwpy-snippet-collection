@@ -71,7 +71,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         self.highlight_element = self.highlight_overlay.overlay
         # self.highlight_element = highlight_overlay
         # Initialize properties
-        self._selected_element = None
+        self._selected_element: js.HTMLElement | None = None
         self._toolbar_dimensions = None
         self._raf_id = None
 
@@ -135,21 +135,13 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
     def update_highlight(self):
         """Update the position and visibility of the highlight overlay and toolbar"""
         if not self._selected_element:
-            self.highlight_element.style.display = 'none'
+            self.highlight_overlay.hide()
             self.toolbar_element.style.display = 'none'
             return
 
-        # Get the bounding rectangle of the selected element
         rect = self._selected_element.getBoundingClientRect()
 
-        # Position the highlight overlay
-        self.highlight_element.style.display = 'block'
-        self.highlight_element.style.top = f"{rect.top}px"
-        self.highlight_element.style.left = f"{rect.left}px"
-        self.highlight_element.style.width = f"{rect.width}px"
-        self.highlight_element.style.height = f"{rect.height}px"
-
-        # Update the toolbar position
+        self.highlight_overlay.show(rect)
         self.update_toolbar_position(rect)
 
     def update_toolbar_position(self, rect):
@@ -251,3 +243,14 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
         </style>      
         <div class="highlight-overlay" data-name="overlay"></div>
         """
+
+    def hide(self):
+        self.overlay.style.display = 'none'
+
+    def show(self, rect):
+        self.overlay.style.display = 'block'
+        self.overlay.style.top = f"{rect.top}px"
+        self.overlay.style.left = f"{rect.left}px"
+        self.overlay.style.width = f"{rect.width}px"
+        self.overlay.style.height = f"{rect.height}px"
+
