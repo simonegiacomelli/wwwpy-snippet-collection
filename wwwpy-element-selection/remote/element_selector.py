@@ -138,6 +138,8 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
 
     def set_selected_element(self, element):
         """Set the selected element and update the highlight and toolbar"""
+        if self._selected_element == element:
+            return
         self._selected_element = element
         self.update_highlight()
 

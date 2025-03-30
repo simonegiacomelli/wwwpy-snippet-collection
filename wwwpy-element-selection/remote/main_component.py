@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import inspect
+
 import wwwpy.remote.component as wpc
 import js
 from pyodide.ffi import create_proxy
@@ -84,45 +86,24 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         <!-- Our custom element for selection highlighting -->
         <element-selector data-name="element_selector" id="element-selector"></element-selector>
         """
+        self._mouse_move = create_proxy(self._mouse_move)
 
-    async def after_init_component(self):
-        """Setup after the component is initialized"""
-        # Get all the elements that can be selected
-        elements = self.canvas.querySelectorAll('.element')
+    def connectedCallback(self):
+        # connect the mouse move
+        js.document.addEventListener('mousemove', self._mouse_move)
 
-        # Handle element selection - attach click handlers to each element
-        for i in range(elements.length):
-            element = elements.item(i)
+    def disconnectedCallback(self):
+        # disconnect the mouse move
+        js.document.removeEventListener('mousemove', self._mouse_move)
 
-            # Create a closure to capture the element for the click handler
-            def create_element_click_handler(el):
-                def element_click_handler(e):
-                    e.stopPropagation()
-                    # Set the selected element in our ElementSelector component
-                    self.element_selector.set_selected_element(el)
-                return element_click_handler
+    def _mouse_move(self, event: js.MouseEvent):
+        path = event.composedPath()
+        js.console.log(f'Mouse move event: {event.clientX}, {event.clientY}', path, event.target, event)
+        el = path[0] if path and len(path) > 0 else event.target
 
-            # Add the click event listener
-            element.addEventListener('click', create_proxy(create_element_click_handler(element)))
+        self.element_selector.set_selected_element(el)
 
-        # Handle clicks outside elements to deselect
-        def handle_document_click(e):
-            # Check if the click was on an element or within the selector
-            if (not e.target.closest('.element') and
-                    not e.target.closest('element-selector')):
-                self.element_selector.set_selected_element(None)
-
-        # Add the document click listener
-        js.document.addEventListener('click', create_proxy(handle_document_click))
-
-        # Handle toolbar actions
-        def handle_toolbar_action(e):
-            # Display an alert with the action and element ID
-            detail = e.detail
-            js.window.alert(f"Action: {detail.action} on {detail.element.id}")
-
-        # Add the toolbar action listener
-        self.element_selector.element.addEventListener(
-            'toolbar-action',
-            create_proxy(handle_toolbar_action)
-        )
+    def element_selector__toolbar_action(self, e):
+        # Display an alert with the action and element ID
+        detail = e.detail
+        js.window.alert(f"Action: {detail.action} on {detail.element.id}")
