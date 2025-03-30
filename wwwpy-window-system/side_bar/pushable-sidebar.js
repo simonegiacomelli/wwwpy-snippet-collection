@@ -17,19 +17,20 @@ class PushableSidebar extends HTMLElement {
         // Attach Shadow DOM for style isolation
         this.attachShadow({ mode: 'open' });
 
+        // States: 'hidden', 'collapsed', 'expanded'
+        this._state = 'expanded';
+
         // Default configuration
         this._config = {
             position: 'left',        // 'left' or 'right'
-            width: '300px',          // Initial width
+            width: '300px',          // Initial width when expanded
             minWidth: '50px',        // Minimum width when resizing
             maxWidth: '500px',       // Maximum width when resizing
-            collapsed: false,        // Initial state
             collapsedWidth: '30px',  // Width when collapsed
-            zIndex: 9999,            // z-index for the sidebar
-            hidden: false            // Whether sidebar is completely hidden
+            zIndex: 9999             // z-index for the sidebar
         };
 
-        // State
+        // Resize state
         this._isResizing = false;
         this._startWidth = 0;
         this._startX = 0;
@@ -45,7 +46,7 @@ class PushableSidebar extends HTMLElement {
     static get observedAttributes() {
         return [
             'position', 'width', 'min-width', 'max-width',
-            'collapsed', 'collapsed-width', 'z-index', 'hidden'
+            'collapsed-width', 'z-index', 'state'
         ];
     }
 
@@ -66,17 +67,18 @@ class PushableSidebar extends HTMLElement {
             case 'max-width':
                 this._config.maxWidth = newValue;
                 break;
-            case 'collapsed':
-                this._config.collapsed = newValue === 'true';
-                break;
             case 'collapsed-width':
                 this._config.collapsedWidth = newValue;
                 break;
             case 'z-index':
                 this._config.zIndex = newValue;
                 break;
-            case 'hidden':
-                this._config.hidden = newValue === 'true';
+            case 'state':
+                if (['hidden', 'collapsed', 'expanded'].includes(newValue)) {
+                    this._state = newValue;
+                } else {
+                    console.warn('Invalid state. Valid values are: hidden, collapsed, expanded');
+                }
                 break;
         }
 
@@ -126,7 +128,7 @@ class PushableSidebar extends HTMLElement {
         const style = document.createElement('style');
         style.textContent = `
       :host {
-        display: ${this._config.hidden ? 'none' : 'block'};
+        display: ${this._state === 'hidden' ? 'none' : 'block'};
         position: fixed;
         top: 0;
         ${position}: 0;
@@ -134,7 +136,7 @@ class PushableSidebar extends HTMLElement {
         box-sizing: border-box;
         z-index: ${this._config.zIndex};
         transition: width ${animationSpeed}ms ease;
-        width: ${this._config.collapsed ? this._config.collapsedWidth : this._config.width};
+        width: ${this._state === 'collapsed' ? this._config.collapsedWidth : this._config.width};
         overflow: hidden;
       }
       
@@ -160,6 +162,7 @@ class PushableSidebar extends HTMLElement {
       
       .sidebar-header-buttons {
         display: flex;
+        flex-direction: column;
         align-items: center;
       }
       
@@ -169,8 +172,18 @@ class PushableSidebar extends HTMLElement {
         cursor: pointer;
         color: #fff;
         font-size: 16px;
-        padding: 5px;
-        margin-left: 5px;
+        padding: 8px 5px;
+        margin: 5px 0;
+        width: 30px;
+        height: 30px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+      }
+      
+      .toggle-button:hover, .close-button:hover {
+        background-color: rgba(255, 255, 255, 0.1);
       }
       
       .close-button {
@@ -202,12 +215,12 @@ class PushableSidebar extends HTMLElement {
       }
       
       /* When collapsed, only show the toggle button */
-      :host([collapsed="true"]) .sidebar-content,
-      :host([collapsed="true"]) .resize-handle {
+      :host([state="collapsed"]) .sidebar-content,
+      :host([state="collapsed"]) .resize-handle {
         opacity: 0;
       }
       
-      :host([collapsed="true"]) .sidebar-header {
+      :host([state="collapsed"]) .sidebar-header {
         border-bottom: none;
       }
     `;
@@ -227,15 +240,15 @@ class PushableSidebar extends HTMLElement {
         toggleButton.className = 'toggle-button';
         toggleButton.title = 'Collapse sidebar';
         toggleButton.innerHTML = position === 'left'
-            ? (this._config.collapsed ? '&#9658;' : '&#9668;')  // Right or Left arrow
-            : (this._config.collapsed ? '&#9668;' : '&#9658;'); // Left or Right arrow
+            ? (this._state === 'collapsed' ? '&#9658;' : '&#9668;')  // Right or Left arrow
+            : (this._state === 'collapsed' ? '&#9668;' : '&#9658;'); // Left or Right arrow
         toggleButton.addEventListener('click', this.toggle);
 
         const closeButton = document.createElement('button');
         closeButton.className = 'close-button';
         closeButton.title = 'Hide sidebar';
         closeButton.innerHTML = '&times;'; // × symbol
-        closeButton.addEventListener('click', () => this.hide());
+        closeButton.addEventListener('click', () => this.setState('hidden'));
 
         buttonContainer.appendChild(toggleButton);
         buttonContainer.appendChild(closeButton);
@@ -274,8 +287,11 @@ class PushableSidebar extends HTMLElement {
 
     // Update sidebar appearance and behavior based on configuration
     _updateSidebar() {
-        // Handle hidden state
-        if (this._config.hidden) {
+        // Set attribute to match internal state
+        this.setAttribute('state', this._state);
+
+        // Handle display based on state
+        if (this._state === 'hidden') {
             this.style.display = 'none';
             this._removePadding();
             return;
@@ -283,30 +299,16 @@ class PushableSidebar extends HTMLElement {
             this.style.display = 'block';
         }
 
-        // Update the width
-        this.style.width = this._config.collapsed
+        // Update the width based on state
+        this.style.width = this._state === 'collapsed'
             ? this._config.collapsedWidth
             : this._config.width;
 
         // Update toggle button icon
         if (this._toggleButton) {
             this._toggleButton.innerHTML = this._config.position === 'left'
-                ? (this._config.collapsed ? '&#9658;' : '&#9668;')
-                : (this._config.collapsed ? '&#9668;' : '&#9658;');
-        }
-
-        // Set collapsed attribute for CSS styling
-        if (this._config.collapsed) {
-            this.setAttribute('collapsed', 'true');
-        } else {
-            this.setAttribute('collapsed', 'false');
-        }
-
-        // Set hidden attribute for CSS styling
-        if (this._config.hidden) {
-            this.setAttribute('hidden', 'true');
-        } else {
-            this.setAttribute('hidden', 'false');
+                ? (this._state === 'collapsed' ? '&#9658;' : '&#9668;')
+                : (this._state === 'collapsed' ? '&#9668;' : '&#9658;');
         }
 
         // Update document body padding to make space for the sidebar
@@ -318,8 +320,11 @@ class PushableSidebar extends HTMLElement {
         // Remove existing padding first
         this._removePadding();
 
+        // Skip adding padding if sidebar is hidden
+        if (this._state === 'hidden') return;
+
         // Add padding based on current sidebar state
-        const currentWidth = this._config.collapsed
+        const currentWidth = this._state === 'collapsed'
             ? this._config.collapsedWidth
             : this.style.width || this._config.width;
 
@@ -352,7 +357,7 @@ class PushableSidebar extends HTMLElement {
 
     // Start resize operation
     _startResize(e) {
-        if (this._config.collapsed) return;
+        if (this._state !== 'expanded') return;
 
         this._isResizing = true;
         this._startWidth = parseInt(getComputedStyle(this).width, 10);
@@ -448,41 +453,55 @@ class PushableSidebar extends HTMLElement {
 
     // Public API methods
 
-    // Toggle sidebar collapsed state
-    toggle() {
-        this._config.collapsed = !this._config.collapsed;
+    // Set sidebar state ('hidden', 'collapsed', 'expanded')
+    setState(state) {
+        if (!['hidden', 'collapsed', 'expanded'].includes(state)) {
+            console.warn('Invalid state. Valid states are: hidden, collapsed, expanded');
+            return this;
+        }
+
+        const oldState = this._state;
+        this._state = state;
         this._updateSidebar();
 
         // Dispatch event
-        this.dispatchEvent(new CustomEvent('sidebar-toggle', {
-            detail: { collapsed: this._config.collapsed }
+        this.dispatchEvent(new CustomEvent('sidebar-state-change', {
+            detail: {
+                oldState: oldState,
+                newState: state
+            }
         }));
 
-        return this._config.collapsed;
+        return this;
+    }
+
+    // Get current state
+    getState() {
+        return this._state;
+    }
+
+    // Toggle sidebar state in a cycle: hidden -> expanded -> collapsed -> hidden
+    toggle() {
+        switch (this._state) {
+            case 'hidden':
+                this.setState('expanded');
+                break;
+            case 'expanded':
+                this.setState('collapsed');
+                break;
+            case 'collapsed':
+                this.setState('hidden');
+                break;
+        }
+        return this;
     }
 
     // Set sidebar width programmatically
     setWidth(width) {
         this._config.width = width;
-        if (!this._config.collapsed) {
+        if (this._state === 'expanded') {
             this.style.width = width;
             this._adjustContentPadding();
-        }
-        return this;
-    }
-
-    // Collapse the sidebar
-    collapse() {
-        if (!this._config.collapsed) {
-            this.toggle();
-        }
-        return this;
-    }
-
-    // Expand the sidebar
-    expand() {
-        if (this._config.collapsed) {
-            this.toggle();
         }
         return this;
     }
@@ -509,39 +528,6 @@ class PushableSidebar extends HTMLElement {
         this._updateSidebar();
 
         return this;
-    }
-
-    // Hide the sidebar completely
-    hide() {
-        this._config.hidden = true;
-        this.setAttribute('hidden', 'true');
-        this._updateSidebar();
-
-        // Dispatch event
-        this.dispatchEvent(new CustomEvent('sidebar-hide', {
-            detail: { hidden: true }
-        }));
-
-        return this;
-    }
-
-    // Show the sidebar
-    show() {
-        this._config.hidden = false;
-        this.setAttribute('hidden', 'false');
-        this._updateSidebar();
-
-        // Dispatch event
-        this.dispatchEvent(new CustomEvent('sidebar-show', {
-            detail: { hidden: false }
-        }));
-
-        return this;
-    }
-
-    // Toggle visibility (hide/show)
-    toggleVisibility() {
-        return this._config.hidden ? this.show() : this.hide();
     }
 }
 

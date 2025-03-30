@@ -92,13 +92,19 @@
 
   <div class="controls">
     <h3>Control Panel</h3>
-    <button id="toggle-sidebar">Toggle Sidebar</button>
+    <button id="toggle-sidebar">Toggle Sidebar State</button>
     <button id="add-content">Add Content</button>
-    <button id="show-sidebar">Show Sidebar</button>
-    <button id="hide-sidebar">Hide Sidebar</button>
 
     <div style="margin-top: 15px;">
-      <label>
+      <label>State:
+        <select id="state-select">
+          <option value="expanded">Expanded</option>
+          <option value="collapsed">Collapsed</option>
+          <option value="hidden">Hidden</option>
+        </select>
+      </label>
+
+      <label style="margin-left: 15px;">
         Position:
         <select id="position-select">
           <option value="left">Left</option>
@@ -158,13 +164,14 @@
     sidebar.appendChild(div);
   });
 
-  // Hide/show functionality
-  document.getElementById('hide-sidebar').addEventListener('click', () => {
-    sidebar.hide();
+  // State change dropdown
+  document.getElementById('state-select').addEventListener('change', (e) => {
+    sidebar.setState(e.target.value);
   });
 
-  document.getElementById('show-sidebar').addEventListener('click', () => {
-    sidebar.show();
+  // Update dropdown when sidebar state changes
+  sidebar.addEventListener('sidebar-state-change', (e) => {
+    document.getElementById('state-select').value = e.detail.newState;
   });
 
   // Position changing
