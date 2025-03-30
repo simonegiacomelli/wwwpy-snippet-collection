@@ -18,7 +18,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
 
     # Elements to track
     highlight_overlay: HighlightOverlay = wpc.element()
-    toolbar_element: js.HTMLDivElement = wpc.element()
+    toolbar_button: ToolbarButton = wpc.element()
 
     def init_component(self):
         """Initialize the component"""
@@ -66,8 +66,9 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
             }
         </style>
         <highlight-overlay data-name="highlight_overlay"></highlight-overlay>
-        <div class="toolbar" role="toolbar" aria-label="Element actions" data-name="toolbar_element"></div>
+        <toolbar-button data-name="toolbar_button"></toolbar-button>
         """
+        self.toolbar_element = self.toolbar_button.element
         self._selected_element: js.HTMLElement | None = None
         self._toolbar_dimensions = None
         self._raf_id = None
@@ -244,10 +245,54 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
     def hide(self):
         self.overlay.style.display = 'none'
 
-    def show(self, rect):
+    def show(self, rect: js.DOMRect):
         self.overlay.style.display = 'block'
         self.overlay.style.top = f"{rect.top}px"
         self.overlay.style.left = f"{rect.left}px"
         self.overlay.style.width = f"{rect.width}px"
         self.overlay.style.height = f"{rect.height}px"
 
+
+# this class is an extraction  of the toolbar above (refactoring)
+class ToolbarButton(wpc.Component, tag_name='toolbar-button'):
+    """A component for creating a toolbar button with an icon and label.
+    Converted from the JavaScript implementation in selection-scroll-1.html.
+    """
+
+    def init_component(self):
+        """Initialize the component"""
+        self.element.attachShadow(dict_to_js({'mode': 'open'}))
+        # language=html
+        self.element.shadowRoot.innerHTML = """
+        <style>
+             :host {
+              position: fixed;
+              display: none;
+              background-color: #333;
+              border-radius: 4px;
+              padding: 4px;
+              z-index: 200001;
+              box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+              white-space: nowrap;
+              min-width: max-content;
+              pointer-events: auto;
+            }
+
+            button {
+              background-color: transparent;
+              color: white;
+              border: none;
+              width: 30px;
+              height: 30px;
+              border-radius: 3px;
+              cursor: pointer;
+              margin: 0 2px;
+            }
+
+            button:hover {
+              background-color: rgba(255,255,255,0.2);
+            }
+        </style>
+        <button data-name="button1">←</button>
+        <button data-name="button2">↑</button>
+        """
