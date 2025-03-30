@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Selection Highlight and Floating Toolbar Demo</title>
+  <style>
+    /* Core container styles */
+    body {
+      font-family: sans-serif;
+      padding: 20px;
+    }
+
+    .content-area {
+      position: relative;
+      border: 1px dashed #ccc;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Selectable elements */
+    .element {
+      padding: 15px;
+      margin: 10px;
+      background-color: #f5f5f5;
+      border: 1px solid #ddd;
+      cursor: pointer;
+    }
+
+    /* Selection highlight overlay - positioned absolutely and doesn't affect layout */
+    .highlight-overlay {
+      position: absolute;
+      pointer-events: none; /* allows clicks to pass through to underlying elements */
+      border: 2px solid #4a90e2;
+      background-color: rgba(74, 144, 226, 0.1);
+      z-index: 100;
+      transition: all 0.2s ease;
+    }
+
+    /* Floating toolbar styles */
+    .toolbar {
+      position: absolute;
+      display: none; /* Initially hidden */
+      background-color: #333;
+      border-radius: 4px;
+      padding: 4px;
+      z-index: 101; /* Higher than the highlight overlay */
+      box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+    }
+
+    .toolbar button {
+      background-color: transparent;
+      color: white;
+      border: none;
+      width: 30px;
+      height: 30px;
+      border-radius: 3px;
+      cursor: pointer;
+      margin: 0 2px;
+    }
+
+    .toolbar button:hover {
+      background-color: rgba(255,255,255,0.2);
+    }
+
+    /* Keep main elements' layout independent from overlay elements */
+    #highlight-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none; /* By default, let events pass through */
+      z-index: 100;
+    }
+
+    /* Enable pointer events specifically for the toolbar */
+    .toolbar {
+      pointer-events: auto; /* Override the container's pointer-events: none */
+    }
+  </style>
+</head>
+<body>
+<h1>Selection Highlight Demo</h1>
+<p>Click on any element below to select it. A highlight and toolbar will appear without changing the layout.</p>
+
+<div class="content-area" id="canvas">
+  <div class="element" id="element1">Element 1</div>
+  <div class="element" id="element2">Element 2</div>
+  <div class="element" id="element3">
+    Element 3 with some longer content to show how the highlight adapts to different sizes.
+  </div>
+  <div style="display: flex; justify-content: space-between;">
+    <div class="element" id="element4" style="width: 30%;">Element 4 (narrow)</div>
+    <div class="element" id="element5" style="width: 60%;">Element 5 (wider)</div>
+  </div>
+</div>
+
+<!-- This container holds our overlay elements (highlight and toolbar) -->
+<div id="highlight-container">
+  <div class="highlight-overlay" id="highlight"></div>
+  <div class="toolbar" id="toolbar" role="toolbar" aria-label="Element actions">
+    <button aria-label="Move up" title="Move up">↑</button>
+    <button aria-label="Move down" title="Move down">↓</button>
+    <button aria-label="Edit" title="Edit">✏️</button>
+    <button aria-label="Delete" title="Delete">🗑️</button>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    const highlight = document.getElementById('highlight');
+    const toolbar = document.getElementById('toolbar');
+    const highlightContainer = document.getElementById('highlight-container');
+    const canvas = document.getElementById('canvas');
+
+    // Position the highlight container to cover the entire canvas
+    function updateHighlightContainer() {
+      const canvasRect = canvas.getBoundingClientRect();
+      const scrollY = window.scrollY;
+      const scrollX = window.scrollX;
+
+      highlightContainer.style.top = (canvasRect.top + scrollY) + 'px';
+      highlightContainer.style.left = (canvasRect.left + scrollX) + 'px';
+      highlightContainer.style.width = canvasRect.width + 'px';
+      highlightContainer.style.height = canvasRect.height + 'px';
+    }
+
+    // Update the highlight overlay and toolbar position for a selected element
+    function updateHighlight(element) {
+      if (!element) {
+        highlight.style.display = 'none';
+        toolbar.style.display = 'none';
+        return;
+      }
+
+      const rect = element.getBoundingClientRect();
+      const containerRect = highlightContainer.getBoundingClientRect();
+
+      // Position the highlight overlay to match the element
+      highlight.style.display = 'block';
+      highlight.style.top = (rect.top - containerRect.top) + 'px';
+      highlight.style.left = (rect.left - containerRect.left) + 'px';
+      highlight.style.width = rect.width + 'px';
+      highlight.style.height = rect.height + 'px';
+
+      // Position the toolbar
+      toolbar.style.display = 'block';
+
+      // Get toolbar dimensions
+      const toolbarRect = toolbar.getBoundingClientRect();
+
+      // Position at bottom-right with right edges aligned and shifted down a bit
+      let toolbarX = rect.right - containerRect.left - toolbarRect.width; // Align right edges
+      let toolbarY = rect.bottom - containerRect.top + 5; // Add 10px offset to move it below the element
+
+      // Check if the toolbar would go off-screen to the left
+      if (toolbarX < 0) {
+        // If it would go off-screen to the left, align with left edge instead
+        toolbarX = rect.left - containerRect.left;
+      }
+
+      // Check if toolbar would go off-screen at the bottom
+      if (rect.bottom + toolbarRect.height > window.innerHeight) {
+        // If it would go off bottom, place it above the element
+        toolbarY = rect.top - containerRect.top - toolbarRect.height;
+      }
+
+      toolbar.style.left = toolbarX + 'px';
+      toolbar.style.top = toolbarY + 'px';
+    }
+
+    // Set up click handlers for all elements
+    const elements = document.querySelectorAll('.element');
+    let selectedElement = null;
+
+    elements.forEach(element => {
+      element.addEventListener('click', function(e) {
+        e.stopPropagation(); // Prevent clicks from bubbling to container
+        selectedElement = element;
+        updateHighlight(element);
+      });
+    });
+
+    // Click outside to deselect
+    document.addEventListener('click', function(e) {
+      if (!e.target.closest('.element') && !e.target.closest('.toolbar')) {
+        selectedElement = null;
+        updateHighlight(null);
+      }
+    });
+
+    // Make toolbar buttons interactive without affecting selection
+    const toolbarButtons = toolbar.querySelectorAll('button');
+    toolbarButtons.forEach(button => {
+      button.addEventListener('click', function(e) {
+        e.stopPropagation();
+        alert('Action: ' + button.getAttribute('aria-label') + ' on ' +
+                (selectedElement ? selectedElement.id : 'unknown element'));
+      });
+    });
+
+    // Handle window resize and scroll events
+    function handleViewportChange() {
+      updateHighlightContainer();
+      if (selectedElement) {
+        updateHighlight(selectedElement);
+      }
+    }
+
+    window.addEventListener('resize', handleViewportChange);
+    window.addEventListener('scroll', handleViewportChange);
+
+    // Initial setup
+    updateHighlightContainer();
+  });
+</script>
+</body>
+</html>
