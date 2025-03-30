@@ -359,7 +359,12 @@ class PushableSidebar extends HTMLElement {
 
     // Start resize operation
     _startResize(e) {
-        if (this._state !== 'expanded') return;
+        // If sidebar is in collapsed state, expand it first but keep the current width
+        if (this._state === 'collapsed') {
+            const currentWidth = this.style.width;
+            this.setState('expanded');
+            this.style.width = currentWidth; // Prevent jumping to stored width
+        }
 
         this._isResizing = true;
         this._startWidth = parseInt(getComputedStyle(this).width, 10);
