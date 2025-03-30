@@ -46,25 +46,6 @@
       background-color: #45a049;
     }
 
-    select, input {
-      padding: 8px;
-      margin: 5px;
-      border: 1px solid #ddd;
-      border-radius: 4px;
-    }
-
-    .code-example {
-      background-color: #f8f8f8;
-      border-left: 4px solid #4CAF50;
-      padding: 15px;
-      margin: 20px 0;
-      overflow-x: auto;
-    }
-
-    pre {
-      margin: 0;
-    }
-
     .sidebar-content {
       padding: 15px;
     }
@@ -98,94 +79,7 @@
     <button id="toggle-left">Toggle Left Sidebar</button>
     <button id="toggle-right">Toggle Right Sidebar</button>
     <button id="add-content">Add Content to Left Sidebar</button>
-    <br>
-    <label>
-      Theme:
-      <select id="theme-select">
-        <option value="light">Light</option>
-        <option value="dark">Dark</option>
-      </select>
-    </label>
-    <label>
-      Position:
-      <select id="position-select">
-        <option value="left">Left</option>
-        <option value="right">Right</option>
-      </select>
-    </label>
-    <label>
-      Width:
-      <input type="text" id="width-input" value="300px">
-      <button id="apply-width">Apply</button>
-    </label>
   </div>
-
-  <h2>How to Use</h2>
-
-  <p>The PushableSidebar library creates a custom element that you can use in your HTML or create programmatically.</p>
-
-  <h3>Method 1: HTML Declaration</h3>
-  <div class="code-example">
-      <pre><code>&lt;pushable-sidebar position="left" width="300px" theme="light"&gt;
-  &lt;div&gt;Your sidebar content here&lt;/div&gt;
-&lt;/pushable-sidebar&gt;</code></pre>
-  </div>
-
-  <h3>Method 2: JavaScript Creation</h3>
-  <div class="code-example">
-      <pre><code>// Create sidebar with configuration
-const sidebar = document.createElement('pushable-sidebar');
-sidebar.setAttribute('position', 'left');
-sidebar.setAttribute('width', '300px');
-sidebar.setAttribute('min-width', '200px');
-sidebar.setAttribute('max-width', '500px');
-sidebar.setAttribute('theme', 'light');
-sidebar.innerHTML = '&lt;div&gt;Sidebar content&lt;/div&gt;';
-
-// Add to document
-document.body.appendChild(sidebar);
-
-// Control programmatically
-sidebar.toggle();       // Toggle expand/collapse
-sidebar.setWidth('400px');
-sidebar.setPosition('right');
-sidebar.setTheme('dark');
-</code></pre>
-  </div>
-
-  <h3>Features</h3>
-  <ul>
-    <li><strong>Push Content:</strong> The sidebar pushes the page content instead of overlapping it</li>
-    <li><strong>Resizable:</strong> Drag the edge to resize the sidebar</li>
-    <li><strong>Collapsible:</strong> Click the arrow to collapse/expand</li>
-    <li><strong>Positioning:</strong> Place on left or right side</li>
-    <li><strong>Theming:</strong> Light and dark themes included</li>
-    <li><strong>Style Isolation:</strong> Uses Shadow DOM to prevent style conflicts</li>
-    <li><strong>Responsive:</strong> Adapts to window resizing</li>
-  </ul>
-
-  <h2>API Reference</h2>
-  <p>The library provides the following public methods:</p>
-  <ul>
-    <li><code>toggle()</code> - Toggles between collapsed and expanded states</li>
-    <li><code>collapse()</code> - Collapses the sidebar</li>
-    <li><code>expand()</code> - Expands the sidebar</li>
-    <li><code>setWidth(width)</code> - Sets the width (e.g., '300px', '20em')</li>
-    <li><code>setPosition(position)</code> - Sets position ('left' or 'right')</li>
-    <li><code>setTheme(theme)</code> - Sets theme ('light' or 'dark')</li>
-  </ul>
-
-  <p>Attributes you can set on the custom element:</p>
-  <ul>
-    <li><code>position</code> - 'left' or 'right' (default: 'left')</li>
-    <li><code>width</code> - Width when expanded (default: '300px')</li>
-    <li><code>min-width</code> - Minimum width when resizing (default: '50px')</li>
-    <li><code>max-width</code> - Maximum width when resizing (default: '500px')</li>
-    <li><code>collapsed</code> - Initial state (default: 'false')</li>
-    <li><code>collapsed-width</code> - Width when collapsed (default: '30px')</li>
-    <li><code>z-index</code> - z-index value (default: 9999)</li>
-    <li><code>theme</code> - 'light' or 'dark' (default: 'light')</li>
-  </ul>
 </div>
 
 <!-- Load the PushableSidebar library -->
@@ -197,7 +91,7 @@ sidebar.setTheme('dark');
   const leftSidebar = document.createElement('pushable-sidebar');
   leftSidebar.setAttribute('position', 'left');
   leftSidebar.setAttribute('width', '300px');
-  leftSidebar.setAttribute('theme', 'light');
+  leftSidebar.setAttribute('theme', 'dark');
   leftSidebar.innerHTML = `
       <div class="sidebar-content">
         <h3>Left Sidebar</h3>
@@ -244,23 +138,10 @@ sidebar.setTheme('dark');
     div.textContent = 'New content added at ' + new Date().toLocaleTimeString();
     div.style.padding = '10px';
     div.style.margin = '10px 0';
-    div.style.backgroundColor = 'rgba(0,0,0,0.05)';
+    div.style.backgroundColor = 'rgba(255,255,255,0.1)';
     div.style.borderRadius = '4px';
 
     leftSidebar.appendChild(div);
-  });
-
-  document.getElementById('theme-select').addEventListener('change', (e) => {
-    leftSidebar.setTheme(e.target.value);
-  });
-
-  document.getElementById('position-select').addEventListener('change', (e) => {
-    leftSidebar.setPosition(e.target.value);
-  });
-
-  document.getElementById('apply-width').addEventListener('click', () => {
-    const width = document.getElementById('width-input').value;
-    leftSidebar.setWidth(width);
   });
 </script>
 </body>

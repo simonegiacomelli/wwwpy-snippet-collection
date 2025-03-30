@@ -24,9 +24,7 @@ class PushableSidebar extends HTMLElement {
             maxWidth: '500px',       // Maximum width when resizing
             collapsed: false,        // Initial state
             collapsedWidth: '30px',  // Width when collapsed
-            zIndex: 9999,            // z-index for the sidebar
-            theme: 'light',          // 'light' or 'dark'
-            animationSpeed: 300      // Transition duration in ms
+            zIndex: 9999            // z-index for the sidebar
         };
 
         // State
@@ -44,7 +42,7 @@ class PushableSidebar extends HTMLElement {
     static get observedAttributes() {
         return [
             'position', 'width', 'min-width', 'max-width',
-            'collapsed', 'collapsed-width', 'z-index', 'theme'
+            'collapsed', 'collapsed-width', 'z-index'
         ];
     }
 
@@ -73,9 +71,6 @@ class PushableSidebar extends HTMLElement {
                 break;
             case 'z-index':
                 this._config.zIndex = newValue;
-                break;
-            case 'theme':
-                this._config.theme = newValue;
                 break;
         }
 
@@ -119,7 +114,7 @@ class PushableSidebar extends HTMLElement {
     // Create the HTML structure and CSS
     _render() {
         const position = this._config.position;
-        const theme = this._config.theme;
+        const animationSpeed = 300; // Fixed animation speed
 
         // Define the styles
         const style = document.createElement('style');
@@ -132,7 +127,7 @@ class PushableSidebar extends HTMLElement {
         height: 100%;
         box-sizing: border-box;
         z-index: ${this._config.zIndex};
-        transition: width ${this._config.animationSpeed}ms ease;
+        transition: width ${animationSpeed}ms ease;
         width: ${this._config.collapsed ? this._config.collapsedWidth : this._config.width};
         overflow: hidden;
       }
@@ -142,11 +137,11 @@ class PushableSidebar extends HTMLElement {
         flex-direction: column;
         height: 100%;
         width: 100%;
-        background-color: ${theme === 'dark' ? '#333' : '#f5f5f5'};
-        color: ${theme === 'dark' ? '#fff' : '#333'};
+        background-color: #333;
+        color: #fff;
         box-shadow: ${position === 'left' ? '2px' : '-2px'} 0 5px rgba(0, 0, 0, 0.1);
         box-sizing: border-box;
-        transition: transform ${this._config.animationSpeed}ms ease;
+        transition: transform ${animationSpeed}ms ease;
       }
       
       .sidebar-header {
@@ -154,14 +149,14 @@ class PushableSidebar extends HTMLElement {
         justify-content: ${position === 'left' ? 'flex-end' : 'flex-start'};
         align-items: center;
         padding: 10px;
-        border-bottom: 1px solid ${theme === 'dark' ? '#444' : '#ddd'};
+        border-bottom: 1px solid #444;
       }
       
       .toggle-button {
         background: none;
         border: none;
         cursor: pointer;
-        color: ${theme === 'dark' ? '#fff' : '#333'};
+        color: #fff;
         font-size: 16px;
         padding: 5px;
       }
@@ -185,7 +180,7 @@ class PushableSidebar extends HTMLElement {
       
       .resize-handle:hover,
       .resize-handle.active {
-        background-color: rgba(0, 0, 0, 0.1);
+        background-color: rgba(255, 255, 255, 0.1);
       }
       
       /* When collapsed, only show the toggle button */
@@ -441,13 +436,6 @@ class PushableSidebar extends HTMLElement {
         this._render();
         this._updateSidebar();
 
-        return this;
-    }
-
-    // Set theme
-    setTheme(theme) {
-        this._config.theme = theme;
-        this.setAttribute('theme', theme);
         return this;
     }
 }
