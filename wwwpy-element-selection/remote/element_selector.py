@@ -24,7 +24,7 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         """Initialize the component"""
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
 
-        # Create the shadow DOM content
+        # language=html
         self.element.shadowRoot.innerHTML = """
         <style>
             :host {
