@@ -8,13 +8,13 @@ This component is written to showcase the use of the `wwwpy` library for creatin
 import inspect
 
 import wwwpy.remote.component as wpc
-import js
+import js # generally we use `js.` to reference to the globals, so do not use `window.` as many of you might be used to.
 import datetime
 from pyodide.ffi import create_proxy
 
 import logging
 
-from wwwpy.remote import dict_to_js
+from wwwpy.remote import dict_to_js # when passing a python dictionary to a JS function, we need to convert it to a JS object
 
 logger = logging.getLogger(__name__)
 
@@ -29,7 +29,13 @@ class Component1(wpc.Component, tag_name='component-1'):
     textarea1: js.HTMLTextAreaElement = wpc.element()
     title_icon_1: TitleIconComponent = wpc.element()
     """The name here must match the 'data-name' in the html, so we will never use a 
-    '-' for the name, in other words we will use valid python identifiers."""
+    '-' for the name, in other words we will use valid python identifiers.
+    
+    Also take note that we use the Python class instead of a js.HTMLElement, you should prefer this declaration.
+    If you want to attach an event handler to the element, you should prefer the autobinding (e.g., see the below method title_icon_1__title_close)
+    so we don't need to use title_icon_1.element.addEventListener (and a manual create_proxy).
+    
+    """
 
     def init_component(self):
         f"""This method is to be intended as the constructor of the component.
@@ -37,9 +43,12 @@ class Component1(wpc.Component, tag_name='component-1'):
         this class instance. This is also why we can reload the component without reloading the page (notably
         custom elements are do not support undefining them).
         """
-        # self.element.attachShadow(dict_to_js({'mode': 'open'}))
+        self.element.attachShadow(dict_to_js({'mode': 'open'})) # note the use of dict_to_js to convert the dictionary to a JS object, otherwise it will not work
+
+        # note in the html that we use 'data-name' to assign the elements to the attributes.
+        # We never use the 'id' attribute, because it is not a good practice to use it in web components.
         # language=html
-        self.element.innerHTML = """
+        self.element.shadowRoot.innerHTML = """
 <title-icon data-name='title_icon_1'>
     <div slot='title'>Select a file...</div>
 </title-icon>
@@ -86,6 +95,9 @@ class Component1(wpc.Component, tag_name='component-1'):
         self._log('button 1 clicked')
         self.title_icon_1.flash()
 
+    async def title_icon_1__title_close(self, event):
+        self._log(f'title_icon_1__title_close event fired')
+
     def _log(self, message: str):
         # add to the textarea the datetime and the message, then scroll to the bottom
         now = datetime.datetime.now()
@@ -122,7 +134,14 @@ class TitleIconComponent(wpc.Component, tag_name='title-icon'):
 """
 
     async def _close__click(self, event):
-        self.element.dispatchEvent(js.CustomEvent.new('title-close', dict_to_js({'bubbles': True})))
+        self.element.dispatchEvent(
+            js.CustomEvent.new( # note that this is a js.CustomEvent. Do not use window.CustomEvent.
+                'title-close',
+                # note that the auto-binding event handler is title_icon_1__title_close, so the dash is automatically converted to an underscore
+                dict_to_js({'bubbles': True})
+
+            )
+        )
 
     def flash(self):
         # Add the flashing class
