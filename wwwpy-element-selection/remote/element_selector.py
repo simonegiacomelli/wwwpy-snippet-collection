@@ -108,13 +108,13 @@ class WindowMonitor:
 
 
 class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
-    overlay: js.HTMLDivElement = wpc.element()
 
     def init_component(self):
+        self.element.attachShadow(dict_to_js({'mode': 'open'}))
         # language=html
-        self.element.innerHTML = """
+        self.element.shadowRoot.innerHTML = """
         <style>
-            .no-transition {
+            :host {
               position: fixed;
               pointer-events: none;
               border: 2px solid #4a90e2;
@@ -122,36 +122,30 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
               z-index: 200000;
               display: none;
             } 
-            
-            .transition {
-              transition: all 0.2s ease; 
-            }
         </style>      
-        <div class="no-transition" data-name="overlay"></div>
         """
+
 
     @property
     def transition(self) -> bool:
-        return self.overlay.classList.contains('transition')
+        return self.element.style.transition != 'none'
 
     @transition.setter
     def transition(self, value: bool):
         if value:
-            self.overlay.classList.add('transition')
-            # self.overlay.classList.remove('no-transition')
+            self.element.style.transition = 'all 0.2s ease'
         else:
-            self.overlay.classList.remove('transition')
-            # self.overlay.classList.add('no-transition')
+            self.element.style.transition = 'none'
 
     def hide(self):
-        self.overlay.style.display = 'none'
+        self.element.style.display = 'none'
 
     def show(self, rect: js.DOMRect):
-        self.overlay.style.display = 'block'
-        self.overlay.style.top = f"{rect.top}px"
-        self.overlay.style.left = f"{rect.left}px"
-        self.overlay.style.width = f"{rect.width}px"
-        self.overlay.style.height = f"{rect.height}px"
+        self.element.style.display = 'block'
+        self.element.style.top = f"{rect.top}px"
+        self.element.style.left = f"{rect.left}px"
+        self.element.style.width = f"{rect.width}px"
+        self.element.style.height = f"{rect.height}px"
 
 
 # this class is an extraction  of the toolbar above (refactoring)
@@ -194,12 +188,44 @@ class ToolbarButton(wpc.Component, tag_name='toolbar-button'):
               background-color: rgba(255,255,255,0.2);
             }
         </style>
-        <button data-name="button1">←</button>
-        <button data-name="button2">↑</button>
         """
         self._toolbar_dimensions = None
         self.toolbar_element = self.element
-        self.element.addEventListener('click', create_proxy(self._handle_click))
+
+        button_data = [
+            {'label': 'Parent', 'icon': '←'},
+            {'label': 'Move up', 'icon': '↑'},
+            {'label': 'Move down', 'icon': '↓'},
+            {'label': 'Edit', 'icon': '✏️'},
+            {'label': 'Delete', 'icon': '🗑️'}
+        ]
+
+        for data in button_data:
+            button = js.document.createElement('button')
+            button.setAttribute('aria-label', data['label'])
+            button.setAttribute('title', data['label'])
+            button.textContent = data['icon']
+
+            # Create a proxy function to handle the click event
+            def create_button_click_handler(action_label):
+                def button_click_handler(e):
+                    e.stopPropagation()
+                    # Dispatch a custom event when a toolbar button is clicked
+                    self.element.dispatchEvent(
+                        js.CustomEvent.new('toolbar-action', dict_to_js({
+                            'bubbles': True,
+                            'composed': True,
+                            'detail': {
+                                'action': action_label,
+                            }
+                        }))
+                    )
+
+                return button_click_handler
+
+            # Add event listener with the proxy function
+            button.addEventListener('click', create_proxy(create_button_click_handler(data['label'])))
+            self.element.shadowRoot.appendChild(button)
 
     def _handle_click(self, event):
         event.stopPropagation()

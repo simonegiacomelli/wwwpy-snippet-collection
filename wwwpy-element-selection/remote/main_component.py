@@ -143,12 +143,15 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         detail = e.detail
         # js.window.alert(f"Action: {detail.action} on {detail.element.id}")
         parent = None
+        element = self.element_selector.get_selected_element()
+        if not element:
+            return
         if detail.action == 'Move up':
-            parent = next_element(detail.element, 'up')
+            parent = next_element(element, 'up')
         if detail.action == 'Move down':
-            parent = next_element(detail.element, 'down')
+            parent = next_element(element, 'down')
         if detail.action == 'Parent':
-            parent = parent_element(detail.element)
+            parent = parent_element(element)
 
         if parent:
             self._set_selection(parent)
