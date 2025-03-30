@@ -46,6 +46,13 @@
       background-color: #45a049;
     }
 
+    select, input {
+      padding: 8px;
+      margin: 5px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+    }
+
     .sidebar-content {
       padding: 15px;
     }
@@ -58,12 +65,12 @@
 
     .sidebar-menu li {
       padding: 10px 15px;
-      border-bottom: 1px solid rgba(0,0,0,0.1);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
       cursor: pointer;
     }
 
     .sidebar-menu li:hover {
-      background-color: rgba(0,0,0,0.05);
+      background-color: rgba(255,255,255,0.05);
     }
   </style>
 </head>
@@ -76,29 +83,43 @@
 
   <div class="controls">
     <h3>Control Panel</h3>
-    <button id="toggle-left">Toggle Left Sidebar</button>
-    <button id="toggle-right">Toggle Right Sidebar</button>
-    <button id="add-content">Add Content to Left Sidebar</button>
-    <button id="show-left">Show Left Sidebar</button>
-    <button id="hide-left">Hide Left Sidebar</button>
-    <button id="toggle-visibility-right">Toggle Right Sidebar Visibility</button>
+    <button id="toggle-sidebar">Toggle Sidebar</button>
+    <button id="add-content">Add Content</button>
+    <button id="show-sidebar">Show Sidebar</button>
+    <button id="hide-sidebar">Hide Sidebar</button>
+
+    <div style="margin-top: 15px;">
+      <label>
+        Position:
+        <select id="position-select">
+          <option value="left">Left</option>
+          <option value="right">Right</option>
+        </select>
+      </label>
+
+      <label style="margin-left: 15px;">
+        Width:
+        <input type="text" id="width-input" value="300px">
+        <button id="apply-width">Apply</button>
+      </label>
+    </div>
   </div>
 </div>
 
 <!-- Load the PushableSidebar library -->
 <script src="pushable-sidebar.js"></script>
 
-<!-- Create both sidebars programmatically -->
+<!-- Create the sidebar programmatically -->
 <script>
-  // Create left sidebar
-  const leftSidebar = document.createElement('pushable-sidebar');
-  leftSidebar.setAttribute('position', 'left');
-  leftSidebar.setAttribute('width', '300px');
-  leftSidebar.setAttribute('theme', 'dark');
-  leftSidebar.innerHTML = `
+  // Create sidebar
+  const sidebar = document.createElement('pushable-sidebar');
+  sidebar.setAttribute('position', 'left');
+  sidebar.setAttribute('width', '300px');
+  sidebar.setAttribute('theme', 'dark');
+  sidebar.innerHTML = `
       <div class="sidebar-content">
-        <h3>Left Sidebar</h3>
-        <p>This is a pushable sidebar that doesn't overlap content.</p>
+        <h3>Pushable Sidebar</h3>
+        <p>This is a sidebar that doesn't overlap content.</p>
         <ul class="sidebar-menu">
           <li>Dashboard</li>
           <li>Profile</li>
@@ -109,31 +130,12 @@
       </div>
     `;
 
-  // Create right sidebar
-  const rightSidebar = document.createElement('pushable-sidebar');
-  rightSidebar.setAttribute('position', 'right');
-  rightSidebar.setAttribute('width', '250px');
-  rightSidebar.setAttribute('theme', 'dark');
-  rightSidebar.setAttribute('collapsed', 'true');
-  rightSidebar.innerHTML = `
-      <div class="sidebar-content">
-        <h3>Right Sidebar</h3>
-        <p>This is configured on the right side with dark theme.</p>
-        <p>You can resize this sidebar by dragging its edge.</p>
-      </div>
-    `;
-
   // Add to document
-  document.body.appendChild(leftSidebar);
-  document.body.appendChild(rightSidebar);
+  document.body.appendChild(sidebar);
 
   // Control buttons
-  document.getElementById('toggle-left').addEventListener('click', () => {
-    leftSidebar.toggle();
-  });
-
-  document.getElementById('toggle-right').addEventListener('click', () => {
-    rightSidebar.toggle();
+  document.getElementById('toggle-sidebar').addEventListener('click', () => {
+    sidebar.toggle();
   });
 
   document.getElementById('add-content').addEventListener('click', () => {
@@ -144,20 +146,27 @@
     div.style.backgroundColor = 'rgba(255,255,255,0.1)';
     div.style.borderRadius = '4px';
 
-    leftSidebar.appendChild(div);
+    sidebar.appendChild(div);
   });
 
   // Hide/show functionality
-  document.getElementById('hide-left').addEventListener('click', () => {
-    leftSidebar.hide();
+  document.getElementById('hide-sidebar').addEventListener('click', () => {
+    sidebar.hide();
   });
 
-  document.getElementById('show-left').addEventListener('click', () => {
-    leftSidebar.show();
+  document.getElementById('show-sidebar').addEventListener('click', () => {
+    sidebar.show();
   });
 
-  document.getElementById('toggle-visibility-right').addEventListener('click', () => {
-    rightSidebar.toggleVisibility();
+  // Position changing
+  document.getElementById('position-select').addEventListener('change', (e) => {
+    sidebar.setPosition(e.target.value);
+  });
+
+  // Width changing
+  document.getElementById('apply-width').addEventListener('click', () => {
+    const width = document.getElementById('width-input').value;
+    sidebar.setWidth(width);
   });
 </script>
 </body>
