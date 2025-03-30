@@ -455,46 +455,8 @@ class PushableSidebar extends HTMLElement {
 // Register the custom element
 customElements.define('pushable-sidebar', PushableSidebar);
 
-// Helper function to create a sidebar programmatically
-function createPushableSidebar(options = {}) {
-    const sidebar = document.createElement('pushable-sidebar');
+// Register the custom element
+customElements.define('pushable-sidebar', PushableSidebar);
 
-    // Set options
-    if (options.position) sidebar.setAttribute('position', options.position);
-    if (options.width) sidebar.setAttribute('width', options.width);
-    if (options.minWidth) sidebar.setAttribute('min-width', options.minWidth);
-    if (options.maxWidth) sidebar.setAttribute('max-width', options.maxWidth);
-    if (options.collapsed) sidebar.setAttribute('collapsed', options.collapsed);
-    if (options.collapsedWidth) sidebar.setAttribute('collapsed-width', options.collapsedWidth);
-    if (options.zIndex) sidebar.setAttribute('z-index', options.zIndex);
-    if (options.theme) sidebar.setAttribute('theme', options.theme);
-
-    // Add content if provided
-    if (options.content) {
-        if (typeof options.content === 'string') {
-            sidebar.innerHTML = options.content;
-        } else if (options.content instanceof Node) {
-            sidebar.appendChild(options.content);
-        }
-    }
-
-    // Add to document if a target is specified
-    if (options.target) {
-        const target = typeof options.target === 'string'
-            ? document.querySelector(options.target)
-            : options.target;
-
-        if (target) {
-            target.appendChild(sidebar);
-        } else {
-            document.body.appendChild(sidebar);
-        }
-    }
-
-    return sidebar;
-}
-
-// Export the API
-window.PushableSidebar = {
-    create: createPushableSidebar
-};
+// Log registration success
+console.log('PushableSidebar custom element registered successfully');

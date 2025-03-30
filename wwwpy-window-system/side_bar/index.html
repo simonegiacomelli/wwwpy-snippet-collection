@@ -134,14 +134,13 @@
   <h3>Method 2: JavaScript Creation</h3>
   <div class="code-example">
       <pre><code>// Create sidebar with configuration
-const sidebar = PushableSidebar.create({
-  position: 'left',
-  width: '300px',
-  minWidth: '200px',
-  maxWidth: '500px',
-  theme: 'light',
-  content: '&lt;div&gt;Sidebar content&lt;/div&gt;'
-});
+const sidebar = document.createElement('pushable-sidebar');
+sidebar.setAttribute('position', 'left');
+sidebar.setAttribute('width', '300px');
+sidebar.setAttribute('min-width', '200px');
+sidebar.setAttribute('max-width', '500px');
+sidebar.setAttribute('theme', 'light');
+sidebar.innerHTML = '&lt;div&gt;Sidebar content&lt;/div&gt;';
 
 // Add to document
 document.body.appendChild(sidebar);
@@ -195,39 +194,37 @@ sidebar.setTheme('dark');
 <!-- Create both sidebars programmatically -->
 <script>
   // Create left sidebar
-  const leftSidebar = PushableSidebar.create({
-    position: 'left',
-    width: '300px',
-    theme: 'light',
-    content: `
-        <div class="sidebar-content">
-          <h3>Left Sidebar</h3>
-          <p>This is a pushable sidebar that doesn't overlap content.</p>
-          <ul class="sidebar-menu">
-            <li>Dashboard</li>
-            <li>Profile</li>
-            <li>Settings</li>
-            <li>Notifications</li>
-            <li>Help</li>
-          </ul>
-        </div>
-      `
-  });
+  const leftSidebar = document.createElement('pushable-sidebar');
+  leftSidebar.setAttribute('position', 'left');
+  leftSidebar.setAttribute('width', '300px');
+  leftSidebar.setAttribute('theme', 'light');
+  leftSidebar.innerHTML = `
+      <div class="sidebar-content">
+        <h3>Left Sidebar</h3>
+        <p>This is a pushable sidebar that doesn't overlap content.</p>
+        <ul class="sidebar-menu">
+          <li>Dashboard</li>
+          <li>Profile</li>
+          <li>Settings</li>
+          <li>Notifications</li>
+          <li>Help</li>
+        </ul>
+      </div>
+    `;
 
   // Create right sidebar
-  const rightSidebar = PushableSidebar.create({
-    position: 'right',
-    width: '250px',
-    theme: 'dark',
-    collapsed: 'true',
-    content: `
-        <div class="sidebar-content">
-          <h3>Right Sidebar</h3>
-          <p>This is configured on the right side with dark theme.</p>
-          <p>You can resize this sidebar by dragging its edge.</p>
-        </div>
-      `
-  });
+  const rightSidebar = document.createElement('pushable-sidebar');
+  rightSidebar.setAttribute('position', 'right');
+  rightSidebar.setAttribute('width', '250px');
+  rightSidebar.setAttribute('theme', 'dark');
+  rightSidebar.setAttribute('collapsed', 'true');
+  rightSidebar.innerHTML = `
+      <div class="sidebar-content">
+        <h3>Right Sidebar</h3>
+        <p>This is configured on the right side with dark theme.</p>
+        <p>You can resize this sidebar by dragging its edge.</p>
+      </div>
+    `;
 
   // Add to document
   document.body.appendChild(leftSidebar);
