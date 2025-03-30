@@ -156,7 +156,7 @@ class PushableSidebar extends HTMLElement {
         display: flex;
         justify-content: ${position === 'left' ? 'flex-end' : 'flex-start'};
         align-items: center;
-        padding: 10px;
+        padding: 5px;
         border-bottom: 1px solid #444;
       }
       
@@ -171,15 +171,15 @@ class PushableSidebar extends HTMLElement {
         border: none;
         cursor: pointer;
         color: #fff;
-        font-size: 16px;
-        padding: 8px 5px;
-        margin: 5px 0;
-        width: 30px;
-        height: 30px;
+        font-size: 14px;
+        padding: 3px;
+        margin: 2px 0;
+        width: 20px;
+        height: 20px;
         display: flex;
         align-items: center;
         justify-content: center;
-        border-radius: 4px;
+        border-radius: 2px;
       }
       
       .toggle-button:hover, .close-button:hover {
@@ -187,7 +187,7 @@ class PushableSidebar extends HTMLElement {
       }
       
       .close-button {
-        font-size: 18px;
+        font-size: 16px;
       }
       
       .sidebar-content {
