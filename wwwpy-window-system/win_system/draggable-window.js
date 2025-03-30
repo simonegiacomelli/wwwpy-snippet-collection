@@ -101,6 +101,7 @@ class DraggableWindow extends HTMLElement {
         overflow: hidden;
         transition: box-shadow 0.2s ease;
         z-index: 1;
+        touch-action: none;
       }
       
       :host(.active) {
@@ -364,6 +365,13 @@ class DraggableWindow extends HTMLElement {
             return;
         }
 
+        // Explicitly prevent default to stop any browser behaviors
+        e.preventDefault();
+
+        // Store pointer ID for tracking
+        this._pointerId = e.pointerId;
+
+        // Start dragging
         this._isDragging = true;
         this._startX = e.clientX;
         this._startY = e.clientY;
@@ -373,16 +381,23 @@ class DraggableWindow extends HTMLElement {
         // Capture pointer for smooth dragging
         this._headerElement.setPointerCapture(e.pointerId);
 
-        // Add event listeners for move and up
-        this._headerElement.addEventListener('pointermove', this._onDragPointerMove.bind(this), { once: false });
-        this._headerElement.addEventListener('pointerup', this._onDragPointerUp.bind(this), { once: true });
-        this._headerElement.addEventListener('pointercancel', this._onDragPointerUp.bind(this), { once: true });
+        // Define bound functions as instance properties so they can be properly removed later
+        if (!this._boundDragMove) {
+            this._boundDragMove = this._onDragPointerMove.bind(this);
+            this._boundDragUp = this._onDragPointerUp.bind(this);
+        }
 
-        e.preventDefault();
+        // Add event listeners for move and up
+        this._headerElement.addEventListener('pointermove', this._boundDragMove);
+        this._headerElement.addEventListener('pointerup', this._boundDragUp);
+        this._headerElement.addEventListener('pointercancel', this._boundDragUp);
     }
 
     _onDragPointerMove(e) {
-        if (!this._isDragging) return;
+        if (!this._isDragging || e.pointerId !== this._pointerId) return;
+
+        // Prevent default to ensure smooth dragging
+        e.preventDefault();
 
         const dx = e.clientX - this._startX;
         const dy = e.clientY - this._startY;
@@ -395,15 +410,21 @@ class DraggableWindow extends HTMLElement {
     }
 
     _onDragPointerUp(e) {
-        if (!this._isDragging) return;
+        if (!this._isDragging || e.pointerId !== this._pointerId) return;
 
         this._isDragging = false;
 
         // Release the pointer capture
-        this._headerElement.releasePointerCapture(e.pointerId);
+        try {
+            this._headerElement.releasePointerCapture(e.pointerId);
+        } catch(err) {
+            // Ignore errors if the capture was already released
+        }
 
         // Remove event listeners
-        this._headerElement.removeEventListener('pointermove', this._onDragPointerMove.bind(this));
+        this._headerElement.removeEventListener('pointermove', this._boundDragMove);
+        this._headerElement.removeEventListener('pointerup', this._boundDragUp);
+        this._headerElement.removeEventListener('pointercancel', this._boundDragUp);
     }
 
     _onResizePointerDown(e) {
@@ -411,6 +432,12 @@ class DraggableWindow extends HTMLElement {
 
         e.stopPropagation();
         this.bringToFront();
+
+        // Prevent default browser behaviors
+        e.preventDefault();
+
+        // Store pointer ID for tracking
+        this._resizePointerId = e.pointerId;
 
         this._isResizing = true;
         this._resizeHandle = e.target.dataset.position;
@@ -424,16 +451,23 @@ class DraggableWindow extends HTMLElement {
         // Capture pointer for smooth resizing
         e.target.setPointerCapture(e.pointerId);
 
-        // Add event listeners for move and up
-        e.target.addEventListener('pointermove', this._onResizePointerMove.bind(this), { once: false });
-        e.target.addEventListener('pointerup', this._onResizePointerUp.bind(this), { once: true });
-        e.target.addEventListener('pointercancel', this._onResizePointerUp.bind(this), { once: true });
+        // Define bound functions as instance properties
+        if (!this._boundResizeMove) {
+            this._boundResizeMove = this._onResizePointerMove.bind(this);
+            this._boundResizeUp = this._onResizePointerUp.bind(this);
+        }
 
-        e.preventDefault();
+        // Add event listeners for move and up
+        e.target.addEventListener('pointermove', this._boundResizeMove);
+        e.target.addEventListener('pointerup', this._boundResizeUp);
+        e.target.addEventListener('pointercancel', this._boundResizeUp);
     }
 
     _onResizePointerMove(e) {
-        if (!this._isResizing) return;
+        if (!this._isResizing || e.pointerId !== this._resizePointerId) return;
+
+        // Prevent default to ensure smooth resizing
+        e.preventDefault();
 
         const dx = e.clientX - this._startX;
         const dy = e.clientY - this._startY;
@@ -498,16 +532,22 @@ class DraggableWindow extends HTMLElement {
     }
 
     _onResizePointerUp(e) {
-        if (!this._isResizing) return;
+        if (!this._isResizing || e.pointerId !== this._resizePointerId) return;
 
         this._isResizing = false;
         this._resizeHandle = null;
 
         // Release the pointer capture
-        e.target.releasePointerCapture(e.pointerId);
+        try {
+            e.target.releasePointerCapture(e.pointerId);
+        } catch(err) {
+            // Ignore errors if the capture was already released
+        }
 
         // Remove event listeners
-        e.target.removeEventListener('pointermove', this._onResizePointerMove.bind(this));
+        e.target.removeEventListener('pointermove', this._boundResizeMove);
+        e.target.removeEventListener('pointerup', this._boundResizeUp);
+        e.target.removeEventListener('pointercancel', this._boundResizeUp);
     }
 
     // Public methods
