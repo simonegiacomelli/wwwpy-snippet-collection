@@ -31,6 +31,7 @@ class MainComponent(wpc.Component, tag_name='main-component'):
     _on_mouse_move: js.HTMLInputElement = wpc.element()
     ele1: js.HTMLDivElement = wpc.element()
     cont1: js.HTMLDivElement = wpc.element()
+    br1: js.HTMLBRElement = wpc.element()
 
     def init_component(self):
         f"""Initialize the component"""
@@ -45,10 +46,7 @@ class MainComponent(wpc.Component, tag_name='main-component'):
                 padding: 20px;
             }
             
-            h1 {
-                margin-bottom: 10px;
-            }
-            
+                  
             .content-area {
                 position: relative;
                 border: 1px dashed #ccc;
@@ -63,19 +61,7 @@ class MainComponent(wpc.Component, tag_name='main-component'):
                 border: 1px solid #ddd;
                 cursor: pointer;
             }
-            
-            .flex-container {
-                display: flex;
-                justify-content: space-between;
-            }
-            
-            .narrow {
-                width: 30%;
-            }
-            
-            .wider {
-                width: 60%;
-            }
+          
         </style>
         
         <h1>Selection Highlight Demo</h1>
@@ -84,17 +70,17 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         
         <inner-component></inner-component>
 
-        <br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
+        <br><br data-name="br1"><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br><br>
         
         <div class="content-area" data-name="cont1">
-            <div class="element" id="element1" data-name="ele1">Element 1</div>
-            <div class="element" id="element2">Element 2</div>
-            <div class="element" id="element3">
+            <div class="element" data-name="ele1">Element 1</div>
+            <div class="element">Element 2</div>
+            <div class="element">
                 Element 3 with some longer content to show how the highlight adapts to different sizes.
             </div>
-            <div class="flex-container">
-                <div class="element narrow" id="element4">Element 4 (narrow)</div>
-                <div class="element wider" id="element5">Element 5 (wider)</div>
+            <div style="display: flex; justify-content: space-between;">
+                <div class="element" style="width: 30%">Element 4 (narrow)</div>
+                <div class="element" style="width: 60%">Element 5 (wider)</div>
             </div>
         </div>
         
