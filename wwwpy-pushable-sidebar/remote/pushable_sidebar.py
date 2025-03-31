@@ -1,9 +1,11 @@
 from __future__ import annotations
 
+import time
+
 import wwwpy.remote.component as wpc
 import js
 from pyodide.ffi import create_proxy
-from wwwpy.remote import dict_to_js
+from wwwpy.remote import dict_to_js, hotkeylib
 
 import logging
 
@@ -93,8 +95,20 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         if self.state:
             self._state = self.state
 
-        # Initialize the component with HTML structure
-        # We'll update the styles separately with _update_style()
+        self._hotkeys = hotkeylib.Hotkey(js.window)
+        self._last_ctrl_time = None
+        self._hotkeys.add('CTRL-Control', self._double_ctrl_detector)
+
+    def _double_ctrl_detector(self, event):
+        if not self._last_ctrl_time:
+            self._last_ctrl_time = time.perf_counter()
+            return
+        _current_time = time.perf_counter()
+        delta = _current_time - self._last_ctrl_time
+        self._last_ctrl_time = _current_time
+        if delta < 0.3:
+            self._last_ctrl_time = None
+            self.toggle()
 
 
     def _update_style(self):
@@ -451,6 +465,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
     # Lifecycle callbacks from the web components spec
     def connectedCallback(self):
         """Called when the element is added to the DOM"""
+        self._hotkeys.install()
         # Update the sidebar when connected
         self._update_sidebar()
 
@@ -460,6 +475,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
 
     def disconnectedCallback(self):
         """Called when the element is removed from the DOM"""
+        self._hotkeys.uninstall()
         # Remove the padding from body when sidebar is removed
         self._remove_padding()
 
