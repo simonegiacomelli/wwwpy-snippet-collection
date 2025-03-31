@@ -11,7 +11,6 @@ logger = logging.getLogger(__name__)
 
 
 class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
-    # Define attributes that match the original component's observedAttributes
     position: str = wpc.attribute()
     width: str = wpc.attribute()
     min_width: str = wpc.attribute()
@@ -20,15 +19,18 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
     z_index: str = wpc.attribute()
     state: str = wpc.attribute()
 
-    # Element references with wwwpy's element() decorator
     _toggle_button: js.HTMLButtonElement = wpc.element()
     _close_button: js.HTMLButtonElement = wpc.element()
     _resize_handle: js.HTMLDivElement = wpc.element()
     _container: js.HTMLDivElement = wpc.element()
     _sidebar_content: js.HTMLDivElement = wpc.element()
+    _style: js.HTMLStyleElement = wpc.element()
 
     def init_component(self):
-        """Initialize the sidebar component"""
+        """
+
+        # Update the style
+        self._update_style()Initialize the sidebar component"""
         # Default configuration
         self._config = {
             'position': 'left',
@@ -63,20 +65,46 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         if self.state:
             self._state = self.state
 
-        # Get the position for proper toggle icon direction
-        position = self._config['position']
-        toggle_icon = '&#9658;' if (position == 'left' and self._state == 'collapsed') or \
-                                   (position == 'right' and self._state != 'collapsed') else '&#9668;'
-
-        animation_speed = 300  # Fixed animation speed
+        # Initialize the component with HTML structure
+        # We'll update the styles separately with _update_style()
 
         # Create shadow DOM with HTML template
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
 
         # language=html
         self.element.shadowRoot.innerHTML = f"""
-        <style>
-        :host {{
+        <style data-name="_style"></style>
+        
+        <div class="sidebar-container" data-name="_container">
+            <div class="sidebar-header">
+                <div class="sidebar-header-buttons">
+                    <button class="toggle-button" 
+                            data-name="_toggle_button" 
+                            title="Toggle sidebar">
+                    </button>
+                    <button class="close-button" 
+                            data-name="_close_button" 
+                            title="Hide sidebar">
+                        &times;
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-content" data-name="_sidebar_content">
+                <slot></slot>
+            </div>
+            <div class="resize-handle" data-name="_resize_handle"></div>
+        </div>
+        """
+
+    def _update_style(self):
+        """Update the style element based on current configuration"""
+        position = self._config['position']
+        animation_speed = 300  # Fixed animation speed
+
+        # Generate CSS content
+        # language=css
+        css = f"""
+         :host {{
             display: {'none' if self._state == 'hidden' else 'block'};
             position: fixed;
             top: 0;
@@ -171,29 +199,10 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         :host([state="collapsed"]) .sidebar-header {{
             border-bottom: none;
         }}
-        </style>
-        
-        <div class="sidebar-container" data-name="_container">
-            <div class="sidebar-header">
-                <div class="sidebar-header-buttons">
-                    <button class="toggle-button" 
-                            data-name="_toggle_button" 
-                            title="{('Expand sidebar' if self._state == 'collapsed' else 'Collapse sidebar')}">
-                        {toggle_icon}
-                    </button>
-                    <button class="close-button" 
-                            data-name="_close_button" 
-                            title="Hide sidebar">
-                        &times;
-                    </button>
-                </div>
-            </div>
-            <div class="sidebar-content" data-name="_sidebar_content">
-                <slot></slot>
-            </div>
-            <div class="resize-handle" data-name="_resize_handle"></div>
-        </div>
         """
+
+        # Update the style element
+        self._style.textContent = css
 
     def _update_sidebar(self):
         """Update sidebar appearance and behavior based on configuration"""
@@ -217,6 +226,9 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
                                    (position == 'right' and self._state != 'collapsed') else '&#9668;'
         self._toggle_button.innerHTML = toggle_icon
         self._toggle_button.title = 'Expand sidebar' if self._state == 'collapsed' else 'Collapse sidebar'
+
+        # Update style
+        self._update_style()
 
         # Update document body padding
         self._adjust_content_padding()
@@ -424,12 +436,6 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         self.element.setAttribute('position', position)
 
         # Re-initialize the component
-        # Clear the shadow DOM
-        while self.element.shadowRoot.firstChild:
-            self.element.shadowRoot.removeChild(self.element.shadowRoot.firstChild)
-
-        # Re-initialize the component
-        self.init_component()
         self._update_sidebar()
 
         return self
