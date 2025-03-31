@@ -25,6 +25,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
     _close_button: js.HTMLButtonElement = wpc.element()
     _resize_handle: js.HTMLDivElement = wpc.element()
     _container: js.HTMLDivElement = wpc.element()
+    _sidebar_content: js.HTMLDivElement = wpc.element()
 
     def init_component(self):
         """Initialize the sidebar component"""
@@ -46,9 +47,6 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         self._start_width = 0
         self._start_x = 0
 
-        # Create shadow DOM for style isolation
-        self.element.attachShadow(dict_to_js({'mode': 'open'}))
-
         # Apply attribute values if provided
         if self.position:
             self._config['position'] = self.position
@@ -65,18 +63,19 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         if self.state:
             self._state = self.state
 
-        # Render the component
-        self._render()
-
-    def _render(self):
-        """Create the HTML structure and CSS for the sidebar"""
+        # Get the position for proper toggle icon direction
         position = self._config['position']
+        toggle_icon = '&#9658;' if (position == 'left' and self._state == 'collapsed') or \
+                                   (position == 'right' and self._state != 'collapsed') else '&#9668;'
+
         animation_speed = 300  # Fixed animation speed
 
-        # Create style element
-        style = js.document.createElement('style')
-        # language=css
-        style.textContent = f"""
+        # Create shadow DOM with HTML template
+        self.element.attachShadow(dict_to_js({'mode': 'open'}))
+
+        # language=html
+        self.element.shadowRoot.innerHTML = f"""
+        <style>
         :host {{
             display: {'none' if self._state == 'hidden' else 'block'};
             position: fixed;
@@ -172,59 +171,29 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         :host([state="collapsed"]) .sidebar-header {{
             border-bottom: none;
         }}
+        </style>
+        
+        <div class="sidebar-container" data-name="_container">
+            <div class="sidebar-header">
+                <div class="sidebar-header-buttons">
+                    <button class="toggle-button" 
+                            data-name="_toggle_button" 
+                            title="{('Expand sidebar' if self._state == 'collapsed' else 'Collapse sidebar')}">
+                        {toggle_icon}
+                    </button>
+                    <button class="close-button" 
+                            data-name="_close_button" 
+                            title="Hide sidebar">
+                        &times;
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-content" data-name="_sidebar_content">
+                <slot></slot>
+            </div>
+            <div class="resize-handle" data-name="_resize_handle"></div>
+        </div>
         """
-
-        # Create container div
-        container = js.document.createElement('div')
-        container.className = 'sidebar-container'
-        container.setAttribute('data-name', '_container')
-
-        # Create header with toggle and close buttons
-        header = js.document.createElement('div')
-        header.className = 'sidebar-header'
-
-        button_container = js.document.createElement('div')
-        button_container.className = 'sidebar-header-buttons'
-
-        # Toggle button
-        toggle_button = js.document.createElement('button')
-        toggle_button.className = 'toggle-button'
-        toggle_button.title = 'Expand sidebar' if self._state == 'collapsed' else 'Collapse sidebar'
-        toggle_icon = '&#9658;' if (position == 'left' and self._state == 'collapsed') or \
-                                   (position == 'right' and self._state != 'collapsed') else '&#9668;'
-        toggle_button.innerHTML = toggle_icon
-        toggle_button.setAttribute('data-name', '_toggle_button')
-
-        # Close button
-        close_button = js.document.createElement('button')
-        close_button.className = 'close-button'
-        close_button.title = 'Hide sidebar'
-        close_button.innerHTML = '&times;'
-        close_button.setAttribute('data-name', '_close_button')
-
-        button_container.appendChild(toggle_button)
-        button_container.appendChild(close_button)
-        header.appendChild(button_container)
-
-        # Create content area for slotted content
-        content = js.document.createElement('div')
-        content.className = 'sidebar-content'
-        slot = js.document.createElement('slot')
-        content.appendChild(slot)
-
-        # Create resize handle
-        resize_handle = js.document.createElement('div')
-        resize_handle.className = 'resize-handle'
-        resize_handle.setAttribute('data-name', '_resize_handle')
-
-        # Assemble the sidebar
-        container.appendChild(header)
-        container.appendChild(content)
-        container.appendChild(resize_handle)
-
-        # Add elements to shadow DOM
-        self.element.shadowRoot.appendChild(style)
-        self.element.shadowRoot.appendChild(container)
 
     def _update_sidebar(self):
         """Update sidebar appearance and behavior based on configuration"""
@@ -243,12 +212,11 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         self.element.style.width = self._config['collapsedWidth'] if self._state == 'collapsed' else self._config['width']
 
         # Update toggle button icon and title
-        if hasattr(self, '_toggle_button') and self._toggle_button:
-            position = self._config['position']
-            toggle_icon = '&#9658;' if (position == 'left' and self._state == 'collapsed') or \
-                                       (position == 'right' and self._state != 'collapsed') else '&#9668;'
-            self._toggle_button.innerHTML = toggle_icon
-            self._toggle_button.title = 'Expand sidebar' if self._state == 'collapsed' else 'Collapse sidebar'
+        position = self._config['position']
+        toggle_icon = '&#9658;' if (position == 'left' and self._state == 'collapsed') or \
+                                   (position == 'right' and self._state != 'collapsed') else '&#9668;'
+        self._toggle_button.innerHTML = toggle_icon
+        self._toggle_button.title = 'Expand sidebar' if self._state == 'collapsed' else 'Collapse sidebar'
 
         # Update document body padding
         self._adjust_content_padding()
@@ -455,11 +423,13 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         self._config['position'] = position
         self.element.setAttribute('position', position)
 
-        # Re-render the sidebar
+        # Re-initialize the component
+        # Clear the shadow DOM
         while self.element.shadowRoot.firstChild:
             self.element.shadowRoot.removeChild(self.element.shadowRoot.firstChild)
 
-        self._render()
+        # Re-initialize the component
+        self.init_component()
         self._update_sidebar()
 
         return self
