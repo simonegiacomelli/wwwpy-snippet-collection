@@ -276,6 +276,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         # If sidebar is in collapsed state, expand it first but keep the current width
         if self._state == 'collapsed':
             current_width = self.element.style.width
+            self._config.update({'width': current_width})
             self.set_state('expanded')
             self.element.style.width = current_width  # Prevent jumping to stored width
 
