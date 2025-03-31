@@ -31,14 +31,42 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
 
         # Update the style
         self._update_style()Initialize the sidebar component"""
-        # Default configuration
+        # Create shadow DOM with HTML template
+        self.element.attachShadow(dict_to_js({'mode': 'open'}))
+
+        # language=html
+        self.element.shadowRoot.innerHTML = f"""
+        <style data-name="_style"></style>
+        
+        <div class="sidebar-container" data-name="_container">
+            <div class="sidebar-header">
+                <div class="sidebar-header-buttons">
+                    <button class="toggle-button" 
+                            data-name="_toggle_button" 
+                            title="Toggle sidebar">
+                    </button>
+                    <button class="close-button" 
+                            data-name="_close_button" 
+                            title="Hide sidebar">
+                        &times;
+                    </button>
+                </div>
+            </div>
+            <div class="sidebar-content" data-name="_sidebar_content">
+                <slot></slot>
+            </div>
+            <div class="resize-handle" data-name="_resize_handle"></div>
+        </div>
+        """
+
         self._config = {
             'position': 'left',
             'width': '300px',
             'minWidth': '50px',
             'maxWidth': '500px',
             'collapsedWidth': '30px',
-            'zIndex': 9999
+            'zIndex': 9999,
+            'enable_animation': True,
         }
 
         # Initial state
@@ -68,38 +96,11 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         # Initialize the component with HTML structure
         # We'll update the styles separately with _update_style()
 
-        # Create shadow DOM with HTML template
-        self.element.attachShadow(dict_to_js({'mode': 'open'}))
-
-        # language=html
-        self.element.shadowRoot.innerHTML = f"""
-        <style data-name="_style"></style>
-        
-        <div class="sidebar-container" data-name="_container">
-            <div class="sidebar-header">
-                <div class="sidebar-header-buttons">
-                    <button class="toggle-button" 
-                            data-name="_toggle_button" 
-                            title="Toggle sidebar">
-                    </button>
-                    <button class="close-button" 
-                            data-name="_close_button" 
-                            title="Hide sidebar">
-                        &times;
-                    </button>
-                </div>
-            </div>
-            <div class="sidebar-content" data-name="_sidebar_content">
-                <slot></slot>
-            </div>
-            <div class="resize-handle" data-name="_resize_handle"></div>
-        </div>
-        """
 
     def _update_style(self):
         """Update the style element based on current configuration"""
         position = self._config['position']
-        animation_speed = 300  # Fixed animation speed
+        animation_speed = 300 if self._config['enable_animation'] else 0
 
         # Generate CSS content
         # language=css
@@ -218,7 +219,8 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
             self.element.style.display = 'block'
 
         # Update the width based on state
-        self.element.style.width = self._config['collapsedWidth'] if self._state == 'collapsed' else self._config['width']
+        self.element.style.width = self._config['collapsedWidth'] if self._state == 'collapsed' else self._config[
+            'width']
 
         # Update toggle button icon and title
         position = self._config['position']
@@ -296,7 +298,10 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         js.document.body.style.userSelect = 'none'
 
         # Add a resize class to the body to optimize rendering
-        js.document.body.classList.add('sidebar-resizing')
+        # self._config['animation_speed'] = 0  # Disable animation during resize
+        # self._config['enable_animation'] = False
+        self._config.update({'enable_animation': False})
+        self._update_style()
 
         event.preventDefault()
 
@@ -346,7 +351,9 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         js.document.body.style.userSelect = ''
 
         # Remove resize class
-        js.document.body.classList.remove('sidebar-resizing')
+        # self._config['animation_speed'] = 300  # Restore animation speed
+        self._config.update({'enable_animation': True})
+        self._update_style()
 
         # Store the final width in the config
         width_val = self.element.style.width
