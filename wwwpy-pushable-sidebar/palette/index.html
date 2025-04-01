@@ -82,6 +82,7 @@
       background-color: var(--item-bg);
       font-size: 12px;
       color: var(--text-color);
+      touch-action: none; /* Prevents browser handling of touch events */
     }
 
     .palette-item:hover {
@@ -149,12 +150,27 @@
       font-size: 12px;
       color: #666;
     }
+
+    /* Dragging Element Preview */
+    .dragging-element {
+      position: absolute;
+      pointer-events: none;
+      opacity: 0.8;
+      z-index: 1000;
+      transform: translate(-50%, -50%);
+      background-color: var(--selected-bg);
+      border: 1px solid var(--selected-border);
+      padding: 5px 10px;
+      border-radius: 4px;
+      color: white;
+      font-size: 12px;
+    }
   </style>
 </head>
 <body>
 <div class="container">
   <div class="palette" id="palette">
-    <div class="palette-item" data-element="button" draggable="true">
+    <div class="palette-item" data-element="button">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>
         <line x1="12" y1="12" x2="12" y2="12"></line>
@@ -162,7 +178,7 @@
       Button
     </div>
 
-    <div class="palette-item" data-element="input" draggable="true">
+    <div class="palette-item" data-element="input">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>
         <line x1="6" y1="12" x2="18" y2="12" stroke-dasharray="2"></line>
@@ -170,7 +186,7 @@
       Input
     </div>
 
-    <div class="palette-item" data-element="textarea" draggable="true">
+    <div class="palette-item" data-element="textarea">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="5" width="18" height="14" rx="2" ry="2"></rect>
         <line x1="6" y1="9" x2="18" y2="9" stroke-dasharray="2"></line>
@@ -180,7 +196,7 @@
       Textarea
     </div>
 
-    <div class="palette-item" data-element="checkbox" draggable="true">
+    <div class="palette-item" data-element="checkbox">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="6" y="6" width="12" height="12" rx="2" ry="2"></rect>
         <path d="M9 12l2 2 4-4"></path>
@@ -188,7 +204,7 @@
       Checkbox
     </div>
 
-    <div class="palette-item" data-element="select" draggable="true">
+    <div class="palette-item" data-element="select">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="8" width="18" height="8" rx="2" ry="2"></rect>
         <polyline points="17,11 15,13 13,11"></polyline>
@@ -197,7 +213,7 @@
       Select
     </div>
 
-    <div class="palette-item" data-element="progress" draggable="true">
+    <div class="palette-item" data-element="progress">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="10" width="18" height="4" rx="2" ry="2"></rect>
         <rect x="3" y="10" width="10" height="4" rx="0" ry="0" fill="currentColor"></rect>
@@ -205,7 +221,7 @@
       Progress
     </div>
 
-    <div class="palette-item" data-element="span" draggable="true">
+    <div class="palette-item" data-element="span">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M4 7h16"></path>
         <path d="M4 12h10"></path>
@@ -214,7 +230,7 @@
       Span
     </div>
 
-    <div class="palette-item" data-element="image" draggable="true">
+    <div class="palette-item" data-element="image">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
         <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -239,6 +255,10 @@
     const workspace = document.getElementById('workspace');
     const log = document.getElementById('log');
     let selectedElement = null;
+    let draggingItem = null;
+    let isDragging = false;
+    let offsetX, offsetY;
+    let dragPreview = null;
 
     // Function to add log entry
     function addLogEntry(message) {
@@ -259,7 +279,17 @@
       return preview;
     }
 
-    // Handle palette item selection
+    // Function to create a dragging preview element
+    function createDragPreview(type) {
+      const preview = document.createElement('div');
+      preview.className = 'dragging-element';
+      preview.textContent = type;
+      preview.style.display = 'none';
+      document.body.appendChild(preview);
+      return preview;
+    }
+
+    // Handle palette item selection (click/tap)
     palette.addEventListener('click', function(e) {
       const item = e.target.closest('.palette-item');
       if (!item) return;
@@ -284,7 +314,7 @@
 
     // Handle workspace click for placement
     workspace.addEventListener('click', function(e) {
-      if (selectedElement) {
+      if (selectedElement && !isDragging) {
         const rect = workspace.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
@@ -302,51 +332,106 @@
       }
     });
 
-    // Drag and drop functionality
-    let draggingElement = null;
-
-    // Drag start event
-    palette.addEventListener('dragstart', function(e) {
+    // Pointer down event on palette items
+    palette.addEventListener('pointerdown', function(e) {
       const item = e.target.closest('.palette-item');
       if (!item) return;
 
-      // Deselect any selected element when dragging starts
-      if (selectedElement) {
-        selectedElement.classList.remove('selected');
-        selectedElement = null;
+      // Capture the pointer to receive all pointer events
+      e.target.setPointerCapture(e.pointerId);
+
+      // Record which item is being dragged
+      draggingItem = item;
+      const elementType = item.getAttribute('data-element');
+
+      // Calculate offset for drag preview positioning
+      const rect = item.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+
+      // Create drag preview element
+      dragPreview = createDragPreview(elementType);
+
+      // Prevent default behavior
+      e.preventDefault();
+    });
+
+    // Pointer move event
+    document.addEventListener('pointermove', function(e) {
+      if (draggingItem && dragPreview) {
+        // Start dragging after a small threshold to differentiate from clicks
+        if (!isDragging && (Math.abs(e.clientX - (offsetX + draggingItem.getBoundingClientRect().left)) > 5 ||
+                Math.abs(e.clientY - (offsetY + draggingItem.getBoundingClientRect().top)) > 5)) {
+          isDragging = true;
+
+          // Deselect any selected element when dragging starts
+          if (selectedElement) {
+            selectedElement.classList.remove('selected');
+            selectedElement = null;
+          }
+
+          // Show the drag preview
+          dragPreview.style.display = 'block';
+        }
+
+        if (isDragging) {
+          // Update drag preview position
+          dragPreview.style.left = `${e.clientX}px`;
+          dragPreview.style.top = `${e.clientY}px`;
+        }
+
+        // Prevent default behavior for smooth dragging
+        e.preventDefault();
+      }
+    });
+
+    // Pointer up event
+    document.addEventListener('pointerup', function(e) {
+      if (draggingItem && isDragging) {
+        // Check if released over workspace
+        const workspaceRect = workspace.getBoundingClientRect();
+        if (e.clientX >= workspaceRect.left && e.clientX <= workspaceRect.right &&
+                e.clientY >= workspaceRect.top && e.clientY <= workspaceRect.bottom) {
+
+          const elementType = draggingItem.getAttribute('data-element');
+          const x = e.clientX - workspaceRect.left;
+          const y = e.clientY - workspaceRect.top;
+
+          addLogEntry(`Dropped ${elementType} at X: ${Math.round(x)}, Y: ${Math.round(y)}`);
+
+          // Create a preview element at the drop location
+          const preview = createElementPreview(elementType, x, y);
+          workspace.appendChild(preview);
+        }
+
+        // Clean up
+        if (dragPreview) {
+          dragPreview.remove();
+          dragPreview = null;
+        }
       }
 
-      draggingElement = item;
-      e.dataTransfer.setData('text/plain', item.getAttribute('data-element'));
-      e.dataTransfer.effectAllowed = 'copy';
-
-      // Set custom drag image (optional)
-      // Here we're just using the default behavior
+      isDragging = false;
+      draggingItem = null;
     });
 
-    // Drag over event (needed to allow dropping)
-    workspace.addEventListener('dragover', function(e) {
-      e.preventDefault();
-      e.dataTransfer.dropEffect = 'copy';
+    // Handle pointer cancel event
+    document.addEventListener('pointercancel', function(e) {
+      isDragging = false;
+      draggingItem = null;
+
+      if (dragPreview) {
+        dragPreview.remove();
+        dragPreview = null;
+      }
     });
 
-    // Drop event
-    workspace.addEventListener('drop', function(e) {
-      e.preventDefault();
-
-      if (draggingElement) {
-        const elementType = e.dataTransfer.getData('text/plain');
-        const rect = workspace.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
-
-        addLogEntry(`Dropped ${elementType} at X: ${Math.round(x)}, Y: ${Math.round(y)}`);
-
-        // Create a preview element at the drop location
-        const preview = createElementPreview(elementType, x, y);
-        workspace.appendChild(preview);
-
-        draggingElement = null;
+    // Handle pointer leave on elements that captured the pointer
+    palette.addEventListener('pointerleave', function(e) {
+      // This is needed in some browsers to ensure continuous pointer tracking
+      // when the pointer leaves the original element
+      if (draggingItem && isDragging) {
+        e.preventDefault();
       }
     });
 
