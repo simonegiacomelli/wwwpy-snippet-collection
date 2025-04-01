@@ -335,7 +335,7 @@
             this.dragThreshold = 5; // Pixels to move before starting drag
         }
 
-        startDrag(item, pointerId, clientX, clientY) {
+        startDrag(item, clientX, clientY) {
             // Record which item is being dragged
             this.draggingItem = item;
             const elementType = item.getAttribute('data-element');
@@ -347,9 +347,6 @@
 
             // Create drag preview element
             this.dragPreview = this.createDragPreview(elementType);
-
-            // Capture the pointer to receive all pointer events
-            item.setPointerCapture(pointerId);
         }
 
         moveDrag(clientX, clientY) {
@@ -442,17 +439,12 @@
         }
 
         placeElement(type, x, y) {
-            const preview = this.createElementPreview(type, x, y);
-            this.workspace.appendChild(preview);
-        }
-
-        createElementPreview(type, x, y) {
             const preview = document.createElement('div');
             preview.className = 'element-preview';
             preview.textContent = type;
             preview.style.left = `${x}px`;
             preview.style.top = `${y}px`;
-            return preview;
+            this.workspace.appendChild(preview);
         }
     }
 
@@ -487,7 +479,9 @@
                 if (!item) return;
                 this.logger.addEntry('Pointer down on palette item');
                 this.selectionManager.select(item);
-                this.dragManager.startDrag(item, e.pointerId, e.clientX, e.clientY);
+                this.dragManager.startDrag(item, e.clientX, e.clientY);
+                // Capture the pointer to receive all pointer events
+                item.setPointerCapture(e.pointerId);
                 e.preventDefault();
             });
 
