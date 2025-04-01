@@ -6,12 +6,18 @@
   <title>UI Element Builder</title>
   <style>
     :root {
-      --primary-color: #3498db;
-      --secondary-color: #2980b9;
-      --border-color: #e0e0e0;
-      --shadow-color: rgba(0, 0, 0, 0.1);
-      --workspace-bg: #f9f9f9;
-      --palette-bg: #ffffff;
+      --primary-color: #6366f1;
+      --primary-hover: #818cf8;
+      --secondary-color: #4f46e5;
+      --border-color: #4b5563;
+      --shadow-color: rgba(0, 0, 0, 0.3);
+      --workspace-bg: #1e1e2e;
+      --palette-bg: #27293d;
+      --text-color: #e2e8f0;
+      --item-bg: #2d3748;
+      --item-hover-bg: #3a4358;
+      --selected-bg: #4c1d95;
+      --selected-border: #8b5cf6;
     }
 
     body {
@@ -21,7 +27,8 @@
       display: flex;
       flex-direction: column;
       height: 100vh;
-      background-color: #f5f5f5;
+      background-color: #111827;
+      color: var(--text-color);
     }
 
     .header {
@@ -48,6 +55,9 @@
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 10px;
+      align-content: start;
+      height: fit-content;
+      max-height: 100%;
     }
 
     .workspace {
@@ -65,24 +75,38 @@
       justify-content: center;
       padding: 0.75rem 0.5rem;
       border: 1px solid var(--border-color);
-      border-radius: 5px;
+      border-radius: 8px;
       cursor: pointer;
       transition: all 0.2s ease;
       user-select: none;
-      background-color: white;
+      background-color: var(--item-bg);
       font-size: 12px;
+      color: var(--text-color);
     }
 
     .palette-item:hover {
       transform: translateY(-2px);
       box-shadow: 0 3px 5px var(--shadow-color);
+      background-color: var(--item-hover-bg);
     }
 
     .palette-item.selected {
-      background-color: var(--primary-color);
-      color: white;
-      border-color: var(--secondary-color);
-      box-shadow: 0 0 0 2px var(--secondary-color);
+      background-color: var(--selected-bg);
+      border: 1px solid var(--selected-border);
+      box-shadow: 0 0 0 2px var(--selected-border), 0 0 12px rgba(139, 92, 246, 0.5);
+      position: relative;
+      transform: scale(1.05);
+    }
+
+    .palette-item.selected::after {
+      content: "";
+      position: absolute;
+      top: -5px;
+      right: -5px;
+      width: 10px;
+      height: 10px;
+      background-color: var(--selected-border);
+      border-radius: 50%;
     }
 
     .palette-item svg {
@@ -102,7 +126,7 @@
 
     .log-entry {
       margin-bottom: 5px;
-      border-bottom: 1px solid #34495e;
+      border-bottom: 1px solid #1e293b;
       padding-bottom: 5px;
     }
 
@@ -285,6 +309,12 @@
     palette.addEventListener('dragstart', function(e) {
       const item = e.target.closest('.palette-item');
       if (!item) return;
+
+      // Deselect any selected element when dragging starts
+      if (selectedElement) {
+        selectedElement.classList.remove('selected');
+        selectedElement = null;
+      }
 
       draggingElement = item;
       e.dataTransfer.setData('text/plain', item.getAttribute('data-element'));
