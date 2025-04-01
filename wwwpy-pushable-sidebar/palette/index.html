@@ -82,7 +82,7 @@
       background-color: var(--item-bg);
       font-size: 12px;
       color: var(--text-color);
-      touch-action: none; /* Prevents browser handling of touch events */
+      touch-action: none;
     }
 
     .palette-item:hover {
@@ -251,192 +251,291 @@
 
 <script>
   document.addEventListener('DOMContentLoaded', function() {
-    const palette = document.getElementById('palette');
-    const workspace = document.getElementById('workspace');
-    const log = document.getElementById('log');
-    let selectedElement = null;
-    let draggingItem = null;
-    let isDragging = false;
-    let offsetX, offsetY;
-    let dragPreview = null;
+    /**
+     * Logger class to handle logging functionality
+     */
+    class Logger {
+      constructor(logElement) {
+        this.logElement = logElement;
+      }
 
-    // Function to add log entry
-    function addLogEntry(message) {
-      const entry = document.createElement('div');
-      entry.className = 'log-entry';
-      entry.textContent = message;
-      log.appendChild(entry);
-      log.scrollTop = log.scrollHeight;
+      addEntry(message) {
+        const entry = document.createElement('div');
+        entry.className = 'log-entry';
+        entry.textContent = message;
+        this.logElement.appendChild(entry);
+        this.logElement.scrollTop = this.logElement.scrollHeight;
+      }
     }
 
-    // Function to create a preview element
-    function createElementPreview(type, x, y) {
-      const preview = document.createElement('div');
-      preview.className = 'element-preview';
-      preview.textContent = type;
-      preview.style.left = `${x}px`;
-      preview.style.top = `${y}px`;
-      return preview;
-    }
+    /**
+     * SelectionManager class to handle element selection
+     */
+    class SelectionManager {
+      constructor(logger) {
+        this.selectedElement = null;
+        this.logger = logger;
+      }
 
-    // Function to create a dragging preview element
-    function createDragPreview(type) {
-      const preview = document.createElement('div');
-      preview.className = 'dragging-element';
-      preview.textContent = type;
-      preview.style.display = 'none';
-      document.body.appendChild(preview);
-      return preview;
-    }
+      select(element) {
+        // Deselect current element if there is one
+        this.deselect();
 
-    // Handle palette item selection (click/tap)
-    palette.addEventListener('click', function(e) {
-      const item = e.target.closest('.palette-item');
-      if (!item) return;
+        // Select the new element
+        element.classList.add('selected');
+        this.selectedElement = element;
+        this.logger.addEntry(`Selected ${element.getAttribute('data-element')} element`);
+      }
 
-      // Toggle selection
-      if (selectedElement === item) {
-        item.classList.remove('selected');
-        selectedElement = null;
-        addLogEntry('Element deselected');
-      } else {
-        // Deselect any previously selected item
-        if (selectedElement) {
-          selectedElement.classList.remove('selected');
+      deselect() {
+        if (this.selectedElement) {
+          this.selectedElement.classList.remove('selected');
+          this.logger.addEntry('Element deselected');
+          this.selectedElement = null;
         }
+      }
 
-        item.classList.add('selected');
-        selectedElement = item;
+      toggle(element) {
+        if (this.selectedElement === element) {
+          this.deselect();
+        } else {
+          this.select(element);
+        }
+      }
+
+      getSelectedType() {
+        return this.selectedElement ? this.selectedElement.getAttribute('data-element') : null;
+      }
+
+      hasSelection() {
+        return !!this.selectedElement;
+      }
+    }
+
+    /**
+     * DragManager class to handle dragging functionality
+     */
+    class DragManager {
+      constructor(logger) {
+        this.logger = logger;
+        this.isDragging = false;
+        this.draggingItem = null;
+        this.dragPreview = null;
+        this.offsetX = 0;
+        this.offsetY = 0;
+        this.dragThreshold = 5; // Pixels to move before starting drag
+      }
+
+      startDrag(item, pointerId, clientX, clientY) {
+        // Record which item is being dragged
+        this.draggingItem = item;
         const elementType = item.getAttribute('data-element');
-        addLogEntry(`Selected ${elementType} element`);
+
+        // Calculate offset for drag preview positioning
+        const rect = item.getBoundingClientRect();
+        this.offsetX = clientX - rect.left;
+        this.offsetY = clientY - rect.top;
+
+        // Create drag preview element
+        this.dragPreview = this.createDragPreview(elementType);
+
+        // Capture the pointer to receive all pointer events
+        item.setPointerCapture(pointerId);
       }
-    });
 
-    // Handle workspace click for placement
-    workspace.addEventListener('click', function(e) {
-      if (selectedElement && !isDragging) {
-        const rect = workspace.getBoundingClientRect();
-        const x = e.clientX - rect.left;
-        const y = e.clientY - rect.top;
+      moveDrag(clientX, clientY) {
+        if (!this.draggingItem || !this.dragPreview) return false;
 
-        const elementType = selectedElement.getAttribute('data-element');
-        addLogEntry(`Placed ${elementType} at X: ${Math.round(x)}, Y: ${Math.round(y)}`);
+        // Start dragging after passing the threshold
+        if (!this.isDragging) {
+          const rect = this.draggingItem.getBoundingClientRect();
+          const startX = rect.left + this.offsetX;
+          const startY = rect.top + this.offsetY;
 
-        // Create a preview element at the clicked location
-        const preview = createElementPreview(elementType, x, y);
-        workspace.appendChild(preview);
-
-        // Deselect the element
-        selectedElement.classList.remove('selected');
-        selectedElement = null;
-      }
-    });
-
-    // Pointer down event on palette items
-    palette.addEventListener('pointerdown', function(e) {
-      const item = e.target.closest('.palette-item');
-      if (!item) return;
-
-      // Capture the pointer to receive all pointer events
-      e.target.setPointerCapture(e.pointerId);
-
-      // Record which item is being dragged
-      draggingItem = item;
-      const elementType = item.getAttribute('data-element');
-
-      // Calculate offset for drag preview positioning
-      const rect = item.getBoundingClientRect();
-      offsetX = e.clientX - rect.left;
-      offsetY = e.clientY - rect.top;
-
-      // Create drag preview element
-      dragPreview = createDragPreview(elementType);
-
-      // Prevent default behavior
-      e.preventDefault();
-    });
-
-    // Pointer move event
-    document.addEventListener('pointermove', function(e) {
-      if (draggingItem && dragPreview) {
-        // Start dragging after a small threshold to differentiate from clicks
-        if (!isDragging && (Math.abs(e.clientX - (offsetX + draggingItem.getBoundingClientRect().left)) > 5 ||
-                Math.abs(e.clientY - (offsetY + draggingItem.getBoundingClientRect().top)) > 5)) {
-          isDragging = true;
-
-          // Deselect any selected element when dragging starts
-          if (selectedElement) {
-            selectedElement.classList.remove('selected');
-            selectedElement = null;
+          if (Math.abs(clientX - startX) > this.dragThreshold ||
+                  Math.abs(clientY - startY) > this.dragThreshold) {
+            this.isDragging = true;
+            // Show the drag preview
+            this.dragPreview.style.display = 'block';
+          } else {
+            return false; // Below threshold, not dragging yet
           }
-
-          // Show the drag preview
-          dragPreview.style.display = 'block';
         }
 
-        if (isDragging) {
-          // Update drag preview position
-          dragPreview.style.left = `${e.clientX}px`;
-          dragPreview.style.top = `${e.clientY}px`;
-        }
+        // Update drag preview position
+        this.dragPreview.style.left = `${clientX}px`;
+        this.dragPreview.style.top = `${clientY}px`;
 
-        // Prevent default behavior for smooth dragging
-        e.preventDefault();
+        return true; // Dragging is active
       }
-    });
 
-    // Pointer up event
-    document.addEventListener('pointerup', function(e) {
-      if (draggingItem && isDragging) {
-        // Check if released over workspace
-        const workspaceRect = workspace.getBoundingClientRect();
-        if (e.clientX >= workspaceRect.left && e.clientX <= workspaceRect.right &&
-                e.clientY >= workspaceRect.top && e.clientY <= workspaceRect.bottom) {
+      endDrag(clientX, clientY, workspace) {
+        if (!this.draggingItem) return null;
 
-          const elementType = draggingItem.getAttribute('data-element');
-          const x = e.clientX - workspaceRect.left;
-          const y = e.clientY - workspaceRect.top;
+        let result = null;
+        if (this.isDragging) {
+          // Check if released over workspace
+          const workspaceRect = workspace.getBoundingClientRect();
+          if (clientX >= workspaceRect.left && clientX <= workspaceRect.right &&
+                  clientY >= workspaceRect.top && clientY <= workspaceRect.bottom) {
 
-          addLogEntry(`Dropped ${elementType} at X: ${Math.round(x)}, Y: ${Math.round(y)}`);
+            const elementType = this.draggingItem.getAttribute('data-element');
+            const x = clientX - workspaceRect.left;
+            const y = clientY - workspaceRect.top;
 
-          // Create a preview element at the drop location
-          const preview = createElementPreview(elementType, x, y);
-          workspace.appendChild(preview);
+            this.logger.addEntry(`Dropped ${elementType} at X: ${Math.round(x)}, Y: ${Math.round(y)}`);
+
+            // Return drop information
+            result = { type: elementType, x, y };
+          }
         }
 
         // Clean up
-        if (dragPreview) {
-          dragPreview.remove();
-          dragPreview = null;
+        this.cleanup();
+        return result;
+      }
+
+      cancelDrag() {
+        this.cleanup();
+      }
+
+      cleanup() {
+        this.isDragging = false;
+        this.draggingItem = null;
+
+        if (this.dragPreview) {
+          this.dragPreview.remove();
+          this.dragPreview = null;
         }
       }
 
-      isDragging = false;
-      draggingItem = null;
-    });
-
-    // Handle pointer cancel event
-    document.addEventListener('pointercancel', function(e) {
-      isDragging = false;
-      draggingItem = null;
-
-      if (dragPreview) {
-        dragPreview.remove();
-        dragPreview = null;
+      createDragPreview(type) {
+        const preview = document.createElement('div');
+        preview.className = 'dragging-element';
+        preview.textContent = type;
+        preview.style.display = 'none';
+        document.body.appendChild(preview);
+        return preview;
       }
-    });
 
-    // Handle pointer leave on elements that captured the pointer
-    palette.addEventListener('pointerleave', function(e) {
-      // This is needed in some browsers to ensure continuous pointer tracking
-      // when the pointer leaves the original element
-      if (draggingItem && isDragging) {
-        e.preventDefault();
+      isDraggingActive() {
+        return this.isDragging;
       }
-    });
+    }
 
-    // Log initial message
-    addLogEntry('UI Element Builder initialized. Start by selecting or dragging elements.');
+    /**
+     * WorkspaceManager class to handle workspace functionality
+     */
+    class WorkspaceManager {
+      constructor(workspaceElement, logger) {
+        this.workspace = workspaceElement;
+        this.logger = logger;
+      }
+
+      placeElement(type, x, y) {
+        const preview = this.createElementPreview(type, x, y);
+        this.workspace.appendChild(preview);
+        this.logger.addEntry(`Placed ${type} at X: ${Math.round(x)}, Y: ${Math.round(y)}`);
+      }
+
+      createElementPreview(type, x, y) {
+        const preview = document.createElement('div');
+        preview.className = 'element-preview';
+        preview.textContent = type;
+        preview.style.left = `${x}px`;
+        preview.style.top = `${y}px`;
+        return preview;
+      }
+    }
+
+    /**
+     * UIBuilder class to manage the overall application
+     */
+    class UIBuilder {
+      constructor() {
+        this.palette = document.getElementById('palette');
+        this.workspace = document.getElementById('workspace');
+        this.logPanel = document.getElementById('log');
+
+        this.logger = new Logger(this.logPanel);
+        this.selectionManager = new SelectionManager(this.logger);
+        this.dragManager = new DragManager(this.logger);
+        this.workspaceManager = new WorkspaceManager(this.workspace, this.logger);
+
+        this.initEventListeners();
+        this.logger.addEntry('UI Element Builder initialized. Start by selecting or dragging elements.');
+      }
+
+      initEventListeners() {
+        // Palette click event - handle selection
+        this.palette.addEventListener('click', (e) => {
+          const item = e.target.closest('.palette-item');
+          if (!item) return;
+
+          this.selectionManager.toggle(item);
+        });
+
+        // Workspace click event - place selected element
+        this.workspace.addEventListener('click', (e) => {
+          if (this.selectionManager.hasSelection() && !this.dragManager.isDraggingActive()) {
+            const rect = this.workspace.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const y = e.clientY - rect.top;
+
+            this.workspaceManager.placeElement(
+                    this.selectionManager.getSelectedType(),
+                    x,
+                    y
+            );
+
+            this.selectionManager.deselect();
+          }
+        });
+
+        // Pointer down event on palette items - initiate drag
+        this.palette.addEventListener('pointerdown', (e) => {
+          const item = e.target.closest('.palette-item');
+          if (!item) return;
+
+          this.dragManager.startDrag(item, e.pointerId, e.clientX, e.clientY);
+          e.preventDefault();
+        });
+
+        // Pointer move event - handle drag movement
+        document.addEventListener('pointermove', (e) => {
+          if (this.dragManager.moveDrag(e.clientX, e.clientY)) {
+            // If actively dragging, deselect any selection
+            if (this.selectionManager.hasSelection()) {
+              this.selectionManager.deselect();
+            }
+            e.preventDefault();
+          }
+        });
+
+        // Pointer up event - handle element placement
+        document.addEventListener('pointerup', (e) => {
+          const dropResult = this.dragManager.endDrag(e.clientX, e.clientY, this.workspace);
+          if (dropResult) {
+            this.workspaceManager.placeElement(dropResult.type, dropResult.x, dropResult.y);
+          }
+        });
+
+        // Handle pointer cancel event
+        document.addEventListener('pointercancel', () => {
+          this.dragManager.cancelDrag();
+        });
+
+        // Handle pointer leave
+        this.palette.addEventListener('pointerleave', (e) => {
+          if (this.dragManager.isDraggingActive()) {
+            e.preventDefault();
+          }
+        });
+      }
+    }
+
+    // Initialize the UI Builder
+    new UIBuilder();
   });
 </script>
 </body>
