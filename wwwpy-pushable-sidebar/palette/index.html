@@ -470,12 +470,6 @@
             this.dragManager = new DragManager(this.logger);
             this.workspaceManager = new WorkspaceManager(this.workspace, this.logger);
 
-            this.initEventListeners();
-            this.logger.addEntry('UI Element Builder initialized. Start by selecting or dragging elements.');
-        }
-
-        initEventListeners() {
-
             this.workspace.addEventListener('click', (e) => {
                 if (this.selectionManager.hasSelection() && !this.dragManager.isDraggingActive()) {
                     this.logger.addEntry('Workspace clicked');
@@ -498,9 +492,7 @@
             });
 
             document.addEventListener('pointermove', (e) => {
-                if (this.dragManager.moveDrag(e.clientX, e.clientY)) {
-                    e.preventDefault();
-                }
+                if (this.dragManager.moveDrag(e.clientX, e.clientY)) e.preventDefault();
             });
 
             document.addEventListener('pointerup', (e) => {
@@ -512,16 +504,14 @@
                 }
             });
 
-            // Handle pointer cancel event
-            document.addEventListener('pointercancel', () => {
-                this.dragManager.cancelDrag();
-            });
+            document.addEventListener('pointercancel', () => this.dragManager.cancelDrag());
 
             this.palette.addEventListener('pointerleave', (e) => {
-                if (this.dragManager.isDraggingActive()) {
-                    e.preventDefault();
-                }
+                if (this.dragManager.isDraggingActive()) e.preventDefault();
             });
+
+            this.logger.addEntry('UI Element Builder initialized. Start by selecting or dragging elements.');
+
         }
     }
 
