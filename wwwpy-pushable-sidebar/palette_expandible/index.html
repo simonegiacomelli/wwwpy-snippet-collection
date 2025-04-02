@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Component Library</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: Arial, sans-serif;
+    }
+
+    body {
+      background-color: #1a1a1a;
+      color: #ffffff;
+    }
+
+    .search-container {
+      padding: 15px;
+      border-bottom: 1px solid #333;
+    }
+
+    .search-input {
+      width: 100%;
+      padding: 10px 15px;
+      background-color: #222;
+      border: 1px solid #444;
+      border-radius: 5px;
+      color: #ccc;
+      font-size: 16px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      padding: 15px;
+      cursor: pointer;
+      border-bottom: 1px solid #333;
+    }
+
+    .section-header:hover {
+      background-color: #252525;
+    }
+
+    .section-title {
+      margin-left: 10px;
+      font-size: 18px;
+      color: #fff;
+    }
+
+    .chevron {
+      transition: transform 0.3s;
+      width: 20px;
+      height: 20px;
+    }
+
+    .chevron.collapsed {
+      transform: rotate(-90deg);
+    }
+
+    .section-content {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      padding: 15px;
+      border-bottom: 1px solid #333;
+      gap: 20px;
+    }
+
+    .section-content.collapsed {
+      display: none;
+    }
+
+    .component {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      gap: 10px;
+    }
+
+    .component-icon {
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .component-name {
+      font-size: 14px;
+      color: #ccc;
+    }
+
+    .section-description {
+      padding: 10px 15px;
+      color: #666;
+      font-size: 14px;
+      border-bottom: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+<div class="search-container">
+  <input type="text" class="search-input" placeholder="Search Components">
+</div>
+
+<!-- Theme Components -->
+<div class="section">
+  <div class="section-header" data-target="theme-components">
+    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+    <span class="section-title">Theme Components</span>
+  </div>
+  <div class="section-content" id="theme-components">
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="16" height="16" rx="2"></rect>
+          <rect x="7" y="9" width="4" height="4"></rect>
+          <rect x="7" y="15" width="10" height="2"></rect>
+        </svg>
+      </div>
+      <span class="component-name">Outlined Card</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="6" width="16" height="12" rx="2"></rect>
+          <path d="M16 12 L18 14"></path>
+          <circle cx="16" cy="12" r="3"></circle>
+        </svg>
+      </div>
+      <span class="component-name">Outlined Button</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="6" width="16" height="12" rx="1"></rect>
+          <line x1="7" y1="12" x2="17" y2="12"></line>
+        </svg>
+      </div>
+      <span class="component-name">Outlined TextBox</span>
+    </div>
+  </div>
+</div>
+
+<!-- Basic Components -->
+<div class="section">
+  <div class="section-header" data-target="basic-components">
+    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+    <span class="section-title">Basic Components</span>
+  </div>
+  <div class="section-content" id="basic-components">
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <text x="6" y="16" font-size="14" font-weight="bold">Tt</text>
+        </svg>
+      </div>
+      <span class="component-name">Label</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="6" width="16" height="12" rx="2"></rect>
+          <path d="M16 12 L18 14"></path>
+          <circle cx="16" cy="12" r="3"></circle>
+        </svg>
+      </div>
+      <span class="component-name">Button</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="6" width="16" height="12" rx="1"></rect>
+          <line x1="7" y1="12" x2="17" y2="12"></line>
+        </svg>
+      </div>
+      <span class="component-name">Text Box</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <path d="M10,7 L14,7 M7,12 L17,12 M3,17 L21,17" stroke-width="2"></path>
+          <path d="M10,17 C10,14 14,14 14,17" stroke-width="2"></path>
+        </svg>
+      </div>
+      <span class="component-name">Link</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="1.5">
+          <text x="6" y="16" font-size="14" font-weight="bold" fill="#999">Tt</text>
+        </svg>
+      </div>
+      <span class="component-name">Rich Text</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="6" width="16" height="12" rx="1"></rect>
+          <text x="8" y="14" font-size="8">abc</text>
+        </svg>
+      </div>
+      <span class="component-name">Text Area</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="6" y="6" width="12" height="12" rx="1"></rect>
+          <path d="M9 12 L11 15 L16 9" stroke-width="2"></path>
+        </svg>
+      </div>
+      <span class="component-name">Checkbox</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <circle cx="12" cy="12" r="8"></circle>
+          <circle cx="12" cy="12" r="4" fill="#fff"></circle>
+        </svg>
+      </div>
+      <span class="component-name">Radio Button</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="6" width="16" height="12" rx="1"></rect>
+          <path d="M4 10 H20 M8 15 H16" stroke-width="1.5"></path>
+          <path d="M18 8 L14 12" stroke-width="1.5"></path>
+        </svg>
+      </div>
+      <span class="component-name">Dropdown</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="16" height="16" rx="1"></rect>
+          <line x1="4" y1="10" x2="20" y2="10"></line>
+          <line x1="10" y1="4" x2="10" y2="20"></line>
+        </svg>
+      </div>
+      <span class="component-name">Date Picker</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="16" height="16" rx="1"></rect>
+          <circle cx="9" cy="9" r="2"></circle>
+          <path d="M13 11 L19 17 M4 19 L8 15 L12 19"></path>
+        </svg>
+      </div>
+      <span class="component-name">Image</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="16" height="16" rx="1"></rect>
+          <path d="M6 18 L6 10 M10 18 L10 7 M14 18 L14 12 M18 18 L18 6"></path>
+        </svg>
+      </div>
+      <span class="component-name">Plot</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <path d="M12 4 L12 15 M7 10 L12 15 L17 10"></path>
+          <line x1="6" y1="20" x2="18" y2="20"></line>
+        </svg>
+      </div>
+      <span class="component-name">File Loader</span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="16" height="16" rx="1"></rect>
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M12 6 L12 9 M12 15 L12 18 M6 12 L9 12 M15 12 L18 12"></path>
+        </svg>
+      </div>
+      <span class="component-name">Google Map</span>
+    </div>
+  </div>
+</div>
+
+<!-- More Components -->
+<div class="section">
+  <div class="section-header" data-target="more-components">
+    <svg class="chevron collapsed" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+    <span class="section-title">More Components</span>
+  </div>
+  <div class="section-content collapsed" id="more-components">
+    <!-- More components would go here -->
+  </div>
+</div>
+
+<!-- Layout Components -->
+<div class="section">
+  <div class="section-header" data-target="layout-components">
+    <svg class="chevron" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <polyline points="6 9 12 15 18 9"></polyline>
+    </svg>
+    <span class="section-title">Layout Components</span>
+  </div>
+  <div class="section-description">For page structure and layout</div>
+  <div class="section-content" id="layout-components">
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="16" height="16" rx="1"></rect>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+        </svg>
+      </div>
+      <span class="component-name"></span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="16" height="16" rx="1"></rect>
+          <line x1="4" y1="12" x2="20" y2="12"></line>
+          <line x1="12" y1="4" x2="12" y2="20"></line>
+        </svg>
+      </div>
+      <span class="component-name"></span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="7" height="7" rx="1"></rect>
+          <rect x="13" y="4" width="7" height="7" rx="1"></rect>
+          <rect x="4" y="13" width="7" height="7" rx="1"></rect>
+          <rect x="13" y="13" width="7" height="7" rx="1"></rect>
+        </svg>
+      </div>
+      <span class="component-name"></span>
+    </div>
+    <div class="component">
+      <div class="component-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.5">
+          <rect x="4" y="4" width="4" height="4" rx="1"></rect>
+          <rect x="10" y="4" width="4" height="4" rx="1"></rect>
+          <rect x="16" y="4" width="4" height="4" rx="1"></rect>
+          <rect x="4" y="10" width="4" height="4" rx="1"></rect>
+          <rect x="10" y="10" width="4" height="4" rx="1"></rect>
+          <rect x="16" y="10" width="4" height="4" rx="1"></rect>
+          <rect x="4" y="16" width="4" height="4" rx="1"></rect>
+          <rect x="10" y="16" width="4" height="4" rx="1"></rect>
+          <rect x="16" y="16" width="4" height="4" rx="1"></rect>
+        </svg>
+      </div>
+      <span class="component-name"></span>
+    </div>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Handle click on section headers
+    const sectionHeaders = document.querySelectorAll('.section-header');
+
+    sectionHeaders.forEach(header => {
+      header.addEventListener('click', () => {
+        const targetId = header.getAttribute('data-target');
+        const targetContent = document.getElementById(targetId);
+        const chevron = header.querySelector('.chevron');
+
+        // Toggle collapsed class
+        targetContent.classList.toggle('collapsed');
+        chevron.classList.toggle('collapsed');
+      });
+    });
+
+    // Initialize "More Components" as collapsed
+    const moreComponentsHeader = document.querySelector('[data-target="more-components"]');
+    const moreComponentsChevron = moreComponentsHeader.querySelector('.chevron');
+    moreComponentsChevron.classList.add('collapsed');
+    document.getElementById('more-components').classList.add('collapsed');
+  });
+</script>
+</body>
+</html>
