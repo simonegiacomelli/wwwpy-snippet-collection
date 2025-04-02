@@ -25,8 +25,6 @@ class ElementSelector(wpc.Component, tag_name='element-selector'):
         """
         self.toolbar_element = self.toolbar_button.element
         self._selected_element: js.HTMLElement | None = None
-        self._toolbar_dimensions = None
-        self._raf_id = None
 
         self._window_monitor = WindowMonitor(lambda: self._selected_element is not None)
         self._window_monitor.listeners.append(lambda: self.update_highlight_no_transitions())
