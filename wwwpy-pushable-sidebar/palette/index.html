@@ -438,67 +438,65 @@
     }
 
     /**
-     * UIBuilder class to manage the overall application
+     * uiBuilder function to manage the overall application
      */
-    class UIBuilder {
-        constructor() {
-            this.palette = document.getElementById('palette');
-            this.workspace = document.getElementById('workspace');
-            this.logPanel = document.getElementById('log');
+    function uiBuilder() {
+        this.palette = document.getElementById('palette');
+        this.workspace = document.getElementById('workspace');
+        this.logPanel = document.getElementById('log');
 
-            this.logger = new Logger(this.logPanel);
-            this.selectionManager = new SelectionManager(this.logger);
-            this.dragManager = new DragManager(this.logger);
-            this.workspaceManager = new WorkspaceManager(this.workspace, this.logger);
+        this.logger = new Logger(this.logPanel);
+        this.selectionManager = new SelectionManager(this.logger);
+        this.dragManager = new DragManager(this.logger);
+        this.workspaceManager = new WorkspaceManager(this.workspace, this.logger);
 
-            this.workspace.addEventListener('click', (e) => {
-                if (this.selectionManager.hasSelection() && !this.dragManager.isDraggingActive()) {
-                    this.logger.addEntry('Workspace clicked');
-                    const rect = this.workspace.getBoundingClientRect();
-                    const x = e.clientX - rect.left;
-                    const y = e.clientY - rect.top;
+        this.workspace.addEventListener('click', (e) => {
+            if (this.selectionManager.hasSelection() && !this.dragManager.isDraggingActive()) {
+                this.logger.addEntry('Workspace clicked');
+                const rect = this.workspace.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
 
-                    this.workspaceManager.placeElement(this.selectionManager.getSelectedType(), x, y);
-                    this.selectionManager.deselect();
-                }
-            });
+                this.workspaceManager.placeElement(this.selectionManager.getSelectedType(), x, y);
+                this.selectionManager.deselect();
+            }
+        });
 
-            this.palette.addEventListener('pointerdown', (e) => {
-                const item = e.target.closest('.palette-item');
-                if (!item) return;
-                this.logger.addEntry('Pointer down on palette item');
-                this.selectionManager.select(item);
-                this.dragManager.startDrag(item, e.clientX, e.clientY);
-                // Capture the pointer to receive all pointer events
-                item.setPointerCapture(e.pointerId);
-                e.preventDefault();
-            });
+        this.palette.addEventListener('pointerdown', (e) => {
+            const item = e.target.closest('.palette-item');
+            if (!item) return;
+            this.logger.addEntry('Pointer down on palette item');
+            this.selectionManager.select(item);
+            this.dragManager.startDrag(item, e.clientX, e.clientY);
+            // Capture the pointer to receive all pointer events
+            item.setPointerCapture(e.pointerId);
+            e.preventDefault();
+        });
 
-            document.addEventListener('pointermove', (e) => {
-                if (this.dragManager.moveDrag(e.clientX, e.clientY)) e.preventDefault();
-            });
+        document.addEventListener('pointermove', (e) => {
+            if (this.dragManager.moveDrag(e.clientX, e.clientY)) e.preventDefault();
+        });
 
-            document.addEventListener('pointerup', (e) => {
-                this.logger.addEntry('Pointer up on document');
-                const dropResult = this.dragManager.endDrag(e.clientX, e.clientY, this.workspace);
-                if (dropResult) {
-                    this.workspaceManager.placeElement(dropResult.type, dropResult.x, dropResult.y);
-                    this.selectionManager.deselect();
-                }
-            });
+        document.addEventListener('pointerup', (e) => {
+            this.logger.addEntry('Pointer up on document');
+            const dropResult = this.dragManager.endDrag(e.clientX, e.clientY, this.workspace);
+            if (dropResult) {
+                this.workspaceManager.placeElement(dropResult.type, dropResult.x, dropResult.y);
+                this.selectionManager.deselect();
+            }
+        });
 
-            document.addEventListener('pointercancel', () => this.dragManager.cancelDrag());
+        document.addEventListener('pointercancel', () => this.dragManager.cancelDrag());
 
-            this.palette.addEventListener('pointerleave', (e) => {
-                if (this.dragManager.isDraggingActive()) e.preventDefault();
-            });
+        this.palette.addEventListener('pointerleave', (e) => {
+            if (this.dragManager.isDraggingActive()) e.preventDefault();
+        });
 
-            this.logger.addEntry('UI Element Builder initialized. Start by selecting or dragging elements.');
+        this.logger.addEntry('UI Element Builder initialized. Start by selecting or dragging elements.');
 
-        }
     }
 
-    document.addEventListener('DOMContentLoaded', () => new UIBuilder());
+    document.addEventListener('DOMContentLoaded', () => uiBuilder());
 </script>
 </body>
 </html>
