@@ -123,7 +123,6 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
         </style>      
         """
 
-
     @property
     def transition(self) -> bool:
         return self.element.style.transition != 'none'
@@ -139,6 +138,10 @@ class HighlightOverlay(wpc.Component, tag_name='highlight-overlay'):
         self.element.style.display = 'none'
 
     def show(self, rect: js.DOMRect):
+        bs = 2  # Adjust this value to match the border size in CSS
+
+        rect = js.DOMRect.new(rect.x - bs, rect.y - bs, rect.width, rect.height, )
+
         self.element.style.display = 'block'
         self.element.style.top = f"{rect.top}px"
         self.element.style.left = f"{rect.left}px"
