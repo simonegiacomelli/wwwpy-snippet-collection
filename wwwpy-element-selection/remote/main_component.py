@@ -90,6 +90,7 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         """
         self._mouse_move = create_proxy(self._mouse_move)
         self._mouse_click = create_proxy(self._mouse_click)
+        self._next_element = None
 
     def connectedCallback(self):
         js.document.addEventListener('mousemove', self._mouse_move)
@@ -122,8 +123,13 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         if self.element_selector.get_selected_element() == el:
             return
         self.element_selector.set_selected_element(el)
+        self._next_element = el
+
         async def more_snappy():
             await asyncio.sleep(0.2)
+            if self._next_element != el:
+                logger.debug(f'more_snappy: element changed, skipping')
+                return
             ep_live = element_path.element_path(el)
             # logger.debug(f'Element path live: {ep_live}')
             ep_source = _rebase_element_path_to_origin_source(ep_live)
