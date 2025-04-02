@@ -477,7 +477,7 @@
             const item = e.target.closest('.palette-item');
             if (!item) return;
             this.logger.addEntry('Pointer down on palette item');
-            this.selectionManager.select(item);
+            this.selectionManager.toggle(item);
             this.dragManager.startDrag(item, e);
         });
 
