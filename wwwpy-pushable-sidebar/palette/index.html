@@ -324,7 +324,9 @@
             this.dragThreshold = 5; // Pixels to move before starting drag
         }
 
-        startDrag(item, clientX, clientY) {
+        startDrag(item, e) {
+            const clientX = e.clientX;
+            const clientY = e.clientY;
             // Record which item is being dragged
             this.draggingItem = item;
             const elementType = item.getAttribute('data-element');
@@ -336,10 +338,15 @@
 
             // Create drag preview element
             this.dragPreview = this.createDragPreview(elementType);
+            // Capture the pointer to receive all pointer events
+            item.setPointerCapture(e.pointerId);
+            e.preventDefault();
         }
 
-        moveDrag(clientX, clientY) {
+        moveDrag(e) {
             if (!this.draggingItem || !this.dragPreview) return false;
+            const clientX = e.clientX;
+            const clientY = e.clientY;
 
             // Start dragging after passing the threshold
             if (!this.isDragging) {
@@ -361,14 +368,18 @@
             this.dragPreview.style.left = `${clientX}px`;
             this.dragPreview.style.top = `${clientY}px`;
 
+            e.preventDefault();
+
             return true; // Dragging is active
         }
 
-        endDrag(clientX, clientY, workspace) {
+        endDrag(e, workspace) {
             if (!this.draggingItem) return null;
 
             let result = null;
             if (this.isDragging) {
+                const clientX = e.clientX;
+                const clientY = e.clientY;
                 // Check if released over workspace
                 const workspaceRect = workspace.getBoundingClientRect();
                 if (clientX >= workspaceRect.left && clientX <= workspaceRect.right &&
@@ -467,19 +478,14 @@
             if (!item) return;
             this.logger.addEntry('Pointer down on palette item');
             this.selectionManager.select(item);
-            this.dragManager.startDrag(item, e.clientX, e.clientY);
-            // Capture the pointer to receive all pointer events
-            item.setPointerCapture(e.pointerId);
-            e.preventDefault();
+            this.dragManager.startDrag(item, e);
         });
 
-        document.addEventListener('pointermove', (e) => {
-            if (this.dragManager.moveDrag(e.clientX, e.clientY)) e.preventDefault();
-        });
+        document.addEventListener('pointermove', (e) => this.dragManager.moveDrag(e));
 
         document.addEventListener('pointerup', (e) => {
             this.logger.addEntry('Pointer up on document');
-            const dropResult = this.dragManager.endDrag(e.clientX, e.clientY, this.workspace);
+            const dropResult = this.dragManager.endDrag(e, this.workspace);
             if (dropResult) {
                 this.workspaceManager.placeElement(dropResult.type, dropResult.x, dropResult.y);
                 this.selectionManager.deselect();
