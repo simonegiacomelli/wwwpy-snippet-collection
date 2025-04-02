@@ -386,15 +386,15 @@
             }
 
             // Clean up
-            this.cleanup();
+            this.#cleanup();
             return result;
         }
 
         cancelDrag() {
-            this.cleanup();
+            this.#cleanup();
         }
 
-        cleanup() {
+        #cleanup() {
             this.isDragging = false;
             this.draggingItem = null;
 
