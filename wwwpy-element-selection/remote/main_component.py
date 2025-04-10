@@ -9,7 +9,7 @@ import js
 from pyodide.ffi import create_proxy, JsProxy
 from wwwpy.common.designer import code_strings, html_locator
 from wwwpy.common.designer.element_path import ElementPath, Origin
-from wwwpy.remote import dict_to_js
+from wwwpy.remote import dict_to_js, eventlib
 
 import logging
 
@@ -84,24 +84,20 @@ class MainComponent(wpc.Component, tag_name='main-component'):
         <!-- Our custom element for selection highlighting -->
         <element-selector data-name="element_selector" id="element-selector"></element-selector>
         """
-        self._mouse_move = create_proxy(self._mouse_move)
-        self._mouse_click = create_proxy(self._mouse_click)
         self._next_element = None
 
     def connectedCallback(self):
-        js.document.addEventListener('mousemove', self._mouse_move)
-        js.document.addEventListener('click', self._mouse_click)
+        eventlib.add_event_listeners(self)
 
     def disconnectedCallback(self):
-        js.document.removeEventListener('mousemove', self._mouse_move)
-        js.document.removeEventListener('click', self._mouse_click)
+        eventlib.remove_event_listeners(self)
 
-    def _mouse_move(self, event: js.MouseEvent):
+    def _js_document__mousemove(self, event: js.MouseEvent):
         if not self._on_mouse_move.checked:
             return
         self._change_selection_from_event(event)
 
-    def _mouse_click(self, event: js.MouseEvent):
+    def _js_document_click(self, event: js.MouseEvent):
         if event.target == self._on_mouse_move:
             return
         self._on_mouse_move.checked = False
@@ -137,8 +133,8 @@ class MainComponent(wpc.Component, tag_name='main-component'):
                 tb = DevModeComponent.instance.toolbox
                 tb._toolbox_state.selected_element_path = ep_live
                 tb._restore_selected_element_path()
-        asyncio.create_task(more_snappy())
 
+        asyncio.create_task(more_snappy())
 
     def element_selector__toolbar_action(self, e):
         # Display an alert with the action and element ID
@@ -159,7 +155,6 @@ class MainComponent(wpc.Component, tag_name='main-component'):
             self._set_selection(parent)
 
 
-
 class InnerComponent(wpc.Component, tag_name='inner-component'):
     inner_button: js.HTMLButtonElement = wpc.element()
     div_root2: js.HTMLDivElement = wpc.element()
@@ -174,7 +169,6 @@ class InnerComponent(wpc.Component, tag_name='inner-component'):
 </div>"""
 
 
-
 def parent_element(element: js.HTMLElement) -> js.HTMLElement | None:
     if element_path.is_instance_of(element, js.ShadowRoot):
         element = element.host
@@ -186,7 +180,8 @@ def parent_element(element: js.HTMLElement) -> js.HTMLElement | None:
 
     return element
 
-def next_element(element: js.HTMLElement, up_down:str) -> js.HTMLElement | None:
+
+def next_element(element: js.HTMLElement, up_down: str) -> js.HTMLElement | None:
     if element_path.is_instance_of(element, js.ShadowRoot):
         element = element.host
 
@@ -205,6 +200,7 @@ def next_element(element: js.HTMLElement, up_down:str) -> js.HTMLElement | None:
         element = element.host
 
     return element
+
 
 def _rebase_element_path_to_origin_source(ep: ElementPath) -> Optional[ElementPath]:
     """This is similar to rebase_path dumb because we use indexes alone.
