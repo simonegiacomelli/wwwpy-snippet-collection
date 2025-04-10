@@ -15,11 +15,7 @@ import logging
 
 from wwwpy.remote.designer import element_path
 from wwwpy.remote.designer.helpers import _element_path_lbl
-
-# from wwwpy.remote.designer.ui.property_editor import _rebase_element_path_to_origin_source
-
-from . import element_selector  # import to register the element-selector component
-from .element_selector import ElementSelector
+from wwwpy.remote.designer.ui.element_selector import ElementSelector
 
 logger = logging.getLogger(__name__)
 
