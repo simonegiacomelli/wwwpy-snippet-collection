@@ -5,39 +5,38 @@
     <title>Title</title>
 </head>
 <body>
+
 <svg viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg">
   <!-- Define the arrow markers -->
   <defs>
     <marker id="arrowhead" markerWidth="10" markerHeight="7"
             refX="0" refY="3.5" orient="auto">
-      <polygon points="0 0, 10 3.5, 0 7" fill="#2c3e50"/>
+      <polygon points="0 0, 8 3.5, 0 7" fill="#2c3e50"/>
     </marker>
   </defs>
 
-  <!-- Outer rectangle (drop location tool boundary) -->
-  <rect x="10" y="10" width="380" height="280" fill="none" stroke="#333" stroke-width="2"/>
+  <!-- Outer rectangle (drop location tool boundary) - now aligned with viewBox -->
+  <rect x="0" y="0" width="400" height="300" fill="none" stroke="#333" stroke-width="2"/>
 
   <!-- Inner rectangle (70% of the space) -->
-  <!-- 70% of width: 380 * 0.7 = 266, 70% of height: 280 * 0.7 = 196 -->
-  <!-- To center: x = 10 + (380 - 266)/2 = 10 + 57 = 67, y = 10 + (280 - 196)/2 = 10 + 42 = 52 -->
-  <rect x="67" y="52" width="266" height="196" fill="#e0e0e0" stroke="#666" stroke-width="1.5"/>
+  <rect x="60" y="45" width="280" height="210" fill="#e0e0e0" stroke="#666" stroke-width="1.5"/>
 
   <!-- Corner connecting segments -->
   <!-- Top-left corner -->
-  <line x1="10" y1="10" x2="67" y2="52" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="0" y1="0" x2="60" y2="45" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
   <!-- Top-right corner -->
-  <line x1="390" y1="10" x2="333" y2="52" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="400" y1="0" x2="340" y2="45" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
   <!-- Bottom-left corner -->
-  <line x1="10" y1="290" x2="67" y2="248" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="0" y1="300" x2="60" y2="255" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
   <!-- Bottom-right corner -->
-  <line x1="390" y1="290" x2="333" y2="248" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
+  <line x1="400" y1="300" x2="340" y2="255" stroke="#999" stroke-width="1" stroke-dasharray="5,3"/>
 
   <!-- Arrows -->
-  <!-- From center to top-left -->
-  <line x1="200" y1="150" x2="15" y2="15" stroke="#2c3e50" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <!-- From near inner top-left to near outer top-left (longer, centered) -->
+  <line x1="44" y1="33" x2="24" y2="18" stroke="#2c3e50" stroke-width="2" marker-end="url(#arrowhead)"/>
 
-  <!-- From center to bottom-right -->
-  <line x1="200" y1="150" x2="385" y2="285" stroke="#2c3e50" stroke-width="2" marker-end="url(#arrowhead)"/>
+  <!-- From near inner bottom-right to near outer bottom-right (longer, centered) -->
+  <line x1="356" y1="267" x2="376" y2="282" stroke="#2c3e50" stroke-width="2" marker-end="url(#arrowhead)"/>
 </svg>
 
 </body>
