@@ -1,12 +1,20 @@
 from __future__ import annotations
 
+import asyncio
+
 import wwwpy.remote.component as wpc
 import js
 from pyodide.ffi import create_proxy
-from wwwpy.remote import dict_to_js
-
+from wwwpy.remote import dict_to_js, eventlib
+from wwwpy.remote.designer import element_path
+from wwwpy.remote.designer.helpers import _element_path_lbl
+from wwwpy.remote.designer.ui import palette  # noqa
 import logging
 import datetime
+
+from wwwpy.remote.designer.ui.element_selector import ElementSelector
+from wwwpy.remote.designer.ui.property_editor import _rebase_element_path_to_origin_source
+from wwwpy.remote.jslib import is_contained
 
 from . import pushable_sidebar  # Import the PushableSidebar component
 
@@ -22,6 +30,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     width_input: js.HTMLInputElement = wpc.element()
     apply_width_button: js.HTMLButtonElement = wpc.element()
     sidebar: pushable_sidebar.PushableSidebar = wpc.element()  # Reference to the sidebar component
+    _palette: palette.PaletteComponent = wpc.element()  # Reference to the palette component
+    element_selector: ElementSelector = wpc.element()
 
     def init_component(self):
         """Initialize the sidebar demo component with shadow DOM"""
@@ -83,12 +93,15 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
                 --sidebar-transition: padding 0.3s ease;
             }
         </style>
-        
+        <element-selector data-name="element_selector" id="element-selector"></element-selector>
         <!-- The pushable-sidebar component -->
         <pushable-sidebar data-name="sidebar" position="left" width="300px">
             <div class="sidebar-content">
                 <h3>Pushable Sidebar</h3>
                 <p>This is a sidebar that doesn't overlap content.</p>
+                
+                <h4>Menu</h4>
+                <wwwpy-palette data-name="_palette"></wwwpy-palette>
                 <ul class="sidebar-menu">
                     <li>Dashboard</li>
                     <li>Profile</li>
@@ -97,6 +110,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
                     <li>Help</li>
                 </ul>
             </div>
+            <span>hello</span>
         </pushable-sidebar>
         
         <!-- Main content -->
@@ -139,6 +153,16 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
         # Add global styles to the document for body transitions
         self._add_global_styles()
+        self._action_manager = self._palette.action_manager
+        self._palette.add_item('item1', 'Item 1')
+        self._palette.add_item('item2', 'Item 2')
+        self._palette.add_item('item3', 'Item 3')
+        self._palette.add_item('item4', 'Item 4')
+
+        def _hover_handler(event: palette.HoverEvent):
+            self._change_selection_from_event(event.js_event)
+
+        self._action_manager.listeners_for(palette.HoverEvent).add(_hover_handler)
 
     def _add_global_styles(self):
         """Add global styles to document head for body transitions"""
@@ -193,7 +217,6 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
     def connectedCallback(self):
         """Called when the element is added to the DOM"""
-        pass  # Nothing special needed here
 
     def disconnectedCallback(self):
         """Called when the element is removed from the DOM"""
@@ -253,3 +276,53 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         """Log a message to the console"""
         now = datetime.datetime.now()
         logger.info(f"{now} - {message}")
+
+    def _change_selection_from_event(self, event: js.Event):
+        if not event.ctrlKey:
+            return
+        path = event.composedPath()
+        el = path[0] if path and len(path) > 0 else event.target
+        # js.console.log(f'change selection: {event.clientX}, {event.clientY}', path, event)
+
+        self._set_selection(el)
+
+    def _set_selection(self, el):
+        # js.console.log(f'_set_selection to el:', el)
+        if self.element_selector.get_selected_element() == el:
+            return
+        if not self.element_selector.is_selectable(el):
+            return
+        logger.debug('starting ----------')
+        in_sidebar = is_contained(el, self.sidebar.element)
+        logger.debug(f'_set_selection: {_pretty(el)} in_sidebar={in_sidebar}')
+        if in_sidebar or el == js.document.body or el == js.document.documentElement:
+            self.element_selector.set_selected_element(None)
+            return
+
+        self.element_selector.set_selected_element(el)
+        self._next_element = el
+
+        async def more_snappy():
+            await asyncio.sleep(0.2)
+            if self._next_element != el:
+                logger.debug(f'more_snappy: element changed, skipping')
+                return
+            ep_live = element_path.element_path(el)
+            # logger.debug(f'Element path live: {ep_live}')
+            ep_source = _rebase_element_path_to_origin_source(ep_live)
+            # logger.debug(f'Element path source: {ep_source}')
+            message = 'ep_source is none' if ep_source is None else f'Selection: {_element_path_lbl(ep_source)}'
+            # logger.debug(message)
+            if ep_source is not None:
+                from wwwpy.remote.designer.ui.dev_mode_component import DevModeComponent
+                tb = DevModeComponent.instance.toolbox
+                tb._toolbox_state.selected_element_path = ep_live
+                tb._restore_selected_element_path()
+
+            asyncio.create_task(more_snappy())
+
+
+def _pretty(node):
+    if hasattr(node, 'tagName'):
+        return f'{node.tagName.lower()}#{node.id}.{node.className}[{node.innerHTML.strip()[:20]}…]'
+    return str(node)
