@@ -1,17 +1,16 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
+import logging
 
-import wwwpy.remote.component as wpc
 import js
+import wwwpy.remote.component as wpc
 from pyodide.ffi import create_proxy
-from wwwpy.remote import dict_to_js, eventlib
+from wwwpy.remote import dict_to_js
 from wwwpy.remote.designer import element_path
 from wwwpy.remote.designer.helpers import _element_path_lbl
 from wwwpy.remote.designer.ui import palette  # noqa
-import logging
-import datetime
-
 from wwwpy.remote.designer.ui.element_selector import ElementSelector
 from wwwpy.remote.designer.ui.property_editor import _rebase_element_path_to_origin_source
 from wwwpy.remote.jslib import is_contained
@@ -159,10 +158,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._palette.add_item('item3', 'Item 3')
         self._palette.add_item('item4', 'Item 4')
 
-        def _hover_handler(event: palette.HoverEvent):
-            self._change_selection_from_event(event.js_event)
-
-        self._action_manager.listeners_for(palette.HoverEvent).add(_hover_handler)
+        self._action_manager.listeners_for(palette.HoverEvent).add(self._hover_handler)
 
     def _add_global_styles(self):
         """Add global styles to document head for body transitions"""
@@ -224,7 +220,6 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         if hasattr(self, '_style_element') and js.document.head.contains(self._style_element):
             js.document.head.removeChild(self._style_element)
 
-    # Event handlers using wwwpy's auto-binding with element__event naming pattern
     async def toggle_button__click(self, event):
         """Handle toggle button click"""
         self.sidebar.toggle()
@@ -277,17 +272,16 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         now = datetime.datetime.now()
         logger.info(f"{now} - {message}")
 
-    def _change_selection_from_event(self, event: js.Event):
+    def _hover_handler(self, hover_event: palette.HoverEvent):
+        event = hover_event.js_event
         if not event.ctrlKey:
             return
         path = event.composedPath()
         el = path[0] if path and len(path) > 0 else event.target
-        # js.console.log(f'change selection: {event.clientX}, {event.clientY}', path, event)
 
         self._set_selection(el)
 
     def _set_selection(self, el):
-        # js.console.log(f'_set_selection to el:', el)
         if self.element_selector.get_selected_element() == el:
             return
         if not self.element_selector.is_selectable(el):
