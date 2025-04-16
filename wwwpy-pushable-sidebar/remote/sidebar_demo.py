@@ -33,7 +33,6 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     element_selector: ElementSelector = wpc.element()
 
     def init_component(self):
-        f"""Initialize the sidebar demo component with shadow DOM"""
         # Create shadow DOM for style isolation
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
 
@@ -54,7 +53,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
             }
             
             h1 {
-                color: #333;
+                color: white;
                 border-bottom: 1px solid #eee;
                 padding-bottom: 10px;
             }
@@ -93,7 +92,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
             }
         </style>
         <element-selector data-name="element_selector" id="element-selector"></element-selector>
-        <!-- The pushable-sidebar component -->
+        
         <pushable-sidebar data-name="sidebar" position="left" width="300px">
             <div class="sidebar-content">
                 <h3>Pushable Sidebar</h3>
@@ -114,7 +113,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         
         <!-- Main content -->
         <div class="content">
-            <h1>Pushable Sidebar Demo</h1>
+            <h1>Demo Mixer</h1>
             
             <p>This demo shows how to use the PushableSidebar library to create sidebars that push content away instead of overlapping it.</p>
             
@@ -150,7 +149,6 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         </div>
         """
 
-        # Add global styles to the document for body transitions
         self._add_global_styles()
         self._action_manager = self._palette.action_manager
         self._palette.add_item('item1', 'Item 1')
@@ -162,49 +160,12 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._action_manager.listeners_for(palette.AcceptEvent).add(self._accept_handler)
 
     def _add_global_styles(self):
-        """Add global styles to document head for body transitions"""
         style = js.document.createElement('style')
-        style.textContent = """
-        /* Global body styles for transitions */
-        body {
-            transition: padding 0.3s ease;
-        }
-        
-        /* Disable transitions during resize for better performance */
-        body.sidebar-resizing {
-            transition: none !important;
-        }
-        
-        body.sidebar-resizing * {
-            transition: none !important;
-        }
-        
-        /* Sidebar content styles */
-        .sidebar-content {
-            padding: 15px;
-        }
-        
-        .sidebar-menu {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        
-        .sidebar-menu li {
-            padding: 10px 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.1);
-            cursor: pointer;
-        }
-        
-        .sidebar-menu li:hover {
-            background-color: rgba(255,255,255,0.05);
-        }
-        """
+        style.textContent = _style
         self._style_element = style
         js.document.head.appendChild(style)
 
     async def after_init_component(self):
-        """Set up event listeners after initialization"""
         # Set up event listener for sidebar state changes
         # This is needed for external events not handled by the auto-binding mechanism
         self.sidebar.element.addEventListener(
@@ -213,21 +174,18 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         )
 
     def connectedCallback(self):
-        """Called when the element is added to the DOM"""
+        f"""Called when the element is added to the DOM"""
 
     def disconnectedCallback(self):
-        """Called when the element is removed from the DOM"""
         # Remove the global styles when component is disconnected
         if hasattr(self, '_style_element') and js.document.head.contains(self._style_element):
             js.document.head.removeChild(self._style_element)
 
     async def toggle_button__click(self, event):
-        """Handle toggle button click"""
         self.sidebar.toggle()
         self._log(f"Sidebar toggled to state: {self.sidebar.get_state()}")
 
     async def add_content_button__click(self, event):
-        """Handle add content button click"""
         div = js.document.createElement('div')
         time_str = js.Date.new().toLocaleTimeString()
         div.textContent = f'New content added at {time_str}'
@@ -240,36 +198,30 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._log(f"Content added at {time_str}")
 
     async def state_select__change(self, event):
-        """Handle state select change"""
         new_state = self.state_select.value
         self.sidebar.set_state(new_state)
         self._log(f"State changed to: {new_state}")
 
     async def position_select__change(self, event):
-        """Handle position select change"""
         new_position = self.position_select.value
         self.sidebar.set_position(new_position)
         self._log(f"Position changed to: {new_position}")
 
     async def apply_width_button__click(self, event):
-        """Handle apply width button click"""
         width = self.width_input.value
         self.sidebar.set_width(width)
         self._log(f"Width changed to: {width}")
 
     async def sidebar__sidebar_state_change(self, event):
-        """Auto-bound event handler for sidebar state changes"""
         new_state = event.detail.newState
         self.state_select.value = new_state
         self._log(f"Sidebar state changed to: {new_state}")
 
     def handle_sidebar_state_change(self, event):
-        """JavaScript event handler for sidebar state changes"""
         new_state = event.detail.newState
         self.state_select.value = new_state
 
     def _log(self, message: str):
-        """Log a message to the console"""
         now = datetime.datetime.now()
         logger.info(f"{now} - {message}")
 
@@ -329,3 +281,40 @@ def _pretty(node):
     if hasattr(node, 'tagName'):
         return f'{node.tagName.lower()}#{node.id}.{node.className}[{node.innerHTML.strip()[:20]}…]'
     return str(node)
+
+_style = """
+/* Global body styles for transitions */
+    body {
+    transition: padding 0.3s ease;
+}
+
+/* Disable transitions during resize for better performance */
+    body.sidebar-resizing {
+    transition: none !important;
+}
+
+body.sidebar-resizing * {
+    transition: none !important;
+}
+
+/* Sidebar content styles */
+.sidebar-content {
+    padding: 15px;
+}
+
+.sidebar-menu {
+    list-style: none;
+padding: 0;
+margin: 0;
+}
+
+.sidebar-menu li {
+    padding: 10px 15px;
+border-bottom: 1px solid rgba(255,255,255,0.1);
+cursor: pointer;
+}
+
+.sidebar-menu li:hover {
+    background-color: rgba(255,255,255,0.05);
+}
+"""
