@@ -27,7 +27,7 @@ class Component1(wpc.Component, tag_name='component-1'):
 
     button1: js.HTMLButtonElement = wpc.element()
     textarea1: js.HTMLTextAreaElement = wpc.element()
-    title_icon_1: TitleIconComponent = wpc.element()
+    title_icon_1: TitleIconComponent = wpc.element() # note that here we are telling wpc.element() to map the class type directly! this is handy because we can access all the properties and methods of the class.
     """The name here must match the 'data-name' in the html, so we will never use a 
     '-' for the name, in other words we will use valid python identifiers.
     
@@ -47,7 +47,7 @@ class Component1(wpc.Component, tag_name='component-1'):
 
         # note in the html that we use 'data-name' to assign the elements to the attributes.
         # We never use the 'id' attribute, because it is not a good practice to use it in web components.
-        # language=html
+        # language=html     # this comment is important, don't omit it, because it help the ide to colorize the html
         self.element.shadowRoot.innerHTML = """
 <title-icon data-name='title_icon_1'>
     <div slot='title'>Select a file...</div>
