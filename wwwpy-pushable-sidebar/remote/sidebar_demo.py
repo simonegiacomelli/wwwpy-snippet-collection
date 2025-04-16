@@ -159,6 +159,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._palette.add_item('item4', 'Item 4')
 
         self._action_manager.listeners_for(palette.HoverEvent).add(self._hover_handler)
+        self._action_manager.listeners_for(palette.AcceptEvent).add(lambda e: e.accept())
 
     def _add_global_styles(self):
         """Add global styles to document head for body transitions"""
@@ -274,7 +275,9 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
     def _hover_handler(self, hover_event: palette.HoverEvent):
         event = hover_event.js_event
-        if not event.ctrlKey:
+        # if not event.ctrlKey:
+        #     return
+        if not self._action_manager.selected_action:
             return
         path = event.composedPath()
         el = path[0] if path and len(path) > 0 else event.target
