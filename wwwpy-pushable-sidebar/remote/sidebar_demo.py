@@ -159,7 +159,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._palette.add_item('item4', 'Item 4')
 
         self._action_manager.listeners_for(palette.HoverEvent).add(self._hover_handler)
-        self._action_manager.listeners_for(palette.AcceptEvent).add(lambda e: e.accept())
+        self._action_manager.listeners_for(palette.AcceptEvent).add(self._accept_handler)
 
     def _add_global_styles(self):
         """Add global styles to document head for body transitions"""
@@ -284,6 +284,11 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
         self._set_selection(el)
 
+    def _accept_handler(self, accept_event: palette.AcceptEvent):
+        # hide selection
+        self.element_selector.set_selected_element(None)
+        accept_event.accept()
+
     def _set_selection(self, el):
         if self.element_selector.get_selected_element() == el:
             return
@@ -309,14 +314,15 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
             ep_source = _rebase_element_path_to_origin_source(ep_live)
             # logger.debug(f'Element path source: {ep_source}')
             message = 'ep_source is none' if ep_source is None else f'Selection: {_element_path_lbl(ep_source)}'
-            # logger.debug(message)
+            logger.debug(message)
             if ep_source is not None:
                 from wwwpy.remote.designer.ui.dev_mode_component import DevModeComponent
                 tb = DevModeComponent.instance.toolbox
                 tb._toolbox_state.selected_element_path = ep_live
                 tb._restore_selected_element_path()
 
-            asyncio.create_task(more_snappy())
+
+        asyncio.create_task(more_snappy())
 
 
 def _pretty(node):
