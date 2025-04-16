@@ -4,7 +4,7 @@ import asyncio
 import logging
 import weakref
 from dataclasses import dataclass, field
-from typing import Optional, List, Union
+from typing import Optional, Union
 
 import js
 import wwwpy.remote.component as wpc
@@ -77,6 +77,14 @@ class Dialog(wpc.Component, tag_name='dialog-stack'):
         self.layers = {}
 
         self.element.style.display = 'none'
+        # self._hotkey = Hotkey(js.window)
+        # self._hotkey.add('Escape', lambda e: self.close_top_dialog())
+
+    def close_top_dialog(self):
+        """Close the top dialog in the stack."""
+        top_layer = self._get_top_layer()
+        if top_layer:
+            top_layer.close()
 
     def _ensure_dialog_visible(self):
         """Helper method to ensure dialog is in DOM and visible"""

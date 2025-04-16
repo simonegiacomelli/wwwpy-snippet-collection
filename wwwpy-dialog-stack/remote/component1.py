@@ -1,13 +1,17 @@
 from __future__ import annotations
-import inspect
-import wwwpy.remote.component as wpc
-import js
 
+import inspect
 import logging
+
+import js
+import wwwpy.remote.component as wpc
+from wwwpy.remote.hotkey import Hotkey
+from wwwpy.remote.hotkeylib import Hotkey
 
 from remote.dialog_stack import dialog
 
 logger = logging.getLogger(__name__)
+
 
 class Component1(wpc.Component, tag_name='component-1'):
     _open: js.HTMLButtonElement = wpc.element()
@@ -26,15 +30,14 @@ class Component1(wpc.Component, tag_name='component-1'):
 
 <component-2 data-name="div1" style="display: block"></component-2>
 """
-    
+        self._hotkey = Hotkey(js.window)
+        self._hotkey.add('Escape', lambda e: dialog.close_top_dialog())
+
     async def _open__click(self, event):
         div1 = self.div1
         result = await dialog.open(div1)
         self._result.innerHTML = f"Result: {result}"
         self.element.append(div1.element)
-
-
-
 
 
 class Component2(wpc.Component, tag_name='component-2'):
@@ -107,7 +110,3 @@ class Component2(wpc.Component, tag_name='component-2'):
     async def _btn_smaller__click(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
         self._add(-30)  # Remove 30 pixels
-
-
-    
-    
