@@ -336,6 +336,13 @@ class PopupNotificationElement(wpc.Component, tag_name='popup-notification'):
         # language=html
         self.element.shadowRoot.innerHTML = """
             <style>
+                /* Host styles and CSS Custom Properties */
+                :host {
+                    --popup-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+                    --popup-font-size: 14px;
+                    --popup-line-height: 1.6;
+                }
+
                 /* Popup notification styles */
                 .popup-container {
                     position: fixed;
@@ -343,6 +350,9 @@ class PopupNotificationElement(wpc.Component, tag_name='popup-notification'):
                     display: flex;
                     flex-direction: column;
                     pointer-events: none;
+                    font-family: var(--popup-font-family);
+                    font-size: var(--popup-font-size);
+                    line-height: var(--popup-line-height);
                 }
 
                 .popup-container.right-bottom {
@@ -379,6 +389,7 @@ class PopupNotificationElement(wpc.Component, tag_name='popup-notification'):
                     overflow: hidden;
                     pointer-events: auto;
                     animation: slideIn 0.3s ease-out forwards;
+                    font-family: var(--popup-font-family);
                 }
 
                 .popup-notification.closing {
@@ -402,6 +413,7 @@ class PopupNotificationElement(wpc.Component, tag_name='popup-notification'):
                     font-weight: bold;
                     margin: 0;
                     font-size: 16px;
+                    font-family: var(--popup-font-family);
                 }
 
                 .popup-close {
@@ -414,6 +426,7 @@ class PopupNotificationElement(wpc.Component, tag_name='popup-notification'):
                     display: flex;
                     align-items: center;
                     justify-content: center;
+                    font-family: var(--popup-font-family);
                 }
 
                 .popup-close:hover {
@@ -423,6 +436,7 @@ class PopupNotificationElement(wpc.Component, tag_name='popup-notification'):
                 .popup-content {
                     padding: 8px 12px;
                     word-break: break-word;
+                    font-family: var(--popup-font-family);
                 }
 
                 .popup-actions {
@@ -439,6 +453,7 @@ class PopupNotificationElement(wpc.Component, tag_name='popup-notification'):
                     border-radius: 4px;
                     cursor: pointer;
                     font-size: 14px;
+                    font-family: var(--popup-font-family);
                 }
 
                 .popup-action:hover {
