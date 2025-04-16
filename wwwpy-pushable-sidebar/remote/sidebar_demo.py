@@ -33,7 +33,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     element_selector: ElementSelector = wpc.element()
 
     def init_component(self):
-        """Initialize the sidebar demo component with shadow DOM"""
+        f"""Initialize the sidebar demo component with shadow DOM"""
         # Create shadow DOM for style isolation
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
 
