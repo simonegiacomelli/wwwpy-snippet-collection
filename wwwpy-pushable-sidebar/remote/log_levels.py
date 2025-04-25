@@ -12,7 +12,8 @@ def setup():
         # 'wwwpy.common.designer.element_path',
         # 'wwwpy.common.designer.code_strings',
         # 'wwwpy.common.designer.html_locator',
-        # 'wwwpy.remote.designer.ui.drag_manager'
+        # 'wwwpy.remote.designer.ui.drag_manager',
+        # 'wwwpy.remote.jslib',
     ]
     for logger_name in names:
         logger = logging.getLogger(logger_name)

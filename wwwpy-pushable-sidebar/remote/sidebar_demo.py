@@ -13,7 +13,7 @@ from wwwpy.remote.designer.helpers import _element_path_lbl
 from wwwpy.remote.designer.ui import palette  # noqa
 from wwwpy.remote.designer.ui.element_selector import ElementSelector
 from wwwpy.remote.designer.ui.property_editor import _rebase_element_path_to_origin_source
-from wwwpy.remote.jslib import is_contained
+from wwwpy.remote.jslib import is_contained, get_deepest_element
 
 from . import pushable_sidebar  # Import the PushableSidebar component
 
@@ -31,8 +31,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     sidebar: pushable_sidebar.PushableSidebar = wpc.element()  # Reference to the sidebar component
     _palette: palette.PaletteComponent = wpc.element()  # Reference to the palette component
     element_selector: ElementSelector = wpc.element()
-    _span1: js.HTMLSpanElement = wpc.element()
-    _update_span: js.HTMLSpanElement = wpc.element()
+    _lbl1: js.HTMLDivElement = wpc.element()
+    _lbl2: js.HTMLDivElement = wpc.element()
 
     def init_component(self):
         # Create shadow DOM for style isolation
@@ -111,8 +111,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
                                                         <li>Help</li>
                                                     </ul>
                                                 </div>
-                                                <div data-name="_span1">hello</div>
-                                                <div data-name="_update_span">hello</div>
+                                                <div data-name="_lbl1">hello</div>
+                                                <div data-name="_lbl2">hello</div>
                                             </pushable-sidebar>
 
                                             <!-- Main content -->
@@ -239,21 +239,24 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._set_selection_from_js_event(event)
 
     def _accept_handler(self, accept_event: palette.AcceptEvent):
+        logger.debug(f'accept_handler: {accept_event}')
+        if self._action_manager.selected_action is None:
+            return
         self._set_selection_from_js_event(accept_event.js_event)
         self._update_selected_action_label()
         accept_event.accept()
 
     def _update_selected_action_label(self):
         self._update_lbl += 1
-        self._update_span.innerHTML = f'update {self._update_lbl}'
+        self._lbl2.innerHTML = f'update {self._update_lbl}'
 
         sa = self._action_manager.selected_action
         sel_label = 'None' if sa is None else sa.label
         msg = f'palette item selected: {sel_label}'
-        if msg == self._span1.innerHTML:
+        if msg == self._lbl1.innerHTML:
             return
         logger.debug(msg)
-        self._span1.innerHTML = msg
+        self._lbl1.innerHTML = msg
 
     def _set_selection_from_js_event(self, event):
         # path = event.composedPath()
@@ -264,13 +267,13 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
         if not self.element_selector.is_selectable(target):
             target = None
-        in_sidebar = is_contained(target, self.sidebar.element)
-        if in_sidebar or target == js.document.body or target == js.document.documentElement:
+        unselectable = is_contained(target, self._palette.element)
+        if unselectable or target == js.document.body or target == js.document.documentElement:
             target = None
 
         if self.element_selector.get_selected_element() == target:
             return
-        logger.debug(f'set_selection: {_pretty(target)}, in_inside: {in_sidebar}, composed: {composed}')
+        logger.debug(f'set_selection: {_pretty(target)}, unselectable: {unselectable}, composed: {composed}')
         js.console.log('set_selection console', event, event.composedPath())
         self.element_selector.set_selected_element(target)
         self._next_element = target
@@ -278,14 +281,14 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         async def more_snappy():
             await asyncio.sleep(0.2)
             if self._next_element != target:
-                # logger.debug(f'more_snappy: element changed, skipping')
+                logger.debug(f'more_snappy: element changed, skipping')
                 return
             ep_live = element_path.element_path(target)
-            # logger.debug(f'Element path live: {ep_live}')
+            logger.debug(f'Element path live: {ep_live}')
             ep_source = _rebase_element_path_to_origin_source(ep_live)
-            # logger.debug(f'Element path source: {ep_source}')
-            message = 'ep_source is none' if ep_source is None else f'Selection: {_element_path_lbl(ep_source)}'
-            # logger.debug(message)
+            logger.debug(f'Element path source: {ep_source}')
+            message = 'ep_source is none' if ep_source is None else f'ep_source: {_element_path_lbl(ep_source)}'
+            logger.debug(message)
             if ep_source is not None:
                 from wwwpy.remote.designer.ui.dev_mode_component import DevModeComponent
                 tb = DevModeComponent.instance.toolbox
@@ -296,30 +299,13 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
 
 def _element_from_js_event(event):
-    """
-    Get the deepest element at the event coordinates by recursively traversing shadow DOMs.
-    """
-
-    def get_deepest_element(root, x, y):
-        # Get element at point in current root context
-        element = root.elementFromPoint(x, y)
-
-        # If element has a shadow root, look deeper
-        if element and hasattr(element, 'shadowRoot') and element.shadowRoot:
-            # Recursively search in the shadow DOM
-            shadow_element = get_deepest_element(element.shadowRoot, x, y)
-            if shadow_element:
-                return shadow_element
-
-        return element
-
-    # Start from the document level and traverse down
-    return get_deepest_element(js.document, event.clientX, event.clientY)
+    return get_deepest_element(event.clientX, event.clientY)
 
 
-def _pretty(node):
+def _pretty(node: js.HTMLElement):
     if hasattr(node, 'tagName'):
-        return f'{node.tagName.lower()}#{node.id}.{node.className}[{node.innerHTML.strip()[:20]}…]'
+        identifier = node.dataset.name if node.hasAttribute('data-name') else node.id
+        return f'{node.tagName.lower()}#{identifier}.{node.className}[{node.innerHTML.strip()[:20]}…]'
     return str(node)
 
 
