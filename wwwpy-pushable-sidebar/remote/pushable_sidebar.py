@@ -1,4 +1,5 @@
 from __future__ import annotations
+import inspect
 
 import time
 
@@ -27,6 +28,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
     _container: js.HTMLDivElement = wpc.element()
     _sidebar_content: js.HTMLDivElement = wpc.element()
     _style: js.HTMLStyleElement = wpc.element()
+    _sb_buttons: js.HTMLDivElement = wpc.element()
 
     def init_component(self):
         """
@@ -37,12 +39,12 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
 
         # language=html
-        self.element.shadowRoot.innerHTML = f"""
+        self.element.shadowRoot.innerHTML = """
         <style data-name="_style"></style>
         
         <div class="sidebar-container" data-name="_container">
             <div class="sidebar-header">
-                <div class="sidebar-header-buttons">
+                <div class="sidebar-header-buttons" data-name="_sb_buttons">
                     <button class="toggle-button" 
                             data-name="_toggle_button" 
                             title="Toggle sidebar">
