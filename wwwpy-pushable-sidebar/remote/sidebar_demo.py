@@ -1,4 +1,5 @@
 from __future__ import annotations
+import inspect
 
 import asyncio
 import datetime
@@ -7,7 +8,7 @@ import logging
 import js
 import wwwpy.remote.component as wpc
 from pyodide.ffi import create_proxy
-from wwwpy.remote import dict_to_js
+from wwwpy.remote import dict_to_js, dict_to_py
 from wwwpy.remote.designer import element_path
 from wwwpy.remote.designer.helpers import _element_path_lbl
 from wwwpy.remote.designer.ui import palette  # noqa
@@ -33,6 +34,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     element_selector: ElementSelector = wpc.element()
     _lbl1: js.HTMLDivElement = wpc.element()
     _lbl2: js.HTMLDivElement = wpc.element()
+    _li_dashboard: js.HTMLLIElement = wpc.element()
 
     def init_component(self):
         # Create shadow DOM for style isolation
@@ -40,118 +42,117 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
         # Define component HTML structure with shadow DOM
         # language=html
-        self.element.shadowRoot.innerHTML = """
-                                            <style>
-                                                /* Component styles */
-                                                :host {
-                                                    display: block;
-                                                    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-                                                }
+        self.element.shadowRoot.innerHTML = """<style>
+    /* Component styles */
+    :host {
+        display: block;
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
 
-                                                .content {
-                                                    padding: 20px;
-                                                    max-width: 1200px;
-                                                    margin: 0 auto;
-                                                }
+    .content {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
 
-                                                h1 {
-                                                    color: white;
-                                                    border-bottom: 1px solid #eee;
-                                                    padding-bottom: 10px;
-                                                }
+    h1 {
+        color: white;
+        border-bottom: 1px solid #eee;
+        padding-bottom: 10px;
+    }
 
-                                                .controls {
-                                                    margin: 20px 0;
-                                                    padding: 20px;
-                                                    background-color: #f5f5f5;
-                                                    border-radius: 5px;
-                                                }
+    .controls {
+        margin: 20px 0;
+        padding: 20px;
+        background-color: #f5f5f5;
+        border-radius: 5px;
+    }
 
-                                                button {
-                                                    padding: 8px 16px;
-                                                    margin: 5px;
-                                                    background-color: #4CAF50;
-                                                    color: white;
-                                                    border: none;
-                                                    border-radius: 4px;
-                                                    cursor: pointer;
-                                                }
+    button {
+        padding: 8px 16px;
+        margin: 5px;
+        background-color: #4CAF50;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+    }
 
-                                                button:hover {
-                                                    background-color: #45a049;
-                                                }
+    button:hover {
+        background-color: #45a049;
+    }
 
-                                                select, input {
-                                                    padding: 8px;
-                                                    margin: 5px;
-                                                    border: 1px solid #ddd;
-                                                    border-radius: 4px;
-                                                }
+    select, input {
+        padding: 8px;
+        margin: 5px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+    }
 
-                                                /* Style for the body through a global style */
-                                                :host {
-                                                    --sidebar-transition: padding 0.3s ease;
-                                                }
-                                            </style>
-                                            <element-selector data-name="element_selector"
-                                                              id="element-selector"></element-selector>
+    /* Style for the body through a global style */
+    :host {
+        --sidebar-transition: padding 0.3s ease;
+    }
+</style>
+<element-selector data-name="element_selector"
+                  id="element-selector"></element-selector>
 
-                                            <pushable-sidebar data-name="sidebar" position="left" width="300px">
-                                                <div class="sidebar-content">
-                                                    <h3>Pushable Sidebar</h3>
-                                                    <p>This is a sidebar that doesn't overlap content.</p>
+<pushable-sidebar data-name="sidebar" position="left" width="300px">
+    <div class="sidebar-content">
+        <h3>Pushable Sidebar</h3>
+        <p>This is a sidebar that doesn't overlap content.</p>
 
-                                                    <h4>Menu</h4>
-                                                    <wwwpy-palette data-name="_palette"></wwwpy-palette>
-                                                    <ul class="sidebar-menu">
-                                                        <li>Dashboard</li>
-                                                        <li>Profile</li>
-                                                        <li>Settings</li>
-                                                        <li>Notifications</li>
-                                                        <li>Help</li>
-                                                    </ul>
-                                                </div>
-                                                <div data-name="_lbl1">hello</div>
-                                                <div data-name="_lbl2">hello</div>
-                                            </pushable-sidebar>
+        <h4>Menu</h4>
+        <wwwpy-palette data-name="_palette"></wwwpy-palette>
+        <ul class="sidebar-menu">
+            <li data-name="_li_dashboard">Dashboard</li>
+            <li>Profile</li>
+            <li>Settings</li>
+            <li>Notifications</li>
+            <li>Help</li>
+        </ul>
+    </div>
+    <div data-name="_lbl1">hello</div>
+    <div data-name="_lbl2">hello</div>
+</pushable-sidebar>
 
-                                            <!-- Main content -->
-                                            <div class="content">
-                                                <h1>Demo Mixer</h1>
+<!-- Main content -->
+<div class="content">
+    <h1>Demo Mixer</h1>
 
-                                                <p>This demo shows how to use the PushableSidebar library to create
-                                                    sidebars that push content away instead of overlapping it.</p>
+    <p>This demo shows how to use the PushableSidebar library to create
+        sidebars that push content away instead of overlapping it.</p>
 
-                                                <div class="controls">
-                                                    <h3>Control Panel</h3>
-                                                    <button data-name="toggle_button">Toggle Sidebar State</button>
-                                                    <button data-name="add_content_button">Add Content</button>
+    <div class="controls">
+        <h3>Control Panel</h3>
+        <button data-name="toggle_button">Toggle Sidebar State</button>
+        <button data-name="add_content_button">Add Content</button>
 
-                                                    <div style="margin-top: 15px;">
-                                                        <label>State:
-                                                            <select data-name="state_select">
-                                                                <option value="expanded">Expanded</option>
-                                                                <option value="collapsed">Collapsed</option>
-                                                                <option value="hidden">Hidden</option>
-                                                            </select>
-                                                        </label>
+        <div style="margin-top: 15px;">
+            <label>State:
+                <select data-name="state_select">
+                    <option value="expanded">Expanded</option>
+                    <option value="collapsed">Collapsed</option>
+                    <option value="hidden">Hidden</option>
+                </select>
+            </label>
 
-                                                        <label style="margin-left: 15px;">
-                                                            Position:
-                                                            <select data-name="position_select">
-                                                                <option value="left">Left</option>
-                                                                <option value="right">Right</option>
-                                                            </select>
-                                                        </label>
+            <label style="margin-left: 15px;">
+                Position:
+                <select data-name="position_select">
+                    <option value="left">Left</option>
+                    <option value="right">Right</option>
+                </select>
+            </label>
 
-                                                        <label style="margin-left: 15px;">
-                                                            Width:
-                                                            <input type="text" data-name="width_input" value="300px">
-                                                            <button data-name="apply_width_button">Apply</button>
-                                                        </label>
-                                                    </div>
-                                                </div>
-                                            </div> \
+            <label style="margin-left: 15px;">
+                Width:
+                <input type="text" data-name="width_input" value="300px">
+                <button data-name="apply_width_button">Apply</button>
+            </label>
+        </div>
+    </div>
+</div>
                                             """
 
         self._add_global_styles()
@@ -264,6 +265,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         composed = 'disabled'
         # target = path[0] if composed else event.target
         target = _element_from_js_event(event)
+        if target is None:
+            logger.warning(f'set_selection: target is None {dict_to_py(event)}')
 
         if not self.element_selector.is_selectable(target):
             target = None
@@ -296,6 +299,10 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
                 tb._restore_selected_element_path()
 
         asyncio.create_task(more_snappy())
+    
+    async def _li_dashboard__click(self, event):
+        logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
+    
 
 
 def _element_from_js_event(event):
