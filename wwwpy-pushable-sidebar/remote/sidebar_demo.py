@@ -269,7 +269,9 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
             logger.warning(f'set_selection: target is None {dict_to_py(event)}')
 
         if not self.element_selector.is_selectable(target):
-            target = None
+            logger.warning(f'set_selection: target is not selectable because o element_selector.is_selectable')
+            return
+
         unselectable = is_contained(target, self._palette.element)
         if unselectable or target == js.document.body or target == js.document.documentElement:
             target = None
