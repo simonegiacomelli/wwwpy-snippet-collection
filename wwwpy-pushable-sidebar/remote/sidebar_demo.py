@@ -13,6 +13,7 @@ from wwwpy.remote.designer import element_path
 from wwwpy.remote.designer.helpers import _element_path_lbl
 from wwwpy.remote.designer.ui import palette  # noqa
 from wwwpy.remote.designer.ui.element_selector import ElementSelector
+from wwwpy.remote.designer.ui.pointer_manager import HoverEvent, DeselectEvent
 from wwwpy.remote.designer.ui.property_editor import _rebase_element_path_to_origin_source
 from wwwpy.remote.jslib import is_contained, get_deepest_element
 
@@ -162,8 +163,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._palette.add_item('item3', 'Item 3')
         self._palette.add_item('item4', 'Item 4')
 
-        self._action_manager.listeners_for(palette.HoverEvent).add(self._hover_handler)
-        self._action_manager.listeners_for(palette.AcceptEvent).add(self._accept_handler)
+        self._action_manager.listeners_for(HoverEvent).add(self._hover_handler)
+        self._action_manager.listeners_for(DeselectEvent).add(self._accept_handler)
         self._update_lbl = 0
 
     def _add_global_styles(self):
