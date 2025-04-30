@@ -18,6 +18,7 @@ from wwwpy.remote.designer.ui.property_editor import _rebase_element_path_to_ori
 from wwwpy.remote.jslib import is_contained, get_deepest_element
 
 from . import pushable_sidebar  # Import the PushableSidebar component
+from . import svg_rectangle_generator # noqa
 
 logger = logging.getLogger(__name__)
 
@@ -153,6 +154,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
             </label>
         </div>
     </div>
+    <svg-rectangle-generator></svg-rectangle-generator>
+
 </div>
                                             """
 
