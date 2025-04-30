@@ -119,7 +119,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
 <!-- Main content -->
 <div class="content">
-    <h1>Demo Mixer</h1>
+    <h1>Demo Mixer <wwwpy-help-icon href="https://www.google.com"></wwwpy-help-icon></h1>
 
     <p>This demo shows how to use the PushableSidebar library to create
         sidebars that push content away instead of overlapping it.</p>
@@ -233,14 +233,14 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         now = datetime.datetime.now()
         logger.info(f"{now} - {message}")
 
-    def _hover_handler(self, hover_event: palette.HoverEvent):
+    def _hover_handler(self, hover_event: HoverEvent):
         event = hover_event.js_event
         self._update_selected_action_label()
         if not self._action_manager.selected_action:
             return
         self._set_selection_from_js_event(event)
 
-    def _accept_handler(self, accept_event: palette.AcceptEvent):
+    def _accept_handler(self, accept_event: DeselectEvent):
         logger.debug(f'accept_handler: {accept_event}')
         if self._action_manager.selected_action is None:
             return
