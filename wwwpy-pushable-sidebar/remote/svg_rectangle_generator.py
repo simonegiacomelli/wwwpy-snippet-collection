@@ -7,6 +7,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 class SvgRectangleGenerator(wpc.Component, tag_name='svg-rectangle-generator'):
     # Input elements
     width_input: js.HTMLInputElement = wpc.element()
@@ -149,50 +150,6 @@ class SvgRectangleGenerator(wpc.Component, tag_name='svg-rectangle-generator'):
         """Called after initialization. Generate SVG on startup."""
         self.generate_svg()
 
-    def create_svg(self, w, h, x, y, pulse_option):
-        """Create SVG string based on parameters."""
-        # Validate to ensure inner rectangle has positive dimensions
-        if x * 2 >= w or y * 2 >= h:
-            return f'<text x="10" y="30" fill="red">Error: Inset values too large for the given width/height</text>'
-
-        # Calculate inner rectangle dimensions
-        inner_width = w - 2 * x
-        inner_height = h - 2 * y
-
-        # Determine which parts should pulse
-        top_class = ""
-        left_class = ""
-        bottom_class = ""
-        right_class = ""
-        inner_class = ""
-
-        if pulse_option == "top_left":
-            top_class = 'class="pulse" stroke="cyan"'
-            left_class = 'class="pulse" stroke="cyan"'
-        elif pulse_option == "bottom_right":
-            bottom_class = 'class="pulse" stroke="cyan"'
-            right_class = 'class="pulse" stroke="cyan"'
-        elif pulse_option == "inner":
-            inner_class = 'class="pulse" stroke="cyan"'
-
-        # Create SVG string with the CSS classes for animation
-        return f'''<svg viewBox="0 0 {w} {h}" width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">
-                <!-- Outer rectangle segments -->
-                <line x1="0" y1="0" x2="{w}" y2="0" stroke="blue" stroke-width="2" {top_class} />
-                <line x1="0" y1="0" x2="0" y2="{h}" stroke="blue" stroke-width="2" {left_class} />
-                <line x1="0" y1="{h}" x2="{w}" y2="{h}" stroke="blue" stroke-width="2" {bottom_class} />
-                <line x1="{w}" y1="0" x2="{w}" y2="{h}" stroke="blue" stroke-width="2" {right_class} />
-
-                <!-- Inner rectangle -->
-                <rect x="{x}" y="{y}" width="{inner_width}" height="{inner_height}" fill="none" stroke="red" stroke-width="2" {inner_class} />
-
-                <!-- Line connecting bottom-left corners -->
-                <line x1="0" y1="{h}" x2="{x}" y2="{h-y}" stroke="green" stroke-width="2" />
-
-                <!-- Line connecting top-right corners -->
-                <line x1="{w}" y1="0" x2="{w-x}" y2="{y}" stroke="purple" stroke-width="2" />
-            </svg>'''
-
     def generate_svg(self):
         """Generate SVG based on current input values."""
         # Get parameter values from inputs
@@ -203,7 +160,7 @@ class SvgRectangleGenerator(wpc.Component, tag_name='svg-rectangle-generator'):
         glow_option = self.glow_option.value
 
         # Generate SVG
-        svg_string = self.create_svg(w, h, x, y, glow_option)
+        svg_string = create_svg(w, h, x, y, glow_option)
 
         # Update the display
         self.svg_container.innerHTML = svg_string
@@ -229,3 +186,45 @@ class SvgRectangleGenerator(wpc.Component, tag_name='svg-rectangle-generator'):
     async def glow_option__change(self, event):
         """Handle glow option changes."""
         self.generate_svg()
+
+
+def create_svg(w, h, x, y, pulse_option) -> str:
+    """Create SVG string based on parameters."""
+    # Validate to ensure inner rectangle has positive dimensions
+    if x * 2 >= w or y * 2 >= h:
+        return f'<text x="10" y="30" fill="red">Error: Inset values too large for the given width/height</text>'
+
+    # Calculate inner rectangle dimensions
+    inner_width = w - 2 * x
+    inner_height = h - 2 * y
+
+    # Determine which parts should pulse
+    top_class, left_class, bottom_class, right_class, inner_class = [''] * 5
+
+    pulse = 'class="pulse" stroke="cyan"'
+    if pulse_option == "top_left":
+        top_class = pulse
+        left_class = pulse
+    elif pulse_option == "bottom_right":
+        bottom_class = pulse
+        right_class = pulse
+    elif pulse_option == "inner":
+        inner_class = pulse
+
+    # Create SVG string with the CSS classes for animation
+    return f'''<svg viewBox="0 0 {w} {h}" width="{w}" height="{h}" xmlns="http://www.w3.org/2000/svg">
+            <!-- Outer rectangle segments -->
+            <line x1="0" y1="0" x2="{w}" y2="0" stroke="blue" stroke-width="2" {top_class} />
+            <line x1="0" y1="0" x2="0" y2="{h}" stroke="blue" stroke-width="2" {left_class} />
+            <line x1="0" y1="{h}" x2="{w}" y2="{h}" stroke="blue" stroke-width="2" {bottom_class} />
+            <line x1="{w}" y1="0" x2="{w}" y2="{h}" stroke="blue" stroke-width="2" {right_class} />
+
+            <!-- Inner rectangle -->
+            <rect x="{x}" y="{y}" width="{inner_width}" height="{inner_height}" fill="none" stroke="red" stroke-width="2" {inner_class} />
+
+            <!-- Line connecting bottom-left corners -->
+            <line x1="0" y1="{h}" x2="{x}" y2="{h - y}" stroke="green" stroke-width="2" />
+
+            <!-- Line connecting top-right corners -->
+            <line x1="{w}" y1="0" x2="{w - x}" y2="{y}" stroke="purple" stroke-width="2" />
+        </svg>'''
