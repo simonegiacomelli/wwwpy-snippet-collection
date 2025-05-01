@@ -203,11 +203,9 @@ def create_svg(w, h, x, y, pulse_option) -> str:
 
     pulse = 'class="pulse" stroke="cyan"'
     if pulse_option == "top_left":
-        top_class = pulse
-        left_class = pulse
+        top_class, left_class = pulse, pulse
     elif pulse_option == "bottom_right":
-        bottom_class = pulse
-        right_class = pulse
+        bottom_class, right_class = pulse, pulse
     elif pulse_option == "inner":
         inner_class = pulse
 
