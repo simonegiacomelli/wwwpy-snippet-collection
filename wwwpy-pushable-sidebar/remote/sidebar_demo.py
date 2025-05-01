@@ -161,8 +161,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
         self._add_global_styles()
         self._action_manager = self._palette.action_manager
-        self._palette.add_item('item1', 'Item 1')
-        self._palette.add_item('item2', 'Item 2')
+        self._palette.add_item('item-select', 'Select')
+        self._palette.add_item('item-add', 'Add')
         self._palette.add_item('item3', 'Item 3')
         self._palette.add_item('item4', 'Item 4')
 
