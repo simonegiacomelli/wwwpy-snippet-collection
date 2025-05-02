@@ -170,8 +170,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._palette.add_item('item3', 'Item 3')
         self._palette.add_item('item4', 'Item 4')
 
-        self._action_manager.listeners_for(HoverEvent).add(self._hover_handler)
-        self._action_manager.listeners_for(DeselectEvent).add(self._accept_handler)
+        self._action_manager.on(HoverEvent).add(self._hover_handler)
+        self._action_manager.on(DeselectEvent).add(self._accept_handler)
         self._update_lbl = 0
 
     def _add_global_styles(self):
