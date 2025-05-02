@@ -7,8 +7,11 @@ import js
 import wwwpy.remote.component as wpc
 from pyodide.ffi import create_proxy
 from wwwpy.remote import dict_to_js, hotkeylib
+from wwwpy.remote._elementlib import ensure_tag_instance
 
 logger = logging.getLogger(__name__)
+
+_BODY_PADDING_STYLE_ID = '_wwwpy_body_padding_style'
 
 
 class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
@@ -60,6 +63,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
             <div class="resize-handle" data-name="_resize_handle"></div>
         </div>
         """
+        self._body_padding = ensure_tag_instance('style', _BODY_PADDING_STYLE_ID, js.document.head)
 
         self._config = {
             'position': 'left',
@@ -340,10 +344,20 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         self._set_padding(f"{new_width}px")
 
     def _set_padding(self, padding):
-        if self._config['position'] == 'left':
-            js.document.body.style.paddingLeft = padding
+        # if self._config['position'] == 'left':
+        #     js.document.body.style.paddingLeft = padding
+        # else:
+        #     js.document.body.style.paddingRight = padding
+        # use a style tag to set the padding to body; use important
+        if padding == '':
+            style = ''
         else:
-            js.document.body.style.paddingRight = padding
+            style = (
+                """body {\n padding-WHERE: PADDING !important; \n} """
+                .replace('WHERE', self._config['position'])
+                .replace('PADDING', padding))
+
+        self._body_padding.innerHTML = style
 
     def _stop_resize(self, event):
         """End resize operation"""
