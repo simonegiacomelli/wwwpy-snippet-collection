@@ -19,6 +19,7 @@ from wwwpy.remote.jslib import is_contained, get_deepest_element
 
 from . import pushable_sidebar  # Import the PushableSidebar component
 from . import svg_rectangle_generator # noqa
+from .animated_svg import animated_svg_html
 
 logger = logging.getLogger(__name__)
 
@@ -158,6 +159,9 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
 </div>
                                             """
+
+        svg_fragment = js.document.createRange().createContextualFragment(animated_svg_html)
+        self.element.shadowRoot.appendChild(svg_fragment)
 
         self._add_global_styles()
         self._action_manager = self._palette.action_manager
