@@ -337,8 +337,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         self.element.style.width = f"{new_width}px"
 
         # Update body padding
-        new_padding = f"{new_width}px"
-        self._set_padding(new_padding)
+        self._set_padding(f"{new_width}px")
 
     def _set_padding(self, padding):
         if self._config['position'] == 'left':
