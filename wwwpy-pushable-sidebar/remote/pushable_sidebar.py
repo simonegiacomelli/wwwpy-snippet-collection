@@ -1,14 +1,12 @@
 from __future__ import annotations
-import inspect
-
-import time
-
-import wwwpy.remote.component as wpc
-import js
-from pyodide.ffi import create_proxy
-from wwwpy.remote import dict_to_js, hotkeylib
 
 import logging
+import time
+
+import js
+import wwwpy.remote.component as wpc
+from pyodide.ffi import create_proxy
+from wwwpy.remote import dict_to_js, hotkeylib
 
 logger = logging.getLogger(__name__)
 
@@ -111,7 +109,6 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         if delta < 0.3:
             self._last_ctrl_time = None
             self.toggle()
-
 
     def _update_style(self):
         """Update the style element based on current configuration"""
@@ -268,10 +265,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         padding_value = current_width if current_width.endswith('px') else f"{current_width}px"
 
         # Apply padding to body to push content
-        if self._config['position'] == 'left':
-            js.document.body.style.paddingLeft = padding_value
-        else:
-            js.document.body.style.paddingRight = padding_value
+        self._set_padding(padding_value)
 
         # Dispatch event for external components to react
         self.element.dispatchEvent(
@@ -282,10 +276,7 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
 
     def _remove_padding(self):
         """Remove body padding"""
-        if self._config['position'] == 'left':
-            js.document.body.style.paddingLeft = ''
-        else:
-            js.document.body.style.paddingRight = ''
+        self._set_padding('')
 
     async def _resize_handle__mousedown(self, event):
         """Start resize operation (using wwwpy's naming convention for event handlers)"""
@@ -346,10 +337,14 @@ class PushableSidebar(wpc.Component, tag_name='pushable-sidebar'):
         self.element.style.width = f"{new_width}px"
 
         # Update body padding
+        new_padding = f"{new_width}px"
+        self._set_padding(new_padding)
+
+    def _set_padding(self, padding):
         if self._config['position'] == 'left':
-            js.document.body.style.paddingLeft = f"{new_width}px"
+            js.document.body.style.paddingLeft = padding
         else:
-            js.document.body.style.paddingRight = f"{new_width}px"
+            js.document.body.style.paddingRight = padding
 
     def _stop_resize(self, event):
         """End resize operation"""
