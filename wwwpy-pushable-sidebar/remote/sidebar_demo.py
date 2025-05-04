@@ -12,13 +12,15 @@ from wwwpy.remote import dict_to_js, dict_to_py
 from wwwpy.remote.designer import element_path
 from wwwpy.remote.designer.helpers import _element_path_lbl
 from wwwpy.remote.designer.ui import palette  # noqa
+from wwwpy.remote.designer.ui.action_select_element import SelectElementAction
 from wwwpy.remote.designer.ui.element_selector import ElementSelector
-from wwwpy.remote.designer.ui.pointer_manager import HoverEvent, DeselectEvent
+from wwwpy.remote.designer.ui.palette import Action
+from wwwpy.remote.designer.ui.action_manager import HoverEvent, DeselectEvent
 from wwwpy.remote.designer.ui.property_editor import _rebase_element_path_to_origin_source
 from wwwpy.remote.jslib import is_contained, get_deepest_element
 
 from . import pushable_sidebar  # Import the PushableSidebar component
-from . import svg_rectangle_generator # noqa
+from . import svg_rectangle_generator  # noqa
 from .animated_svg import animated_svg_html
 
 logger = logging.getLogger(__name__)
@@ -34,7 +36,6 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     apply_width_button: js.HTMLButtonElement = wpc.element()
     sidebar: pushable_sidebar.PushableSidebar = wpc.element()  # Reference to the sidebar component
     _palette: palette.PaletteComponent = wpc.element()  # Reference to the palette component
-    element_selector: ElementSelector = wpc.element()
     _lbl1: js.HTMLDivElement = wpc.element()
     _lbl2: js.HTMLDivElement = wpc.element()
     _li_dashboard: js.HTMLLIElement = wpc.element()
@@ -97,8 +98,6 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         --sidebar-transition: padding 0.3s ease;
     }
 </style>
-<element-selector data-name="element_selector"
-                  id="element-selector"></element-selector>
 
 <pushable-sidebar data-name="sidebar" position="left" width="300px">
     <div class="sidebar-content">
@@ -165,13 +164,13 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 
         self._add_global_styles()
         self._action_manager = self._palette.action_manager
-        self._palette.add_item('item-select', 'Select')
-        self._palette.add_item('item-add', 'Add')
-        self._palette.add_item('item3', 'Item 3')
-        self._palette.add_item('item4', 'Item 4')
+        self._palette.add_action(SelectElementAction())
+        # self._palette.add_action(Action('Add'))
+        # self._palette.add_action(Action('Item 3'))
+        # self._palette.add_action(Action('Item 4'))
 
-        self._action_manager.on(HoverEvent).add(self._hover_handler)
-        self._action_manager.on(DeselectEvent).add(self._accept_handler)
+        # self._action_manager.on(HoverEvent).add(self._hover_handler)
+        # self._action_manager.on(DeselectEvent).add(self._accept_handler)
         self._update_lbl = 0
 
     def _add_global_styles(self):
@@ -310,10 +309,9 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
                 tb._restore_selected_element_path()
 
         asyncio.create_task(more_snappy())
-    
+
     async def _li_dashboard__click(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
-    
 
 
 def _element_from_js_event(event):
