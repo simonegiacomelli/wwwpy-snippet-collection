@@ -1,4 +1,5 @@
 import js
+from pyodide.ffi import create_proxy
 from wwwpy.remote.component import get_component
 
 from remote.accordion_components import AccordionContainer, AccordionSection
@@ -63,3 +64,21 @@ class TestAccordionSectionStandalone:
 
         # THEN
         assert height() > h
+
+    async def test_event(self):
+        # language=html
+        js.document.body.innerHTML = """<wwwpy-accordion-section>
+        <div slot="header"><span id='span1'></span></div>
+        <div slot="panel">p0</div>"""
+        element = js.document.body.firstElementChild
+        section = get_component(element, AccordionSection)
+        span1 = js.document.getElementById('span1')
+        events = []
+        element.addEventListener('accordion-toggle', create_proxy(lambda event: events.append(event)))
+
+        # WHEN
+        span1.click()
+
+        # THEN
+        assert section.expanded is True
+        assert events != []
