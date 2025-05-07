@@ -4,7 +4,7 @@ from wwwpy.remote.component import get_component
 from remote.accordion_components import AccordionContainer, AccordionSection
 
 
-async def test_sections():
+async def test_container_sections():
     # language=html
     js.document.body.innerHTML = """<wwwpy-accordion-container>
     
@@ -32,7 +32,6 @@ async def test_sections():
 
 class TestAccordionSectionStandalone:
 
-
     async def test_accordion_should_be_expanded(self):
         # language=html
         js.document.body.innerHTML = """<wwwpy-accordion-section>
@@ -53,11 +52,14 @@ class TestAccordionSectionStandalone:
         <div slot="panel">p0</div>"""
         section = get_component(js.document.body.firstElementChild, AccordionSection)
 
-        h = section.element.clientHeight
+        def height():
+            return section.element.getBoundingClientRect().height
+
+        h = height()
 
         # WHEN
+        section.transition = False
         section.expanded = True
 
         # THEN
-        assert section.element.clientHeight > h
-
+        assert height() > h

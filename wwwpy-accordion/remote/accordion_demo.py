@@ -151,8 +151,8 @@ class AccordionDemo(wpc.Component, tag_name='accordion-demo'):
             self._log(f"<strong>Programmatic:</strong> Section {index + 1} was toggled (now {'expanded' if section.expanded else 'collapsed'})")
 
     def accordion__accordion_toggle(self, event):
-        """Handle accordion-toggle events."""
-        section = event.target
+        self._log(f'<strong>Event:</strong> Section toggled by user click')
+        section = event.detail.section
         sections = self.accordion.sections
         if section in sections:
             section_index = sections.index(section)

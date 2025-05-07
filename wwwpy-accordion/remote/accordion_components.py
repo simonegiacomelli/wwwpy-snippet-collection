@@ -36,24 +36,28 @@ class AccordionSection(wpc.Component, tag_name='wwwpy-accordion-section'):
     def init_component(self):
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
         # language=html
-        self.element.shadowRoot.innerHTML = """<style>
-    .panel-container {
-        display: grid;
-        transition: grid-template-rows 300ms ease-in-out;
-    }
-</style>
-<slot data-name="_header_container">Header</slot>
-<div data-name="_panel_container" class="panel-container" >
+        self.element.shadowRoot.innerHTML = """
+<slot name="header" data-name="_header_container">Header</slot>
+<div data-name="_panel_container" style="display: grid">
     <div style="overflow: hidden">
         <slot name="panel">Panel</slot>
     </div>
 </div>
 """
-        self._expanded = False
+        self._expanded = None  # type: ignore
         self.expanded = False
+        self.transition = True
 
     def _header_container__click(self, event):
         self.toggle(True)
+
+    @property
+    def transition(self):
+        return self._panel_container.style.transition != ''
+
+    @transition.setter
+    def transition(self, value):
+        self._panel_container.style.transition = '' if not value else 'grid-template-rows 300ms ease-in-out'
 
     @property
     def expanded(self):
