@@ -75,6 +75,6 @@ class AccordionSection(wpc.Component, tag_name='wwwpy-accordion-section'):
         self.expanded = not self.expanded
         if not emit_event:
             return
-        event_dict = dict_to_js({'bubbles': True, 'detail': {'section': self.element, 'expanded': self._expanded}})
+        event_dict = dict_to_js({'bubbles': True, 'detail': {'section': self, 'expanded': self._expanded}})
         event = js.CustomEvent.new('accordion-toggle', event_dict)
         self.element.dispatchEvent(event)

@@ -82,3 +82,6 @@ class TestAccordionSectionStandalone:
         # THEN
         assert section.expanded is True
         assert events != []
+        event0 = events[0]
+        assert event0.target == element
+        assert event0.detail.section == section
