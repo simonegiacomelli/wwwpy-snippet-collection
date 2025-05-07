@@ -148,16 +148,19 @@ class AccordionDemo(wpc.Component, tag_name='accordion-demo'):
         if index < len(sections):
             section = sections[index]
             section.toggle()
-            self._log(f"<strong>Programmatic:</strong> Section {index + 1} was toggled (now {'expanded' if section.expanded else 'collapsed'})")
+            self._log(
+                f"<strong>Programmatic:</strong> Section {index + 1} was toggled (now {'expanded' if section.expanded else 'collapsed'})")
 
     def accordion__accordion_toggle(self, event):
         self._log(f'<strong>Event:</strong> Section toggled by user click')
         section = event.detail.section
         sections = self.accordion.sections
-        if section in sections:
+        try:
             section_index = sections.index(section)
             status = 'expanded' if section.expanded else 'collapsed'
             self._log(f"<strong>Event:</strong> Section index {section_index} was {status} by user click")
+        except ValueError:
+            self._log(f"<strong>Event:</strong> Section not found in the accordion")
 
     async def toggle_section1_btn__click(self, event):
         """Handle toggle section 1 button click."""
