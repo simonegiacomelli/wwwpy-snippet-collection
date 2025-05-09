@@ -12,6 +12,7 @@ from wwwpy.remote import dict_to_js, dict_to_py
 from wwwpy.remote.designer import element_path
 from wwwpy.remote.designer.helpers import _element_path_lbl
 from wwwpy.remote.designer.ui import palette  # noqa
+from wwwpy.remote.designer.ui.accordion_components import AccordionSection
 from wwwpy.remote.designer.ui.action_select_element import SelectElementAction
 from wwwpy.remote.designer.ui.element_selector import ElementSelector
 from wwwpy.remote.designer.ui.palette import Action
@@ -25,6 +26,7 @@ from .animated_svg import animated_svg_html
 
 logger = logging.getLogger(__name__)
 
+x = AccordionSection
 
 class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     # Element references using wpc.element()
@@ -100,12 +102,17 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
 </style>
 
 <pushable-sidebar data-name="sidebar" position="left" width="300px">
+    
+    <h3>Pushable Sidebar</h3>
     <div class="sidebar-content">
-        <h3>Pushable Sidebar</h3>
+        
         <p>This is a sidebar that doesn't overlap content.</p>
 
-        <h4>Menu</h4>
+        <h4>Menu</h4>    
+        <wwwpy-accordion-section expanded>
+        <div slot="header">Add Components</div> 
         <wwwpy-palette data-name="_palette"></wwwpy-palette>
+        </wwwpy-accordion-section>
         <ul class="sidebar-menu">
             <li data-name="_li_dashboard">Dashboard</li>
             <li>Profile</li>
@@ -113,7 +120,10 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
             <li>Notifications</li>
             <li>Help</li>
         </ul>
-    </div>
+        </div>
+        
+    
+    
     <div data-name="_lbl1">hello</div>
     <div data-name="_lbl2">hello</div>
 </pushable-sidebar>
