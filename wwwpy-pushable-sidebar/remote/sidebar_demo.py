@@ -1,24 +1,17 @@
 from __future__ import annotations
-import inspect
 
-import asyncio
 import datetime
+import inspect
 import logging
 
 import js
 import wwwpy.remote.component as wpc
 from pyodide.ffi import create_proxy
-from wwwpy.remote import dict_to_js, dict_to_py
-from wwwpy.remote.designer import element_path
-from wwwpy.remote.designer.helpers import _element_path_lbl
+from wwwpy.remote import dict_to_js
 from wwwpy.remote.designer.ui import palette  # noqa
 from wwwpy.remote.designer.ui.accordion_components import AccordionSection
-from wwwpy.remote.designer.ui.action_select_element import SelectElementAction
-from wwwpy.remote.designer.ui.element_selector import ElementSelector
-from wwwpy.remote.designer.ui.palette import Action
-from wwwpy.remote.designer.ui.action_manager import HoverEvent, DeselectEvent
-from wwwpy.remote.designer.ui.property_editor import _rebase_element_path_to_origin_source
-from wwwpy.remote.jslib import is_contained, get_deepest_element
+from wwwpy.remote.designer.ui.intent_add_element import AddElementIntent
+from wwwpy.remote.designer.ui.intent_select_element import SelectElementIntent
 
 from . import pushable_sidebar  # Import the PushableSidebar component
 from . import svg_rectangle_generator  # noqa
@@ -27,6 +20,7 @@ from .animated_svg import animated_svg_html
 logger = logging.getLogger(__name__)
 
 x = AccordionSection
+
 
 class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     # Element references using wpc.element()
@@ -173,14 +167,10 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self.element.shadowRoot.appendChild(svg_fragment)
 
         self._add_global_styles()
-        self._action_manager = self._palette.action_manager
-        self._palette.add_action(SelectElementAction())
-        # self._palette.add_action(Action('Add'))
-        # self._palette.add_action(Action('Item 3'))
-        # self._palette.add_action(Action('Item 4'))
+        self._intent_manager = self._palette.intent_manager
+        self._palette.add_intent(SelectElementIntent())
+        self._palette.add_intent(AddElementIntent())
 
-        # self._action_manager.on(HoverEvent).add(self._hover_handler)
-        # self._action_manager.on(DeselectEvent).add(self._accept_handler)
         self._update_lbl = 0
 
     def _add_global_styles(self):
@@ -249,26 +239,11 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         now = datetime.datetime.now()
         logger.info(f"{now} - {message}")
 
-    def _hover_handler(self, hover_event: HoverEvent):
-        event = hover_event.js_event
-        self._update_selected_action_label()
-        if not self._action_manager.selected_action:
-            return
-        self._set_selection_from_js_event(event)
-
-    def _accept_handler(self, accept_event: DeselectEvent):
-        logger.debug(f'accept_handler: {accept_event}')
-        if self._action_manager.selected_action is None:
-            return
-        self._set_selection_from_js_event(accept_event.js_event)
-        self._update_selected_action_label()
-        accept_event.accept()
-
-    def _update_selected_action_label(self):
+    def _update_selected_label(self):
         self._update_lbl += 1
         self._lbl2.innerHTML = f'update {self._update_lbl}'
 
-        sa = self._action_manager.selected_action
+        sa = self._intent_manager.current_selection
         sel_label = 'None' if sa is None else sa.label
         msg = f'palette item selected: {sel_label}'
         if msg == self._lbl1.innerHTML:
@@ -276,63 +251,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         logger.debug(msg)
         self._lbl1.innerHTML = msg
 
-    def _set_selection_from_js_event(self, event):
-        # path = event.composedPath()
-        # composed = path and len(path) > 0
-        composed = 'disabled'
-        # target = path[0] if composed else event.target
-        target = _element_from_js_event(event)
-        if target is None:
-            logger.warning(f'set_selection: target is None {dict_to_py(event)}')
-            return
-
-        if not self.element_selector.is_selectable(target):
-            logger.warning(f'set_selection: target is not selectable because o element_selector.is_selectable')
-            return
-
-        unselectable = is_contained(target, self._palette.element)
-        if unselectable or target == js.document.body or target == js.document.documentElement:
-            target = None
-
-        if self.element_selector.get_selected_element() == target:
-            return
-        logger.debug(f'set_selection: {_pretty(target)}, unselectable: {unselectable}, composed: {composed}')
-        js.console.log('set_selection console', event, event.composedPath())
-        self.element_selector.set_selected_element(target)
-        self._next_element = target
-
-        async def more_snappy():
-            await asyncio.sleep(0.2)
-            if self._next_element != target:
-                logger.debug(f'more_snappy: element changed, skipping')
-                return
-            ep_live = element_path.element_path(target)
-            logger.debug(f'Element path live: {ep_live}')
-            ep_source = _rebase_element_path_to_origin_source(ep_live)
-            logger.debug(f'Element path source: {ep_source}')
-            message = 'ep_source is none' if ep_source is None else f'ep_source: {_element_path_lbl(ep_source)}'
-            logger.debug(message)
-            if ep_source is not None:
-                from wwwpy.remote.designer.ui.dev_mode_component import DevModeComponent
-                tb = DevModeComponent.instance.toolbox
-                tb._toolbox_state.selected_element_path = ep_live
-                tb._restore_selected_element_path()
-
-        asyncio.create_task(more_snappy())
-
     async def _li_dashboard__click(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
-
-
-def _element_from_js_event(event):
-    return get_deepest_element(event.clientX, event.clientY)
-
-
-def _pretty(node: js.HTMLElement):
-    if hasattr(node, 'tagName'):
-        identifier = node.dataset.name if node.hasAttribute('data-name') else node.id
-        return f'{node.tagName.lower()}#{identifier}.{node.className}[{node.innerHTML.strip()[:20]}…]'
-    return str(node)
 
 
 _style = """
