@@ -1,18 +1,48 @@
 import xml.etree.ElementTree as ET
 from typing import Callable, Dict
 
-AttributeMutator = Callable[[Dict[str, str]], None]
+import xml.etree.ElementTree as ET
 
-
-def build_document(svg: str, attribute_mutator: AttributeMutator) -> str:
+def add_rounded_background2(svg: str, ratio: float, fill_color: str, radius: float) -> str:
     root = ET.fromstring(svg)
-    for elem in root.iter():
-        attribute_mutator(elem.attrib)
+    orig_w = float(root.attrib['width'])
+    orig_h = float(root.attrib['height'])
+    assert orig_w == orig_h
+    if 'viewBox' in root.attrib:
+        x0, y0, vb_w, vb_h = map(float, root.attrib['viewBox'].split())
+    else:
+        x0 = y0 = 0.0
+        vb_w = vb_h = orig_w
+    assert vb_w == vb_h == orig_w
+    new_size = orig_w * ratio
+    offset = (orig_w - new_size) / 2
+    def fmt(v):
+        return str(int(v)) if v.is_integer() else str(v)
+    new_s = fmt(new_size)
+    off_s = fmt(offset)
+    root.attrib['viewBox'] = f'{off_s} {off_s} {new_s} {new_s}'
+    root.attrib['width'] = new_s
+    root.attrib['height'] = new_s
+    ns = '{http://www.w3.org/2000/svg}'
+    bg = ET.Element(ns + 'rect', {
+        'x': off_s,
+        'y': off_s,
+        'width': new_s,
+        'height': new_s,
+        'fill': fill_color,
+        'rx': str(radius),
+        'ry': str(radius)
+    })
+    root.insert(0, bg)
+    for e in root.iter():
+        if isinstance(e.tag, str) and e.tag.startswith(ns):
+            e.tag = e.tag[len(ns):]
+    for k in list(root.attrib):
+        if k.startswith('xmlns'):
+            root.attrib.pop(k)
+    root.attrib['xmlns'] = 'http://www.w3.org/2000/svg'
     return ET.tostring(root, encoding='unicode')
 
-
-from typing import Dict, Callable
-import xml.etree.ElementTree as ET
 
 def add_rounded_background(svg: str, fill_color: str, radius: float) -> str:
     root = ET.fromstring(svg)
@@ -35,4 +65,14 @@ def add_rounded_background(svg: str, fill_color: str, radius: float) -> str:
         if k.startswith('xmlns'):
             root.attrib.pop(k)
     root.attrib['xmlns'] = 'http://www.w3.org/2000/svg'
+    return ET.tostring(root, encoding='unicode')
+
+
+AttributeMutator = Callable[[Dict[str, str]], None]
+
+
+def build_document(svg: str, attribute_mutator: AttributeMutator) -> str:
+    root = ET.fromstring(svg)
+    for elem in root.iter():
+        attribute_mutator(elem.attrib)
     return ET.tostring(root, encoding='unicode')

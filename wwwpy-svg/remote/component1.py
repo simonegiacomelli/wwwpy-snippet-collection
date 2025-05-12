@@ -3,7 +3,7 @@ import js
 
 import logging
 
-from common.svg import add_rounded_background
+from common.svg import add_rounded_background, add_rounded_background2
 
 logger = logging.getLogger(__name__)
 
@@ -17,10 +17,13 @@ class Component1(wpc.Component, tag_name='component-1'):
 <hr>
 """
 
-        self._append(_svg1)
+        # self._append(_svg1)
 
-        self._append(add_rounded_background(_svg1, _BLUE, 3))
-        self._append(add_rounded_background(_svg1, _GRAY, 3))
+        # self._append(add_rounded_background(_svg1, _BLUE, 3))
+        # self._append(add_rounded_background(_svg1, _GRAY, 3))
+        self._append(add_rounded_background2(_svg1, 1.4, '#2B2D30', 3))
+        self._append(add_rounded_background2(_svg1, 1.4, _BLUE, 3))
+        self._append(add_rounded_background2(_svg1, 1.4, _GRAY, 3))
 
     def _append(self, svg2):
         f = js.document.createRange().createContextualFragment(svg2)
@@ -44,5 +47,5 @@ _svg2 = """
 </svg>
 """
 
-_GRAY = '#3574F0'
-_BLUE = '#3C3E41'
+_BLUE = '#3574F0'
+_GRAY = '#3C3E41'
