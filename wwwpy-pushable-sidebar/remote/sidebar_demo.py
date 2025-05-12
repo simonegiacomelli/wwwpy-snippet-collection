@@ -8,12 +8,11 @@ import js
 import wwwpy.remote.component as wpc
 from pyodide.ffi import create_proxy
 from wwwpy.remote import dict_to_js
-from wwwpy.remote.designer.ui import palette  # noqa
+from wwwpy.remote.designer.ui import palette, pushable_sidebar  # noqa
 from wwwpy.remote.designer.ui.accordion_components import AccordionSection
 from wwwpy.remote.designer.ui.intent_add_element import AddElementIntent
 from wwwpy.remote.designer.ui.intent_select_element import SelectElementIntent
 
-from . import pushable_sidebar  # Import the PushableSidebar component
 from . import svg_rectangle_generator  # noqa
 from .animated_svg import animated_svg_html
 

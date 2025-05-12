@@ -9,6 +9,4 @@ async def main():
     log_levels.setup()
     from . import component1  # for component registration
     from . import sidebar_demo
-    from . import pushable_sidebar
-    # document.body.innerHTML = '<component-1></component-1>'
     document.body.innerHTML = '<sidebar-demo></sidebar-demo>'
