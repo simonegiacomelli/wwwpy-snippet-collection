@@ -21,9 +21,9 @@ class Component1(wpc.Component, tag_name='component-1'):
 
         # self._append(add_rounded_background(_svg1, _BLUE, 3))
         # self._append(add_rounded_background(_svg1, _GRAY, 3))
-        self._append(add_rounded_background2(_svg1, 1.4, '#2B2D30', 3))
-        self._append(add_rounded_background2(_svg1, 1.4, _BLUE, 3))
-        self._append(add_rounded_background2(_svg1, 1.4, _GRAY, 3))
+        self._append(add_rounded_background2(_svg1, '#2B2D30'))
+        self._append(add_rounded_background2(_svg1, _BLUE))
+        self._append(add_rounded_background2(_svg1, _GRAY))
 
     def _append(self, svg2):
         f = js.document.createRange().createContextualFragment(svg2)

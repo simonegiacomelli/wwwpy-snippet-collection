@@ -3,7 +3,21 @@ from typing import Callable, Dict
 
 import xml.etree.ElementTree as ET
 
-def add_rounded_background2(svg: str, ratio: float, fill_color: str, radius: float) -> str:
+def set_width_height(svg: str, width: float, height: float) -> str:
+    root = ET.fromstring(svg)
+    root.set('width', str(width))
+    root.set('height', str(height))
+    out = ET.tostring(root, encoding='unicode')
+    out = out.replace('ns0:', '').replace('xmlns:ns0=', 'xmlns=')
+    return out
+
+
+def add_rounded_background2(svg: str, fill_color: str, ratio: float =1.4, radius: float = 5) -> str:
+    r = add_rounded_background3(svg, fill_color, ratio, radius)
+    r2 = set_width_height(r, 22, 22)
+    return r2
+
+def add_rounded_background3(svg: str, fill_color: str, ratio: float =1.4, radius: float = 5) -> str:
     root = ET.fromstring(svg)
     orig_w = float(root.attrib['width'])
     orig_h = float(root.attrib['height'])
