@@ -176,7 +176,7 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         for ei in element_library().elements:
             if ei.tag_name.startswith('sl-'):
                 continue
-            self._palette.add_intent(AddElementIntent(ei))
+            self._palette.add_intent(AddElementIntent(ei.tag_name, element_def=ei))
 
         self._update_lbl = 0
 
