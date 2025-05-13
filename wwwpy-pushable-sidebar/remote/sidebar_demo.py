@@ -7,6 +7,7 @@ import logging
 import js
 import wwwpy.remote.component as wpc
 from pyodide.ffi import create_proxy
+from wwwpy.common.designer.element_library import element_library
 from wwwpy.remote import dict_to_js
 from wwwpy.remote.designer.ui import palette, pushable_sidebar  # noqa
 from wwwpy.remote.designer.ui.accordion_components import AccordionSection
@@ -168,7 +169,10 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
         self._add_global_styles()
         self._intent_manager = self._palette.intent_manager
         self._palette.add_intent(SelectElementIntent())
-        self._palette.add_intent(AddElementIntent())
+        for ei in element_library().elements:
+            if ei.tag_name.startswith('sl-'):
+                continue
+            self._palette.add_intent(AddElementIntent(ei))
 
         self._update_lbl = 0
 
