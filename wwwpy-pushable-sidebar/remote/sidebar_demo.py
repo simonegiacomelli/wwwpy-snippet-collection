@@ -131,6 +131,8 @@ class SidebarDemo(wpc.Component, tag_name='sidebar-demo'):
     <hr>
     <component-1></component-1>
     <hr>
+    <component-2></component-2>
+    <hr>
     <div class="controls">
         <h3>Control Panel</h3>
         <button data-name="toggle_button">Toggle Sidebar State</button>

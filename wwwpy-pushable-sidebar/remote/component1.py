@@ -1,3 +1,4 @@
+import inspect
 import wwwpy.remote.component as wpc
 import js
 
@@ -14,5 +15,5 @@ class Component1(wpc.Component, tag_name='component-1'):
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
         # language=html
         self.element.shadowRoot.innerHTML = """
-<div>component-1</div>
+<div>component-1 with shadow dom</div>
 """
