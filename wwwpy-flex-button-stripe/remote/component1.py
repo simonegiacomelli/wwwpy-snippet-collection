@@ -72,6 +72,7 @@ class SvgElement(wpc.Component, tag_name='svg-element'):
     def from_file(cls, file: Path) -> SvgElement:
         r = cls()
         r.load_svg_str(file.read_text())
+        r.element.setAttribute('title', file.name)
         return r
 
     def init_component(self):
