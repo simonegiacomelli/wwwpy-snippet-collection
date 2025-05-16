@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Minimalist Custom Element</title>
+    <script>
+        class MyElement extends HTMLElement {
+            constructor() {
+                super()
+                const shadow = this.attachShadow({ mode: 'open' })
+                shadow.innerHTML = `
+      <style>
+        svg    { display: block }
+      </style>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24">
+        <circle cx="12" cy="12" r="10" fill="none" stroke="#CED0D6" stroke-width="2"/>
+        <path d="M13 5 L8 13 H12 L11 19 L16 11 H12 L13 5 Z" fill="#CED0D6"/>
+      </svg>
+    `
+            }
+        }
+        customElements.define('my-element', MyElement)
+    </script>
+</head>
+<body>
+<div style="display: inline-flex; background-color: #2B2D30">
+    <my-element></my-element>
+    <my-element></my-element>
+</div>
+</body>
+</html>
