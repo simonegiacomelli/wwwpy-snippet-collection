@@ -20,7 +20,6 @@ _BGRD = '#2B2D30'
 
 class Component1(wpc.Component, tag_name='component-1'):
     _talogs: js.HTMLTextAreaElement = wpc.element()
-    div1: js.HTMLDivElement = wpc.element()
     div2: js.HTMLDivElement = wpc.element()
     div3: js.HTMLDivElement = wpc.element()
 
@@ -30,7 +29,6 @@ class Component1(wpc.Component, tag_name='component-1'):
         <wwwpy-new-toolbox></wwwpy-new-toolbox>
         <div>component-1</div>
 <textarea data-name="_talogs" placeholder="textarea1" rows="6" wrap="off" style="width: 100%"></textarea>
-<div data-name="div1" style="display: flex; gap: 5px;  background-color: #2B2D30"></div>
 <hr>
 <div data-name="div2" style="display: inline-flex;  background-color: #2B2D30"></div>
 <hr>
@@ -45,11 +43,6 @@ class Component1(wpc.Component, tag_name='component-1'):
         svgs = list(folder.glob('*.svg'))
         for svg in svgs:
             self._log(str(svg))
-            svg_str = svg.read_text()
-            svg_str = add_rounded_background2(svg_str, _BGRD)
-            r = js.document.createRange().createContextualFragment(svg_str)
-            self.div1.appendChild(r)
-
             self.div2.appendChild(SvgElement.from_file(svg).element)
             self.div3.appendChild(SvgElement.from_file(svg).element)
 
