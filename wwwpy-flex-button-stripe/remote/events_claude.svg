@@ -1,0 +1,17 @@
+<!-- Events icon representing event listeners/handlers -->
+<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <!-- Central event source -->
+    <circle cx="10" cy="10" r="2.5" stroke="#CED0D6" stroke-width="1.5"/>
+
+    <!-- Event waves/signals radiating outward -->
+    <path d="M5.5 10C5.5 7.51472 7.51472 5.5 10 5.5" stroke="#CED0D6" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M14.5 10C14.5 12.4853 12.4853 14.5 10 14.5" stroke="#CED0D6" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- Event handler/listener indicators -->
+    <path d="M3 10C3 6.13401 6.13401 3 10 3" stroke="#CED0D6" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M17 10C17 13.866 13.866 17 10 17" stroke="#CED0D6" stroke-width="1.5" stroke-linecap="round"/>
+
+    <!-- Action indicators -->
+    <path d="M17 7L19 5" stroke="#CED0D6" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M3 13L1 15" stroke="#CED0D6" stroke-width="1.5" stroke-linecap="round"/>
+</svg>
