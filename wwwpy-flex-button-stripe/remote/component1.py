@@ -1,3 +1,4 @@
+from __future__ import annotations
 import inspect
 from pathlib import Path
 
@@ -21,6 +22,7 @@ class Component1(wpc.Component, tag_name='component-1'):
     _talogs: js.HTMLTextAreaElement = wpc.element()
     div1: js.HTMLDivElement = wpc.element()
     div2: js.HTMLDivElement = wpc.element()
+    div3: js.HTMLDivElement = wpc.element()
 
     def init_component(self):
         # language=html
@@ -30,7 +32,9 @@ class Component1(wpc.Component, tag_name='component-1'):
 <textarea data-name="_talogs" placeholder="textarea1" rows="6" wrap="off" style="width: 100%"></textarea>
 <div data-name="div1" style="display: flex; gap: 5px;  background-color: #2B2D30"></div>
 <hr>
-<div data-name="div2" style="display: flex; gap: 5px;  background-color: #2B2D30"></div>
+<div data-name="div2" style="display: inline-flex;  background-color: #2B2D30"></div>
+<hr>
+<div data-name="div3" style="display: inline-flex; flex-direction: column;  background-color: #2B2D30"></div>
 
 """
         self._add_svg()
@@ -46,10 +50,8 @@ class Component1(wpc.Component, tag_name='component-1'):
             r = js.document.createRange().createContextualFragment(svg_str)
             self.div1.appendChild(r)
 
-            svgc = SvgElement()
-            svgc.load_svg_file(svg)
-            self.div2.appendChild(svgc.element)
-
+            self.div2.appendChild(SvgElement.from_file(svg).element)
+            self.div3.appendChild(SvgElement.from_file(svg).element)
 
     def _log(self, msg):
         self._talogs.value += str(msg) + '\n'
@@ -63,26 +65,44 @@ class SvgElement(wpc.Component, tag_name='svg-element'):
     filename: str = wpc.attribute()
     _style: js.HTMLStyleElement = wpc.element()
     _div: js.HTMLDivElement = wpc.element()
+    _active: bool
+
+    @classmethod
+    def from_file(cls, file: Path) -> SvgElement:
+        r = cls()
+        r.load_svg_str(file.read_text())
+        return r
 
     def init_component(self):
         self.element.attachShadow(dict_to_js({'mode': 'open'}))
         # language=html
         self.element.shadowRoot.innerHTML = """
-        <style data-name="_style">
-        :host {
-  --svg-primary-color: #3574F0;
-  --svg-secondary-color: #343a40; /* Darker Gray */
-}
-        </style>
-        <div data-name="_div"></div>
+<style data-name="_style"></style>
+<div data-name="_div"></div>
         """
 
-    def load_svg_file(self, file: Path):
-        self.load_svg_str(file.read_text())
+        self.active = False
 
     def load_svg_str(self, svg: str):
-        # self._div.innerHTML = add_rounded_background2(svg, _BLUE)
-        # self._div.innerHTML = add_rounded_background2(svg, _BGRD)
         self._div.innerHTML = add_rounded_background2(svg, 'var(--svg-primary-color)')
-        # r = js.document.createRange().createContextualFragment(svg_str)
-        # self._div.appendChild(r)
+
+    @property
+    def active(self) -> bool:
+        return self._active
+
+    @active.setter
+    def active(self, value: bool):
+        self._active = value
+        root, hover = (_BLUE, '') if value else (_BGRD, _GRAY)
+        self._set_style(root, hover)
+
+    def _set_style(self, color: str, hover_color: str):
+        # language=html
+        hh = f""":host {{ --svg-primary-color: {color}; }}"""
+        ho = f""":host(:hover) {{ --svg-primary-color: {hover_color}; }}"""
+
+        s = hh + ho if hover_color else hh
+        self._style.innerHTML = s
+
+    def _div__click(self, event):
+        self.active = not self.active
