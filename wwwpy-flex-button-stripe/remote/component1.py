@@ -66,6 +66,7 @@ class SvgElement(wpc.Component, tag_name='svg-element'):
     _style: js.HTMLStyleElement = wpc.element()
     _div: js.HTMLDivElement = wpc.element()
     _active: bool
+    border: int = 5
 
     @classmethod
     def from_file(cls, file: Path) -> SvgElement:
@@ -98,10 +99,11 @@ class SvgElement(wpc.Component, tag_name='svg-element'):
 
     def _set_style(self, color: str, hover_color: str):
         # language=html
-        hh = f""":host {{ --svg-primary-color: {color}; }}"""
-        ho = f""":host(:hover) {{ --svg-primary-color: {hover_color}; }}"""
-
-        s = hh + ho if hover_color else hh
+        hover_style = ":host(:hover) { --svg-primary-color: %s; }" % (hover_color,) if hover_color else ''
+        s = ('svg { display: block }\n' +
+             ':host { border: %spx solid transparent }\n' % self.border +
+             ':host { --svg-primary-color: %s; }\n' % color + hover_style)
+        logger.debug(f'set_style: `{s}`')
         self._style.innerHTML = s
 
     def _div__click(self, event):
