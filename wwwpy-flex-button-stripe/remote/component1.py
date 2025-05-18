@@ -6,12 +6,14 @@ from pathlib import Path
 import js
 import wwwpy.remote.component as wpc
 import wwwpy.remote.designer.ui.new_toolbox  # noqa
+from wwwpy.remote.designer.ui.new_toolbox import NewToolbox
 from wwwpy.remote.designer.ui.svg_icon import SvgIcon
-
+from .comp_tree import CompTree # noqa
 logger = logging.getLogger(__name__)
 
 
 class Component1(wpc.Component, tag_name='component-1'):
+    _new_toolbox: NewToolbox = wpc.element()
     _talogs: js.HTMLTextAreaElement = wpc.element()
     div2: js.HTMLDivElement = wpc.element()
     div3: js.HTMLDivElement = wpc.element()
@@ -19,8 +21,8 @@ class Component1(wpc.Component, tag_name='component-1'):
     def init_component(self):
         # language=html
         self.element.innerHTML = """
-        <wwwpy-new-toolbox></wwwpy-new-toolbox>
-        <div>component-1</div>
+<hr>
+<wwwpy-comp-tree></wwwpy-comp-tree>
 <hr>
 <div data-name="div2" style="display: inline-flex;  background-color: #2B2D30"></div>
 <hr>
@@ -28,8 +30,12 @@ class Component1(wpc.Component, tag_name='component-1'):
 <hr>
 <textarea data-name="_talogs" placeholder="textarea1" rows="6" wrap="off" style="width: 100%"></textarea>
 
+<wwwpy-new-toolbox data-name='_new_toolbox'></wwwpy-new-toolbox>
 """
+        self._new_toolbox._sidebar.element.append(js.document.createElement('hr'))
+        self._new_toolbox._sidebar.element.append(CompTree().element)
         self._add_svg()
+
 
     def _add_svg(self):
         folder = Path(__file__).parent
