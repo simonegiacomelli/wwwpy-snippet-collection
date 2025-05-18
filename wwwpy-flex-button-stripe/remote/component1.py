@@ -33,7 +33,11 @@ class Component1(wpc.Component, tag_name='component-1'):
 <wwwpy-new-toolbox data-name='_new_toolbox'></wwwpy-new-toolbox>
 """
         self._new_toolbox._sidebar.element.append(js.document.createElement('hr'))
-        self._new_toolbox._sidebar.element.append(CompTree().element)
+        ct = CompTree().element
+        ct.style.display = 'flex'
+        ct.style.height = '250px'
+        ct.style.overflow = 'scroll'
+        self._new_toolbox._sidebar.element.append(ct)
         self._add_svg()
 
 
