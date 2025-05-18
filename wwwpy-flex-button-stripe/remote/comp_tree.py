@@ -23,17 +23,14 @@ class CompTree(wpc.Component, tag_name='wwwpy-comp-tree'):
         # language=html
         self.element.shadowRoot.innerHTML = """
 <style>
-    body {
-        font-family: sans-serif;
-        padding: 1em;
-    }
-
+    
     details > details {
         margin-left: 1em;
     }
     
     .no-marker > summary {
       list-style: none;
+      padding-left: 0.5em;
     }
     .no-marker > summary::-webkit-details-marker {
       display: none;
