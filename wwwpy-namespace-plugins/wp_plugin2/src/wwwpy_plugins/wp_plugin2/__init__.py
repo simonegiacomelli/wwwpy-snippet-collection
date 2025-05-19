@@ -1,3 +1,4 @@
-print("I'm wp_plugin2/__init__.py")
+print(f"I'm {__file__}")
+
 def hello() -> str:
     return "Hello from wp-plugin2!"
