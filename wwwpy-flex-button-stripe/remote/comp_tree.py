@@ -90,7 +90,7 @@ class CompTreeItem(wpc.Component, tag_name='wwwpy-comp-tree-item'):
 
     def set_comp_info(self, ci: CompInfo):
         self.comp_info = ci
-        self._summary.innerText = ci.class_name
+        self._summary.innerText = ci.class_name + ' / ' + ci.class_package
 
         def rec(cst_tree: CstTree, elem: js.HTMLElement):
             for cst_node in cst_tree:
@@ -127,7 +127,6 @@ class CompTreeItem(wpc.Component, tag_name='wwwpy-comp-tree-item'):
         tag_name = self.comp_info.tag_name
         label = f'Add {tag_name}'
         intent = AddElementIntent(label)
-        python_type = self.comp_info.class_name
-        element_def_min: ElementDefBase = ElementDefBase(tag_name, python_type)
+        element_def_min: ElementDefBase = ElementDefBase(tag_name, self.comp_info.class_full_name)
         intent.element_def = element_def_min
         return intent
