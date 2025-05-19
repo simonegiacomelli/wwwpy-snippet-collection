@@ -21,6 +21,7 @@ class Component1(wpc.Component, tag_name='component-1'):
     def init_component(self):
         # language=html
         self.element.innerHTML = """
+<h1>HELLO</h1>
 <hr>
 <wwwpy-comp-tree></wwwpy-comp-tree>
 <hr>
