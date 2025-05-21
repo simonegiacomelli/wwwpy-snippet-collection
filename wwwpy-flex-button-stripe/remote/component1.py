@@ -6,9 +6,9 @@ from pathlib import Path
 import js
 import wwwpy.remote.component as wpc
 import wwwpy.remote.designer.ui.new_toolbox  # noqa
+from wwwpy.remote.designer.ui.comp_tree import CompTree
 from wwwpy.remote.designer.ui.new_toolbox import NewToolbox
 from wwwpy.remote.designer.ui.svg_icon import SvgIcon
-from .comp_tree import CompTree # noqa
 logger = logging.getLogger(__name__)
 
 
