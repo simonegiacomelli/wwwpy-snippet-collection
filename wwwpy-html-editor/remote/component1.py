@@ -1,3 +1,4 @@
+import asyncio
 import inspect
 import logging
 from pyodide.ffi import create_proxy
@@ -127,8 +128,12 @@ class Component1(wpc.Component, tag_name='component-1'):
             background: #0056b3;
         }
 
-        .copy-btn.copied {
-            background: #28a745;
+        .success-background {
+            background-color: #28a745;
+        }
+        
+        .failure-background {
+            background-color: #dc3545;
         }
 
         table {
@@ -184,7 +189,7 @@ class Component1(wpc.Component, tag_name='component-1'):
             <button data-cmd="insertTable" title="Insert Table">⊞ Table</button>
             <div class="separator"></div>
             <button data-cmd="removeFormat" title="Clear Formatting">✕ Clear</button>
-<button data-name="_btn_save">Save</button>
+            <button data-name="_btn_save">Save</button>
         </div>
 
         <div id="editor" contenteditable="true"></div>
@@ -249,20 +254,17 @@ class Component1(wpc.Component, tag_name='component-1'):
 
             btn.addEventListener('click', create_proxy(handler))
 
-        # self.toolbar.addEventListener('mousedown', create_proxy(
-        #     lambda e: e.preventDefault() if e.target.tagName == 'BUTTON' else None))
-
     async def _btn_copy_html__click(self, event):
         html = self.editor.innerHTML
         js.navigator.clipboard.writeText(html)
         btn = event.target
         original = btn.textContent
         btn.textContent = '✓ Copied!'
-        btn.classList.add('copied')
+        btn.classList.add('success-background')
 
         def reset():
             btn.textContent = original
-            btn.classList.remove('copied')
+            btn.classList.remove('success-background')
 
         js.setTimeout(create_proxy(reset), 2000)
 
@@ -270,4 +272,26 @@ class Component1(wpc.Component, tag_name='component-1'):
         html = self.editor.innerHTML
         # convert html to bytes; DO NOT USE `js.TextEncoder.new().encode(html)` USE PYTHON TO CONVERT TO BYTES
         html_bytes = bytes(html, 'utf-8')
-        await rpc.save_file('index.html', html_bytes)
+        original = self._btn_save.textContent
+        self._btn_save.textContent = 'Saving...'
+        try:
+            await rpc.save_file('index.html', html_bytes)
+            self._btn_save.textContent = 'Saved!'
+            _state_success(self._btn_save)
+        except Exception as e:
+            logger.exception('Error saving file', exc_info=e)
+            _state_failure(self._btn_save)
+            self._btn_save.textContent = 'Save failed'
+            js.alert(f'Error saving file: {e}')
+        await asyncio.sleep(2)
+        self._btn_save.textContent = original
+        _state_clear(self._btn_save)
+
+def _state_success(button: js.HTMLButtonElement):
+    button.style.backgroundColor ='green'
+
+def _state_failure(button: js.HTMLButtonElement):
+    button.style.backgroundColor = 'red'
+
+def _state_clear(button: js.HTMLButtonElement):
+    button.style.backgroundColor = ''
