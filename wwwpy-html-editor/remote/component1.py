@@ -1,5 +1,5 @@
 import logging
-
+from pyodide.ffi import create_proxy
 import js
 import wwwpy.remote.component as wpc
 
@@ -126,7 +126,6 @@ class Component1(wpc.Component, tag_name='component-1'):
             background: #28a745;
         }
 
-        /* Table styles */
         table {
             border-collapse: collapse;
             margin: 10px 0;
@@ -142,13 +141,11 @@ class Component1(wpc.Component, tag_name='component-1'):
             background: #2e2e2e;
         }
 
-        /* Link styles */
         a {
             color: #4ea1d3;
             text-decoration: underline;
         }
 
-        /* List styles */
         ul, ol {
             margin: 10px 0;
             padding-left: 30px;
@@ -156,45 +153,101 @@ class Component1(wpc.Component, tag_name='component-1'):
     </style>
     
     <div class="container">
-    <div id="toolbar">
-        <button data-cmd="undo" title="Undo">↶</button>
-        <button data-cmd="redo" title="Redo">↷</button>
-        <div class="separator"></div>
-        <button data-cmd="bold" title="Bold"><b>B</b></button>
-        <button data-cmd="italic" title="Italic"><i>I</i></button>
-        <button data-cmd="underline" title="Underline"><u>U</u></button>
-        <button data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
-        <div class="separator"></div>
-        <button data-cmd="formatBlock" data-value="h1" title="Heading 1">H1</button>
-        <button data-cmd="formatBlock" data-value="h2" title="Heading 2">H2</button>
-        <button data-cmd="formatBlock" data-value="h3" title="Heading 3">H3</button>
-        <button data-cmd="formatBlock" data-value="p" title="Paragraph">¶</button>
-        <div class="separator"></div>
-        <button data-cmd="insertUnorderedList" title="Bullet List">• List</button>
-        <button data-cmd="insertOrderedList" title="Numbered List">1. List</button>
-        <div class="separator"></div>
-        <button data-cmd="justifyLeft" title="Align Left">⬅</button>
-        <button data-cmd="justifyCenter" title="Align Center">⬌</button>
-        <button data-cmd="justifyRight" title="Align Right">➡</button>
-        <div class="separator"></div>
-        <button data-cmd="createLink" title="Insert Link">🔗 Link</button>
-        <button data-cmd="insertImage" title="Insert Image">🖼 Image</button>
-        <button data-cmd="insertTable" title="Insert Table">⊞ Table</button>
-        <div class="separator"></div>
-        <button data-cmd="removeFormat" title="Clear Formatting">✕ Clear</button>
+        <div id="toolbar">
+            <button data-cmd="undo" title="Undo">↶</button>
+            <button data-cmd="redo" title="Redo">↷</button>
+            <div class="separator"></div>
+            <button data-cmd="bold" title="Bold"><b>B</b></button>
+            <button data-cmd="italic" title="Italic"><i>I</i></button>
+            <button data-cmd="underline" title="Underline"><u>U</u></button>
+            <button data-cmd="strikeThrough" title="Strikethrough"><s>S</s></button>
+            <div class="separator"></div>
+            <button data-cmd="formatBlock" data-value="h1" title="Heading 1">H1</button>
+            <button data-cmd="formatBlock" data-value="h2" title="Heading 2">H2</button>
+            <button data-cmd="formatBlock" data-value="h3" title="Heading 3">H3</button>
+            <button data-cmd="formatBlock" data-value="p" title="Paragraph">¶</button>
+            <div class="separator"></div>
+            <button data-cmd="insertUnorderedList" title="Bullet List">• List</button>
+            <button data-cmd="insertOrderedList" title="Numbered List">1. List</button>
+            <div class="separator"></div>
+            <button data-cmd="justifyLeft" title="Align Left">⬅</button>
+            <button data-cmd="justifyCenter" title="Align Center">⬌</button>
+            <button data-cmd="justifyRight" title="Align Right">➡</button>
+            <div class="separator"></div>
+            <button data-cmd="createLink" title="Insert Link">🔗 Link</button>
+            <button data-cmd="insertImage" title="Insert Image">🖼 Image</button>
+            <button data-cmd="insertTable" title="Insert Table">⊞ Table</button>
+            <div class="separator"></div>
+            <button data-cmd="removeFormat" title="Clear Formatting">✕ Clear</button>
+        </div>
+
+        <div id="editor" contenteditable="true"></div>
+
+        <div class="output-header">
+            <h3>HTML Output (Live Preview)</h3>
+            <button class="copy-btn">Copy HTML</button>
+        </div>
+
+        <pre id="htmlOutput"></pre>
     </div>
-
-    <div id="editor" contenteditable="true">
-
-    </div>
-
-    <div class="output-header">
-        <h3>HTML Output (Live Preview)</h3>
-        <button class="copy-btn" onclick="copyHTML()">Copy HTML</button>
-    </div>
-
-    <pre id="htmlOutput"></pre>
-</div>
 """
 
-    
+    async def after_init_component(self):
+        self.editor = self.element.querySelector('#editor')
+        self.htmlOutput = self.element.querySelector('#htmlOutput')
+        self.toolbar = self.element.querySelector('#toolbar')
+        def updateHTMLOutput(e=None):
+            self.htmlOutput.textContent = self.editor.innerHTML
+        update_proxy = create_proxy(updateHTMLOutput)
+        self.editor.addEventListener('input', update_proxy)
+        self.editor.addEventListener('DOMNodeInserted', update_proxy)
+        self.editor.addEventListener('DOMNodeRemoved', update_proxy)
+        for btn in self.toolbar.querySelectorAll('button'):
+            def handler(evt, btn=btn):
+                evt.preventDefault()
+                cmd = btn.dataset.cmd
+                val = btn.dataset.value or None
+                if cmd == 'createLink':
+                    url = js.prompt('Enter URL:')
+                    if url:
+                        js.document.execCommand(cmd, False, url)
+                        updateHTMLOutput()
+                        return
+                if cmd == 'insertImage':
+                    url = js.prompt('Enter image URL:')
+                    if url:
+                        js.document.execCommand(cmd, False, url)
+                        updateHTMLOutput()
+                        return
+                if cmd == 'insertTable':
+                    rows = int(js.prompt('Number of rows:') or 0)
+                    cols = int(js.prompt('Number of columns:') or 0)
+                    if rows and cols:
+                        table = '<table><tbody>'
+                        for i in range(rows):
+                            table += '<tr>'
+                            for j in range(cols):
+                                table += '<td>&nbsp;</td>'
+                            table += '</tr>'
+                        table += '</tbody></table>'
+                        js.document.execCommand('insertHTML', False, table)
+                        updateHTMLOutput()
+                        return
+                js.document.execCommand(cmd, False, val)
+                updateHTMLOutput()
+                self.editor.focus()
+            btn.addEventListener('click', create_proxy(handler))
+        copyBtn = self.element.querySelector('.copy-btn')
+        def copyHandler(evt):
+            html = self.editor.innerHTML
+            js.navigator.clipboard.writeText(html)
+            btn = evt.target
+            original = btn.textContent
+            btn.textContent = '✓ Copied!'
+            btn.classList.add('copied')
+            def reset():
+                btn.textContent = original
+                btn.classList.remove('copied')
+            js.setTimeout(create_proxy(reset), 2000)
+        copyBtn.addEventListener('click', create_proxy(copyHandler))
+        self.toolbar.addEventListener('mousedown', create_proxy(lambda e: e.preventDefault() if e.target.tagName=='BUTTON' else None))
