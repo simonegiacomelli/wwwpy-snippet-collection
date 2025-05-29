@@ -1,12 +1,17 @@
+import inspect
 import logging
 from pyodide.ffi import create_proxy
 import js
 import wwwpy.remote.component as wpc
 
+from server import rpc
+
 logger = logging.getLogger(__name__)
 
 
 class Component1(wpc.Component, tag_name='component-1'):
+    _btn_copy_html: js.HTMLButtonElement = wpc.element()
+    _btn_save: js.HTMLButtonElement = wpc.element()
 
     def init_component(self):
         # language=html
@@ -179,13 +184,14 @@ class Component1(wpc.Component, tag_name='component-1'):
             <button data-cmd="insertTable" title="Insert Table">⊞ Table</button>
             <div class="separator"></div>
             <button data-cmd="removeFormat" title="Clear Formatting">✕ Clear</button>
+<button data-name="_btn_save">Save</button>
         </div>
 
         <div id="editor" contenteditable="true"></div>
 
         <div class="output-header">
             <h3>HTML Output (Live Preview)</h3>
-            <button class="copy-btn">Copy HTML</button>
+            <button class="copy-btn" data-name="_btn_copy_html">Copy HTML</button>
         </div>
 
         <pre id="htmlOutput"></pre>
@@ -196,14 +202,18 @@ class Component1(wpc.Component, tag_name='component-1'):
         self.editor = self.element.querySelector('#editor')
         self.htmlOutput = self.element.querySelector('#htmlOutput')
         self.toolbar = self.element.querySelector('#toolbar')
+
         def updateHTMLOutput(e=None):
             self.htmlOutput.textContent = self.editor.innerHTML
+
         update_proxy = create_proxy(updateHTMLOutput)
         self.editor.addEventListener('input', update_proxy)
         self.editor.addEventListener('DOMNodeInserted', update_proxy)
         self.editor.addEventListener('DOMNodeRemoved', update_proxy)
         for btn in self.toolbar.querySelectorAll('button'):
             def handler(evt, btn=btn):
+                if not hasattr(btn.dataset, 'cmd'):
+                    return
                 evt.preventDefault()
                 cmd = btn.dataset.cmd
                 val = btn.dataset.value or None
@@ -236,18 +246,28 @@ class Component1(wpc.Component, tag_name='component-1'):
                 js.document.execCommand(cmd, False, val)
                 updateHTMLOutput()
                 self.editor.focus()
+
             btn.addEventListener('click', create_proxy(handler))
-        copyBtn = self.element.querySelector('.copy-btn')
-        def copyHandler(evt):
-            html = self.editor.innerHTML
-            js.navigator.clipboard.writeText(html)
-            btn = evt.target
-            original = btn.textContent
-            btn.textContent = '✓ Copied!'
-            btn.classList.add('copied')
-            def reset():
-                btn.textContent = original
-                btn.classList.remove('copied')
-            js.setTimeout(create_proxy(reset), 2000)
-        copyBtn.addEventListener('click', create_proxy(copyHandler))
-        self.toolbar.addEventListener('mousedown', create_proxy(lambda e: e.preventDefault() if e.target.tagName=='BUTTON' else None))
+
+        # self.toolbar.addEventListener('mousedown', create_proxy(
+        #     lambda e: e.preventDefault() if e.target.tagName == 'BUTTON' else None))
+
+    async def _btn_copy_html__click(self, event):
+        html = self.editor.innerHTML
+        js.navigator.clipboard.writeText(html)
+        btn = event.target
+        original = btn.textContent
+        btn.textContent = '✓ Copied!'
+        btn.classList.add('copied')
+
+        def reset():
+            btn.textContent = original
+            btn.classList.remove('copied')
+
+        js.setTimeout(create_proxy(reset), 2000)
+
+    async def _btn_save__click(self, event):
+        html = self.editor.innerHTML
+        # convert html to bytes; DO NOT USE `js.TextEncoder.new().encode(html)` USE PYTHON TO CONVERT TO BYTES
+        html_bytes = bytes(html, 'utf-8')
+        await rpc.save_file('index.html', html_bytes)
