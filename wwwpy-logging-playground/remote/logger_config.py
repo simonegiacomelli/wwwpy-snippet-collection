@@ -4,6 +4,7 @@ import logging
 import js
 import wwwpy.remote.component as wpc
 from wwwpy.remote import dict_to_js
+from pyodide.ffi import create_proxy
 
 logger = logging.getLogger(__name__)
 
@@ -19,10 +20,10 @@ class LoggerConfigComponent(wpc.Component, tag_name='component-1'):
         self.element.innerHTML = """
 <div data-name="_title">_title</div>
 <input data-name="_search" placeholder="Filter by logger name">
-<div data-name="_row_container"><br>
-</div>  
+<div data-name="_row_container"><br></div>  
 
-<label>Component logs:</label><textarea data-name="_ta_log" placeholder="textarea1" rows="8" wrap="off" style="width: 100%"></textarea> 
+<label>Component logs:</label>
+<textarea data-name="_ta_log" placeholder="textarea1" rows="8" wrap="off" style="width: 100%"></textarea> 
 """
         self._list_all_logger()
 
@@ -45,9 +46,10 @@ class LoggerConfigComponent(wpc.Component, tag_name='component-1'):
             row.level_select = level_name
             self._row_container.appendChild(row.element)
         self._title.innerText = f'Found {logger_counter} loggers'
+        self._log(self._title.innerText)
 
         # scroll to the top of the log area
-        self._ta_log.scrollTop = 0
+        # self._ta_log.scrollTop = 0
 
     def _log(self, message):
         if not isinstance(message, str):
@@ -56,15 +58,15 @@ class LoggerConfigComponent(wpc.Component, tag_name='component-1'):
         self._ta_log.scrollTop = self._ta_log.scrollHeight
 
     async def _row_container__input_row(self, event):
-        logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
-        row: LogConfRow = event.detail
+        row: LogConfRow = event.detail.row
         logging.getLogger(row.logger_name).setLevel(row.level_select)
-        self._log(f'Set {row.level_select:<10} logger {row.logger_name}')
+        msg = f'Set {row.level_select:<10} logger {row.logger_name}'
+        logger.debug(msg)
+        self._log(msg)
 
     async def _search__input(self, event):
         logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
         self._list_all_logger()
-
 
     def _filter_accept(self, logger_name: str) -> bool:
         s = self._search.value.lower()
@@ -120,9 +122,6 @@ class LogConfRow(wpc.Component):
         self._logger_name.innerText = name
 
     async def _level_select__input(self, event):
-        js.document.dispatchEvent(
-            js.CustomEvent.new('input-row', dict_to_js(
-                {
-                    'detail': self
-                }))
-        )
+        logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
+        init = dict_to_js({'bubbles': True, 'detail': {'row': self}})
+        self.element.dispatchEvent(js.CustomEvent.new('input-row', init))
