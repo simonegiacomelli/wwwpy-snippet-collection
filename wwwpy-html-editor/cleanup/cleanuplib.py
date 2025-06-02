@@ -1,6 +1,8 @@
 from pathlib import Path
-from bs4 import BeautifulSoup  # requires beautifulsoup4
 
+import bs4
+from bs4 import BeautifulSoup  # requires beautifulsoup4
+from lxml import etree, html
 import logging
 
 logger = logging.getLogger(__name__)
@@ -56,7 +58,10 @@ def cleanup(content: str, remove_vals: dict | None = None) -> str:
             del tag['style']
     uff = str(soup)
     uff = uff.replace(u'\xa0', u' ')
-    return uff
+    uff = bs4.BeautifulSoup(uff, preserve_whitespace_tags=["p"])
+    # document_root = html.fromstring(uff)
+    # uff = etree.tostring(document_root, encoding='unicode', pretty_print=True)
+    return str(uff)
 
 
 if __name__ == '__main__':
