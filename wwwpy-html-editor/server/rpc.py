@@ -4,7 +4,15 @@ from pathlib import Path
 logger = logging.getLogger(__name__)
 
 
-async def save_file(filename: str, content: bytes) -> None:
+async def file_exists(filename: str) -> bool:
+    """Check if a file exists."""
+    file = _resolve_file(filename)
+    exists = file.exists()
+    logger.debug(f'file_exists `{filename}`: {exists}')
+    return exists
+
+
+async def file_save(filename: str, content: bytes) -> None:
     # log the information about the file being saved, about the content log only the length
     logger.info(f'save_file `{filename}` with content length {len(content)}')
     file = _resolve_file(filename)
@@ -19,4 +27,3 @@ def _resolve_file(name: str) -> Path:
         raise ValueError(f'Invalid path: {candidate}')
     candidate.parent.mkdir(parents=True, exist_ok=True)
     return candidate
-

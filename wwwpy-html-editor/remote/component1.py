@@ -1,18 +1,30 @@
 import asyncio
 import inspect
 import logging
+from dataclasses import dataclass
+from pathlib import Path
+
 from pyodide.ffi import create_proxy
 import js
 import wwwpy.remote.component as wpc
+from wwwpy.common import state
+from wwwpy.remote import dict_to_js
 
 from server import rpc
 
 logger = logging.getLogger(__name__)
 
+@dataclass
+class AppState:
+    content: str = ''
+    filename: str = ''
 
 class Component1(wpc.Component, tag_name='component-1'):
     _btn_copy_html: js.HTMLButtonElement = wpc.element()
     _btn_save: js.HTMLButtonElement = wpc.element()
+    _filename: js.HTMLInputElement = wpc.element()
+    _editor: js.HTMLElement = wpc.element()
+    _html_output: js.HTMLElement = wpc.element()
 
     def init_component(self):
         # language=html
@@ -189,19 +201,24 @@ class Component1(wpc.Component, tag_name='component-1'):
             <button data-cmd="insertTable" title="Insert Table">⊞ Table</button>
             <div class="separator"></div>
             <button data-cmd="removeFormat" title="Clear Formatting">✕ Clear</button>
-            <button data-name="_btn_save">Save</button>
+            
+<input data-name="_filename" placeholder="e.g., filename.html"><button data-name="_btn_save">Save</button>
         </div>
 
-        <div id="editor" contenteditable="true"></div>
+        <div id="editor" data-name='_editor' contenteditable="true"></div>
 
         <div class="output-header">
             <h3>HTML Output (Live Preview)</h3>
             <button class="copy-btn" data-name="_btn_copy_html">Copy HTML</button>
         </div>
 
-        <pre id="htmlOutput"></pre>
+        <pre id="htmlOutput" data-name="_html_output"></pre>
     </div>
 """
+        self._state = state._restore(AppState)
+        self._filename.value = self._state.filename
+        self._editor.innerHTML = self._state.content
+
 
     async def after_init_component(self):
         self.editor = self.element.querySelector('#editor')
@@ -210,6 +227,7 @@ class Component1(wpc.Component, tag_name='component-1'):
 
         def updateHTMLOutput(e=None):
             self.htmlOutput.textContent = self.editor.innerHTML
+            self._state.content = self.editor.innerHTML
 
         update_proxy = create_proxy(updateHTMLOutput)
         self.editor.addEventListener('input', update_proxy)
@@ -269,13 +287,10 @@ class Component1(wpc.Component, tag_name='component-1'):
         js.setTimeout(create_proxy(reset), 2000)
 
     async def _btn_save__click(self, event):
-        html = self.editor.innerHTML
-        # convert html to bytes; DO NOT USE `js.TextEncoder.new().encode(html)` USE PYTHON TO CONVERT TO BYTES
-        html_bytes = bytes(html, 'utf-8')
         original = self._btn_save.textContent
         self._btn_save.textContent = 'Saving...'
         try:
-            await rpc.save_file('index.html', html_bytes)
+            await self._do_save()
             self._btn_save.textContent = 'Saved!'
             _state_success(self._btn_save)
         except Exception as e:
@@ -287,11 +302,102 @@ class Component1(wpc.Component, tag_name='component-1'):
         self._btn_save.textContent = original
         _state_clear(self._btn_save)
 
+    async def _do_save(self):
+        html = self.editor.innerHTML
+        html_bytes = bytes(html, 'utf-8')
+        filename_strip = self._filename.value.strip()
+        if filename_strip:
+            filename = str(Path(filename_strip).with_suffix('.html'))
+        else:
+            filename = 'index.html'
+
+        if await rpc.file_exists(filename):
+            if not js.window.confirm(f'File `{filename}` already exists. Overwrite?'):
+                logger.info(f'User cancelled overwrite for {filename}')
+                return
+        await rpc.file_save(filename, html_bytes)
+        return # disabled image saving for now
+        img_count = 0
+        # query all img tags under _editor
+        imgs = self.editor.querySelectorAll('img')
+        for img in imgs:
+            src = img.getAttribute('src')
+            if not src:
+                continue
+            img_count += 1
+            img_filename = f'image_{img_count}.png'
+            if src.startswith('data:image/'):
+                # Extract base64 data
+                base64_data = src.split(',')[1]
+                # Decode base64 data WITH PYTHON NOT js.atob!
+                import base64
+                byte_array = base64.b64decode(base64_data)
+                await rpc.file_save(img_filename, byte_array)
+            else:  # Assume it's a URL and fetch it
+                logger.debug(f'Fetching image from `{src}`')
+                # response = await js.window.fetch(src, dict_to_js({
+                #     'credentials': 'include',
+                #     'mode': 'cors',
+                #     'cache': 'force-cache'
+                # }))
+                response = await _fetch(src)
+                if response.ok:
+                    blob = await response.blob()
+                    array_buffer = await blob.arrayBuffer()
+                    byte_array = js.Uint8Array.new(array_buffer)
+                    # Save the image file
+                    await rpc.file_save(img_filename, byte_array)
+                else:
+                    logger.error(f'Failed to fetch image from {src}: {response.status} {response.statusText}')
+    
+    async def _filename__input(self, event):
+        logger.debug(f'{inspect.currentframe().f_code.co_name} event fired %s', event)
+        self._state.filename = self._filename.value
+    
+
+
 def _state_success(button: js.HTMLButtonElement):
-    button.style.backgroundColor ='green'
+    button.style.backgroundColor = 'green'
+
 
 def _state_failure(button: js.HTMLButtonElement):
     button.style.backgroundColor = 'red'
 
+
 def _state_clear(button: js.HTMLButtonElement):
     button.style.backgroundColor = ''
+
+
+async def _fetch(url: str) -> js.Response:
+    return await js.window.fetch(url, dict_to_js({
+        # "headers": {
+        #     "accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.7",
+        #     "priority": "u=0, i",
+        #     "sec-ch-ua": "\"Chromium\";v=\"136\", \"Google Chrome\";v=\"136\", \"Not.A/Brand\";v=\"99\"",
+        #     "sec-ch-ua-arch": "\"x86\"",
+        #     "sec-ch-ua-bitness": "\"64\"",
+        #     "sec-ch-ua-form-factors": "\"Desktop\"",
+        #     "sec-ch-ua-full-version": "\"136.0.7103.113\"",
+        #     "sec-ch-ua-full-version-list": "\"Chromium\";v=\"136.0.7103.113\", \"Google Chrome\";v=\"136.0.7103.113\", \"Not.A/Brand\";v=\"99.0.0.0\"",
+        #     "sec-ch-ua-mobile": "?0",
+        #     "sec-ch-ua-model": "\"\"",
+        #     "sec-ch-ua-platform": "\"Linux\"",
+        #     "sec-ch-ua-platform-version": "\"6.11.0\"",
+        #     "sec-ch-ua-wow64": "?0",
+        #     "sec-fetch-dest": "document",
+        #     "sec-fetch-mode": "navigate",
+        #     "sec-fetch-site": "none",
+        #     "sec-fetch-user": "?1",
+        #     "upgrade-insecure-requests": "1",
+        #     "x-browser-channel": "stable",
+        #     "x-browser-copyright": "Copyright 2025 Google LLC. All rights reserved.",
+        #     "x-browser-validation": "ctYldj7UqvsGWB62N+qJrQZxvXA=",
+        #     "x-browser-year": "2025",
+        #     "x-client-data": "CK21yQEIlLbJAQijtskBCKmdygEI84vLAQiUocsBCJGjywEIh6DNAQj+pc4BCK/tzgEI3e7OAQiQ8c4BCK7xzgEIkfLOAQ=="
+        # },
+        "referrerPolicy": "strict-origin-when-cross-origin",
+        "body": None,
+        "method": "GET",
+        "mode": "cors",
+        "credentials": "include"
+    }))
