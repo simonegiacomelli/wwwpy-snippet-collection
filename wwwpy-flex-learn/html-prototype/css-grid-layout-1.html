@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Grid Layout Explorer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 30px;
+      align-items: start;
+    }
+
+    .controls {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 20px;
+    }
+
+    .controls h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #e1e5e9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      outline: none;
+      border-color: #4A90E2;
+    }
+
+    .control-group input[type="range"] {
+      padding: 0;
+      height: 6px;
+      background: #e1e5e9;
+      border-radius: 3px;
+    }
+
+    .control-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      font-weight: normal;
+    }
+
+    .range-value {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #4A90E2;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #357ABD;
+    }
+
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #495057;
+      border: 1px solid #dee2e6;
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+    }
+
+    .grid-preview {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .grid-preview h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    .grid-container {
+      border: 3px solid #4A90E2;
+      border-radius: 8px;
+      min-height: 300px;
+      background: #f8f9fa;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .grid-item {
+      background: #ffffff;
+      border: 2px solid #dee2e6;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #495057;
+      min-height: 60px;
+      transition: all 0.2s;
+    }
+
+    .grid-item:hover {
+      border-color: #4A90E2;
+      transform: scale(1.02);
+    }
+
+    .current-css {
+      margin-top: 20px;
+      padding: 15px;
+      background: #2d3748;
+      color: #e2e8f0;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+
+    .current-css h3 {
+      color: #4A90E2;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .controls {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>CSS Grid Layout Explorer</h1>
+    <p>Experiment with CSS Grid container properties in real-time. Add or remove items and adjust grid settings to see how they affect the layout behavior.</p>
+  </div>
+
+  <div class="layout">
+    <div class="controls">
+      <h2>Grid Controls</h2>
+
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="addGridItem()">Add Item</button>
+        <button class="btn btn-secondary" onclick="removeGridItem()">Remove Item</button>
+      </div>
+
+      <div class="control-group">
+        <div class="checkbox-group">
+          <input type="checkbox" id="displayGrid" checked onchange="updateGrid()">
+          <label for="displayGrid">Enable Grid Display</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="templateColumns">grid-template-columns</label>
+        <input type="text" id="templateColumns" value="repeat(3, 1fr)" oninput="updateGrid()" placeholder="e.g., repeat(3, 1fr), 200px 1fr 100px">
+      </div>
+
+      <div class="control-group">
+        <label for="templateRows">grid-template-rows</label>
+        <input type="text" id="templateRows" value="auto" oninput="updateGrid()" placeholder="e.g., repeat(2, 100px), auto">
+      </div>
+
+      <div class="control-group">
+        <label for="gap">gap</label>
+        <input type="range" id="gap" min="0" max="50" value="15" oninput="updateGrid()">
+        <div class="range-value">Current: <span id="gapValue">15px</span></div>
+      </div>
+
+      <div class="control-group">
+        <label for="justifyContent">justify-content</label>
+        <select id="justifyContent" onchange="updateGrid()">
+          <option value="start">start</option>
+          <option value="end">end</option>
+          <option value="center">center</option>
+          <option value="stretch" selected>stretch</option>
+          <option value="space-around">space-around</option>
+          <option value="space-between">space-between</option>
+          <option value="space-evenly">space-evenly</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="alignContent">align-content</label>
+        <select id="alignContent" onchange="updateGrid()">
+          <option value="start">start</option>
+          <option value="end">end</option>
+          <option value="center">center</option>
+          <option value="stretch" selected>stretch</option>
+          <option value="space-around">space-around</option>
+          <option value="space-between">space-between</option>
+          <option value="space-evenly">space-evenly</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="justifyItems">justify-items</label>
+        <select id="justifyItems" onchange="updateGrid()">
+          <option value="start">start</option>
+          <option value="end">end</option>
+          <option value="center">center</option>
+          <option value="stretch" selected>stretch</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="alignItems">align-items</label>
+        <select id="alignItems" onchange="updateGrid()">
+          <option value="start">start</option>
+          <option value="end">end</option>
+          <option value="center">center</option>
+          <option value="stretch" selected>stretch</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-preview">
+      <h2>Grid Layout Preview</h2>
+      <div class="grid-container" id="gridContainer">
+        <div class="grid-item">1</div>
+        <div class="grid-item">2</div>
+        <div class="grid-item">3</div>
+        <div class="grid-item">4</div>
+        <div class="grid-item">5</div>
+        <div class="grid-item">6</div>
+      </div>
+
+      <div class="current-css">
+        <h3>Current CSS</h3>
+        <pre id="cssDisplay"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let itemCounter = 6;
+
+  function addGridItem() {
+    const container = document.getElementById('gridContainer');
+    const newItem = document.createElement('div');
+    newItem.className = 'grid-item';
+    newItem.textContent = ++itemCounter;
+    container.appendChild(newItem);
+  }
+
+  function removeGridItem() {
+    const container = document.getElementById('gridContainer');
+    const items = container.querySelectorAll('.grid-item');
+    if (items.length > 1) {
+      container.removeChild(items[items.length - 1]);
+      itemCounter--;
+    }
+  }
+
+  function updateGrid() {
+    const container = document.getElementById('gridContainer');
+    const displayGrid = document.getElementById('displayGrid').checked;
+    const templateColumns = document.getElementById('templateColumns').value;
+    const templateRows = document.getElementById('templateRows').value;
+    const gap = document.getElementById('gap').value;
+    const justifyContent = document.getElementById('justifyContent').value;
+    const alignContent = document.getElementById('alignContent').value;
+    const justifyItems = document.getElementById('justifyItems').value;
+    const alignItems = document.getElementById('alignItems').value;
+
+    // Update gap value display
+    document.getElementById('gapValue').textContent = gap + 'px';
+
+    // Apply styles to container
+    container.style.display = displayGrid ? 'grid' : 'block';
+    container.style.gridTemplateColumns = displayGrid ? templateColumns : '';
+    container.style.gridTemplateRows = displayGrid ? templateRows : '';
+    container.style.gap = displayGrid ? gap + 'px' : '';
+    container.style.justifyContent = displayGrid ? justifyContent : '';
+    container.style.alignContent = displayGrid ? alignContent : '';
+    container.style.justifyItems = displayGrid ? justifyItems : '';
+    container.style.alignItems = displayGrid ? alignItems : '';
+
+    // Update CSS display
+    updateCSSDisplay();
+  }
+
+  function updateCSSDisplay() {
+    const displayGrid = document.getElementById('displayGrid').checked;
+    const templateColumns = document.getElementById('templateColumns').value;
+    const templateRows = document.getElementById('templateRows').value;
+    const gap = document.getElementById('gap').value;
+    const justifyContent = document.getElementById('justifyContent').value;
+    const alignContent = document.getElementById('alignContent').value;
+    const justifyItems = document.getElementById('justifyItems').value;
+    const alignItems = document.getElementById('alignItems').value;
+
+    let css = '.grid-container {\n';
+    css += `  display: ${displayGrid ? 'grid' : 'block'};\n`;
+
+    if (displayGrid) {
+      css += `  grid-template-columns: ${templateColumns};\n`;
+      css += `  grid-template-rows: ${templateRows};\n`;
+      css += `  gap: ${gap}px;\n`;
+      css += `  justify-content: ${justifyContent};\n`;
+      css += `  align-content: ${alignContent};\n`;
+      css += `  justify-items: ${justifyItems};\n`;
+      css += `  align-items: ${alignItems};\n`;
+    }
+
+    css += '}';
+
+    document.getElementById('cssDisplay').textContent = css;
+  }
+
+  // Initialize the display
+  updateGrid();
+</script>
+</body>
+</html>

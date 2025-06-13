@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Grid Layout Explorer</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #666;
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .layout {
+      display: grid;
+      grid-template-columns: 350px 1fr;
+      gap: 30px;
+      align-items: start;
+    }
+
+    .controls {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      position: sticky;
+      top: 20px;
+    }
+
+    .controls h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #e1e5e9;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .control-group input:focus,
+    .control-group select:focus {
+      outline: none;
+      border-color: #4A90E2;
+    }
+
+    .control-group input[type="range"] {
+      padding: 0;
+      height: 6px;
+      background: #e1e5e9;
+      border-radius: 3px;
+    }
+
+    .control-group input[type="checkbox"] {
+      width: auto;
+      margin-right: 8px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+    }
+
+    .checkbox-group label {
+      margin: 0;
+      font-weight: normal;
+    }
+
+    .range-value {
+      font-size: 12px;
+      color: #666;
+      margin-top: 4px;
+    }
+
+    .button-group {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .btn {
+      padding: 10px 16px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .btn-primary {
+      background: #4A90E2;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #357ABD;
+    }
+
+    .btn-secondary {
+      background: #f8f9fa;
+      color: #495057;
+      border: 1px solid #dee2e6;
+    }
+
+    .btn-secondary:hover {
+      background: #e9ecef;
+    }
+
+    .grid-preview {
+      background: white;
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+
+    .grid-preview h2 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+
+    .grid-container {
+      border: 3px solid #4A90E2;
+      border-radius: 8px;
+      min-height: 300px;
+      background: #f8f9fa;
+      position: relative;
+      transition: all 0.3s ease;
+    }
+
+    .grid-item {
+      background: #ffffff;
+      border: 2px solid #dee2e6;
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      color: #495057;
+      min-height: 60px;
+      transition: all 0.2s;
+    }
+
+    .grid-item:hover {
+      border-color: #4A90E2;
+      transform: scale(1.02);
+    }
+
+    .current-css {
+      margin-top: 20px;
+      padding: 15px;
+      background: #2d3748;
+      color: #e2e8f0;
+      border-radius: 8px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      line-height: 1.5;
+      overflow-x: auto;
+    }
+
+    .current-css h3 {
+      color: #4A90E2;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+
+    .visual-designer {
+      border: 1px solid #e1e5e9;
+      border-radius: 8px;
+      padding: 15px;
+      background: #fafbfc;
+    }
+
+    .designer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+
+    .designer-label {
+      font-weight: 600;
+      color: #495057;
+      font-size: 13px;
+    }
+
+    .btn-mini {
+      padding: 4px 8px;
+      font-size: 11px;
+      border: 1px solid #dee2e6;
+      background: white;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #495057;
+    }
+
+    .btn-mini:hover {
+      background: #f8f9fa;
+    }
+
+    .tracks-container {
+      display: flex;
+      min-height: 40px;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      margin-bottom: 10px;
+      position: relative;
+    }
+
+    .tracks-container.vertical {
+      flex-direction: column;
+      min-width: 40px;
+      min-height: 120px;
+    }
+
+    .track-segment {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      min-height: 40px;
+      border-right: 2px solid #e9ecef;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 11px;
+      font-weight: 600;
+      color: white;
+      text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+    }
+
+    .track-segment:last-child {
+      border-right: none;
+    }
+
+    .track-segment:hover {
+      opacity: 0.8;
+      transform: scale(1.02);
+    }
+
+    .track-segment.fr {
+      background: linear-gradient(135deg, #4A90E2, #357ABD);
+    }
+
+    .track-segment.px {
+      background: linear-gradient(135deg, #50C878, #3A9B5C);
+    }
+
+    .track-segment.percent {
+      background: linear-gradient(135deg, #FF6B6B, #E55454);
+    }
+
+    .track-segment.auto {
+      background: linear-gradient(135deg, #95A5A6, #7F8C8D);
+    }
+
+    .track-segment.minmax {
+      background: linear-gradient(135deg, #9B59B6, #8E44AD);
+    }
+
+    .vertical .track-segment {
+      border-right: none;
+      border-bottom: 2px solid #e9ecef;
+      min-width: 40px;
+      min-height: 30px;
+    }
+
+    .vertical .track-segment:last-child {
+      border-bottom: none;
+    }
+
+    .track-divider {
+      position: absolute;
+      background: #4A90E2;
+      cursor: col-resize;
+      z-index: 10;
+      opacity: 0;
+      transition: opacity 0.2s;
+    }
+
+    .track-divider:hover,
+    .track-divider.dragging {
+      opacity: 1;
+    }
+
+    .tracks-container:hover .track-divider {
+      opacity: 0.6;
+    }
+
+    .track-divider.horizontal {
+      width: 3px;
+      height: 100%;
+      top: 0;
+    }
+
+    .track-divider.vertical {
+      height: 3px;
+      width: 100%;
+      left: 0;
+      cursor: row-resize;
+    }
+
+    .add-track-zone {
+      position: absolute;
+      background: rgba(74, 144, 226, 0.1);
+      border: 2px dashed #4A90E2;
+      opacity: 0;
+      transition: opacity 0.2s;
+      pointer-events: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #4A90E2;
+      font-size: 20px;
+      font-weight: bold;
+    }
+
+    .add-track-zone.show {
+      opacity: 1;
+      pointer-events: all;
+      cursor: pointer;
+    }
+
+    .context-menu {
+      position: fixed;
+      background: white;
+      border: 1px solid #dee2e6;
+      border-radius: 6px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+      padding: 8px 0;
+      z-index: 1000;
+      display: none;
+    }
+
+    .context-menu-item {
+      padding: 8px 16px;
+      cursor: pointer;
+      font-size: 13px;
+      color: #495057;
+    }
+
+    .context-menu-item:hover {
+      background: #f8f9fa;
+    }
+
+    .css-input {
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 12px;
+      background: #2d3748;
+      color: #e2e8f0;
+      border: 1px solid #4a5568;
+    }
+
+    .css-input:focus {
+      border-color: #4A90E2;
+    }
+
+    @media (max-width: 768px) {
+      .layout {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .controls {
+        position: static;
+      }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="header">
+    <h1>CSS Grid Layout Explorer</h1>
+    <p>Experiment with CSS Grid container properties in real-time. Add or remove items and adjust grid settings to see how they affect the layout behavior.</p>
+  </div>
+
+  <div class="layout">
+    <div class="controls">
+      <h2>Grid Controls</h2>
+
+      <div class="button-group">
+        <button class="btn btn-primary" onclick="addGridItem()">Add Item</button>
+        <button class="btn btn-secondary" onclick="removeGridItem()">Remove Item</button>
+      </div>
+
+      <div class="control-group">
+        <div class="checkbox-group">
+          <input type="checkbox" id="displayGrid" checked onchange="updateGrid()">
+          <label for="displayGrid">Enable Grid Display</label>
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="templateColumns">grid-template-columns</label>
+        <div class="visual-designer" id="columnsDesigner">
+          <div class="designer-header">
+            <span class="designer-label">Columns</span>
+            <button class="btn-mini" onclick="addColumn()">+ Add Column</button>
+          </div>
+          <div class="tracks-container" id="columnsContainer"></div>
+          <input type="text" id="templateColumns" value="repeat(3, 1fr)" oninput="updateFromText('columns')" class="css-input" placeholder="Or edit CSS directly...">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="templateRows">grid-template-rows</label>
+        <div class="visual-designer" id="rowsDesigner">
+          <div class="designer-header">
+            <span class="designer-label">Rows</span>
+            <button class="btn-mini" onclick="addRow()">+ Add Row</button>
+          </div>
+          <div class="tracks-container vertical" id="rowsContainer"></div>
+          <input type="text" id="templateRows" value="auto" oninput="updateFromText('rows')" class="css-input" placeholder="Or edit CSS directly...">
+        </div>
+      </div>
+
+      <div class="control-group">
+        <label for="gap">gap</label>
+        <input type="range" id="gap" min="0" max="50" value="15" oninput="updateGrid()">
+        <div class="range-value">Current: <span id="gapValue">15px</span></div>
+      </div>
+
+      <div class="control-group">
+        <label for="justifyContent">justify-content</label>
+        <select id="justifyContent" onchange="updateGrid()">
+          <option value="start">start</option>
+          <option value="end">end</option>
+          <option value="center">center</option>
+          <option value="stretch" selected>stretch</option>
+          <option value="space-around">space-around</option>
+          <option value="space-between">space-between</option>
+          <option value="space-evenly">space-evenly</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="alignContent">align-content</label>
+        <select id="alignContent" onchange="updateGrid()">
+          <option value="start">start</option>
+          <option value="end">end</option>
+          <option value="center">center</option>
+          <option value="stretch" selected>stretch</option>
+          <option value="space-around">space-around</option>
+          <option value="space-between">space-between</option>
+          <option value="space-evenly">space-evenly</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="justifyItems">justify-items</label>
+        <select id="justifyItems" onchange="updateGrid()">
+          <option value="start">start</option>
+          <option value="end">end</option>
+          <option value="center">center</option>
+          <option value="stretch" selected>stretch</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label for="alignItems">align-items</label>
+        <select id="alignItems" onchange="updateGrid()">
+          <option value="start">start</option>
+          <option value="end">end</option>
+          <option value="center">center</option>
+          <option value="stretch" selected>stretch</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="grid-preview">
+      <h2>Grid Layout Preview</h2>
+      <div class="grid-container" id="gridContainer">
+        <div class="grid-item">1</div>
+        <div class="grid-item">2</div>
+        <div class="grid-item">3</div>
+        <div class="grid-item">4</div>
+        <div class="grid-item">5</div>
+        <div class="grid-item">6</div>
+      </div>
+
+      <div class="current-css">
+        <h3>Current CSS</h3>
+        <pre id="cssDisplay"></pre>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  let itemCounter = 6;
+  let dragState = null;
+  let contextMenu = null;
+
+  // Track parsing and management
+  class GridTrack {
+    constructor(value, type, originalValue = null) {
+      this.value = value;
+      this.type = type; // 'fr', 'px', 'percent', 'auto', 'minmax'
+      this.originalValue = originalValue || value;
+    }
+
+    toString() {
+      return this.originalValue;
+    }
+
+    getDisplayValue() {
+      if (this.type === 'fr') return `${this.value}fr`;
+      if (this.type === 'px') return `${this.value}px`;
+      if (this.type === 'percent') return `${this.value}%`;
+      if (this.type === 'auto') return 'auto';
+      if (this.type === 'minmax') return this.originalValue;
+      return this.originalValue;
+    }
+  }
+
+  function parseGridTemplate(value) {
+    if (!value || value === 'none') return [];
+
+    const tracks = [];
+
+    // Handle repeat() function
+    if (value.includes('repeat(')) {
+      const repeatMatch = value.match(/repeat\((\d+),\s*([^)]+)\)/);
+      if (repeatMatch) {
+        const count = parseInt(repeatMatch[1]);
+        const trackValue = repeatMatch[2].trim();
+        const track = parseTrackValue(trackValue);
+        for (let i = 0; i < count; i++) {
+          tracks.push(new GridTrack(track.value, track.type, trackValue));
+        }
+        return tracks;
+      }
+    }
+
+    // Split by spaces but handle functions like minmax()
+    const parts = value.split(/\s+/);
+    parts.forEach(part => {
+      const track = parseTrackValue(part);
+      tracks.push(track);
+    });
+
+    return tracks;
+  }
+
+  function parseTrackValue(value) {
+    value = value.trim();
+
+    if (value === 'auto') {
+      return new GridTrack('auto', 'auto', value);
+    }
+
+    if (value.includes('minmax(')) {
+      return new GridTrack(value, 'minmax', value);
+    }
+
+    if (value.endsWith('fr')) {
+      const num = parseFloat(value.replace('fr', ''));
+      return new GridTrack(num, 'fr', value);
+    }
+
+    if (value.endsWith('px')) {
+      const num = parseFloat(value.replace('px', ''));
+      return new GridTrack(num, 'px', value);
+    }
+
+    if (value.endsWith('%')) {
+      const num = parseFloat(value.replace('%', ''));
+      return new GridTrack(num, 'percent', value);
+    }
+
+    // Default to auto for unrecognized values
+    return new GridTrack(value, 'auto', value);
+  }
+
+  function tracksToCSS(tracks) {
+    if (tracks.length === 0) return 'none';
+    return tracks.map(track => track.toString()).join(' ');
+  }
+
+  function renderTracks(tracks, containerId, isVertical = false) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+
+    if (tracks.length === 0) {
+      tracks = [new GridTrack('1', 'fr', '1fr')];
+    }
+
+    const totalFr = tracks.filter(t => t.type === 'fr').reduce((sum, t) => sum + t.value, 0);
+    const totalFixed = tracks.filter(t => t.type === 'px').reduce((sum, t) => sum + t.value, 0);
+
+    tracks.forEach((track, index) => {
+      const segment = document.createElement('div');
+      segment.className = `track-segment ${track.type}`;
+      segment.textContent = track.getDisplayValue();
+      segment.dataset.index = index;
+
+      // Calculate flex-grow for fr units, or fixed width for px
+      if (track.type === 'fr') {
+        segment.style.flexGrow = track.value;
+      } else if (track.type === 'px') {
+        if (isVertical) {
+          segment.style.height = `${Math.max(30, track.value / 4)}px`;
+          segment.style.flexShrink = '0';
+        } else {
+          segment.style.width = `${Math.max(40, track.value / 4)}px`;
+          segment.style.flexShrink = '0';
+        }
+      } else if (track.type === 'percent') {
+        if (isVertical) {
+          segment.style.height = `${track.value}%`;
+        } else {
+          segment.style.width = `${track.value}%`;
+        }
+        segment.style.flexShrink = '0';
+      } else {
+        segment.style.flexGrow = '1';
+      }
+
+      // Add click handler for editing
+      segment.addEventListener('click', (e) => {
+        e.stopPropagation();
+        editTrack(index, isVertical ? 'rows' : 'columns');
+      });
+
+      // Add context menu
+      segment.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        showContextMenu(e, index, isVertical ? 'rows' : 'columns');
+      });
+
+      container.appendChild(segment);
+
+      // Add divider (except after last track)
+      if (index < tracks.length - 1) {
+        const divider = document.createElement('div');
+        divider.className = `track-divider ${isVertical ? 'vertical' : 'horizontal'}`;
+        divider.dataset.index = index;
+
+        // Position divider
+        const position = ((index + 1) / tracks.length) * 100;
+        if (isVertical) {
+          divider.style.top = `${position}%`;
+        } else {
+          divider.style.left = `${position}%`;
+        }
+
+        container.appendChild(divider);
+      }
+    });
+
+    // Add click zones for adding tracks
+    addClickZones(container, tracks.length, isVertical);
+  }
+
+  function addClickZones(container, trackCount, isVertical) {
+    // Add zones between tracks and at the end
+    for (let i = 0; i <= trackCount; i++) {
+      const zone = document.createElement('div');
+      zone.className = 'add-track-zone';
+      zone.textContent = '+';
+      zone.dataset.position = i;
+
+      const position = (i / trackCount) * 100;
+
+      if (isVertical) {
+        zone.style.top = i === trackCount ? '100%' : `${position}%`;
+        zone.style.height = '20px';
+        zone.style.width = '100%';
+        zone.style.transform = i === trackCount ? 'translateY(-10px)' : 'translateY(-10px)';
+      } else {
+        zone.style.left = i === trackCount ? '100%' : `${position}%`;
+        zone.style.width = '20px';
+        zone.style.height = '100%';
+        zone.style.transform = i === trackCount ? 'translateX(-10px)' : 'translateX(-10px)';
+      }
+
+      zone.addEventListener('click', () => {
+        addTrackAt(i, isVertical ? 'rows' : 'columns');
+      });
+
+      // Show on hover
+      container.addEventListener('mouseover', () => zone.classList.add('show'));
+      container.addEventListener('mouseleave', () => zone.classList.remove('show'));
+
+      container.appendChild(zone);
+    }
+  }
+
+  function editTrack(index, type) {
+    const tracks = type === 'columns' ? parseGridTemplate(document.getElementById('templateColumns').value) : parseGridTemplate(document.getElementById('templateRows').value);
+    const track = tracks[index];
+
+    const newValue = prompt(`Edit ${type.slice(0, -1)} ${index + 1}:`, track.getDisplayValue());
+    if (newValue && newValue !== track.getDisplayValue()) {
+      const newTrack = parseTrackValue(newValue);
+      tracks[index] = newTrack;
+
+      const css = tracksToCSS(tracks);
+      document.getElementById(type === 'columns' ? 'templateColumns' : 'templateRows').value = css;
+      updateFromVisual(type);
+    }
+  }
+
+  function showContextMenu(e, index, type) {
+    if (contextMenu) {
+      document.body.removeChild(contextMenu);
+    }
+
+    contextMenu = document.createElement('div');
+    contextMenu.className = 'context-menu';
+    contextMenu.style.left = `${e.clientX}px`;
+    contextMenu.style.top = `${e.clientY}px`;
+    contextMenu.style.display = 'block';
+
+    const options = [
+      { label: 'Edit Track', action: () => editTrack(index, type) },
+      { label: 'Duplicate Track', action: () => duplicateTrack(index, type) },
+      { label: 'Delete Track', action: () => deleteTrack(index, type) },
+      { label: '---', action: null },
+      { label: 'Set to 1fr', action: () => setTrackValue(index, type, '1fr') },
+      { label: 'Set to auto', action: () => setTrackValue(index, type, 'auto') },
+      { label: 'Set to 100px', action: () => setTrackValue(index, type, '100px') }
+    ];
+
+    options.forEach(option => {
+      if (option.label === '---') {
+        const divider = document.createElement('hr');
+        contextMenu.appendChild(divider);
+      } else {
+        const item = document.createElement('div');
+        item.className = 'context-menu-item';
+        item.textContent = option.label;
+        item.addEventListener('click', () => {
+          option.action();
+          document.body.removeChild(contextMenu);
+          contextMenu = null;
+        });
+        contextMenu.appendChild(item);
+      }
+    });
+
+    document.body.appendChild(contextMenu);
+
+    // Close on click outside
+    setTimeout(() => {
+      document.addEventListener('click', closeContextMenu);
+    }, 0);
+  }
+
+  function closeContextMenu() {
+    if (contextMenu) {
+      document.body.removeChild(contextMenu);
+      contextMenu = null;
+    }
+    document.removeEventListener('click', closeContextMenu);
+  }
+
+  function setTrackValue(index, type, value) {
+    const tracks = type === 'columns' ? parseGridTemplate(document.getElementById('templateColumns').value) : parseGridTemplate(document.getElementById('templateRows').value);
+    tracks[index] = parseTrackValue(value);
+
+    const css = tracksToCSS(tracks);
+    document.getElementById(type === 'columns' ? 'templateColumns' : 'templateRows').value = css;
+    updateFromVisual(type);
+  }
+
+  function duplicateTrack(index, type) {
+    const tracks = type === 'columns' ? parseGridTemplate(document.getElementById('templateColumns').value) : parseGridTemplate(document.getElementById('templateRows').value);
+    const trackToDuplicate = tracks[index];
+    tracks.splice(index + 1, 0, new GridTrack(trackToDuplicate.value, trackToDuplicate.type, trackToDuplicate.originalValue));
+
+    const css = tracksToCSS(tracks);
+    document.getElementById(type === 'columns' ? 'templateColumns' : 'templateRows').value = css;
+    updateFromVisual(type);
+  }
+
+  function deleteTrack(index, type) {
+    const tracks = type === 'columns' ? parseGridTemplate(document.getElementById('templateColumns').value) : parseGridTemplate(document.getElementById('templateRows').value);
+    if (tracks.length > 1) {
+      tracks.splice(index, 1);
+      const css = tracksToCSS(tracks);
+      document.getElementById(type === 'columns' ? 'templateColumns' : 'templateRows').value = css;
+      updateFromVisual(type);
+    }
+  }
+
+  function addTrackAt(position, type) {
+    const tracks = type === 'columns' ? parseGridTemplate(document.getElementById('templateColumns').value) : parseGridTemplate(document.getElementById('templateRows').value);
+    tracks.splice(position, 0, new GridTrack('1', 'fr', '1fr'));
+
+    const css = tracksToCSS(tracks);
+    document.getElementById(type === 'columns' ? 'templateColumns' : 'templateRows').value = css;
+    updateFromVisual(type);
+  }
+
+  function addColumn() {
+    addTrackAt(-1, 'columns');
+  }
+
+  function addRow() {
+    addTrackAt(-1, 'rows');
+  }
+
+  function updateFromText(type) {
+    updateFromVisual(type);
+  }
+
+  function updateFromVisual(type) {
+    const value = document.getElementById(type === 'columns' ? 'templateColumns' : 'templateRows').value;
+    const tracks = parseGridTemplate(value);
+    renderTracks(tracks, type === 'columns' ? 'columnsContainer' : 'rowsContainer', type === 'rows');
+    updateGrid();
+  }
+
+  function addGridItem() {
+    const container = document.getElementById('gridContainer');
+    const newItem = document.createElement('div');
+    newItem.className = 'grid-item';
+    newItem.textContent = ++itemCounter;
+    container.appendChild(newItem);
+  }
+
+  function removeGridItem() {
+    const container = document.getElementById('gridContainer');
+    const items = container.querySelectorAll('.grid-item');
+    if (items.length > 1) {
+      container.removeChild(items[items.length - 1]);
+      itemCounter--;
+    }
+  }
+
+  function updateGrid() {
+    const container = document.getElementById('gridContainer');
+    const displayGrid = document.getElementById('displayGrid').checked;
+    const templateColumns = document.getElementById('templateColumns').value;
+    const templateRows = document.getElementById('templateRows').value;
+    const gap = document.getElementById('gap').value;
+    const justifyContent = document.getElementById('justifyContent').value;
+    const alignContent = document.getElementById('alignContent').value;
+    const justifyItems = document.getElementById('justifyItems').value;
+    const alignItems = document.getElementById('alignItems').value;
+
+    // Update gap value display
+    document.getElementById('gapValue').textContent = gap + 'px';
+
+    // Apply styles to container
+    container.style.display = displayGrid ? 'grid' : 'block';
+    container.style.gridTemplateColumns = displayGrid ? templateColumns : '';
+    container.style.gridTemplateRows = displayGrid ? templateRows : '';
+    container.style.gap = displayGrid ? gap + 'px' : '';
+    container.style.justifyContent = displayGrid ? justifyContent : '';
+    container.style.alignContent = displayGrid ? alignContent : '';
+    container.style.justifyItems = displayGrid ? justifyItems : '';
+    container.style.alignItems = displayGrid ? alignItems : '';
+
+    // Update CSS display
+    updateCSSDisplay();
+  }
+
+  function updateCSSDisplay() {
+    const displayGrid = document.getElementById('displayGrid').checked;
+    const templateColumns = document.getElementById('templateColumns').value;
+    const templateRows = document.getElementById('templateRows').value;
+    const gap = document.getElementById('gap').value;
+    const justifyContent = document.getElementById('justifyContent').value;
+    const alignContent = document.getElementById('alignContent').value;
+    const justifyItems = document.getElementById('justifyItems').value;
+    const alignItems = document.getElementById('alignItems').value;
+
+    let css = '.grid-container {\n';
+    css += `  display: ${displayGrid ? 'grid' : 'block'};\n`;
+
+    if (displayGrid) {
+      css += `  grid-template-columns: ${templateColumns};\n`;
+      css += `  grid-template-rows: ${templateRows};\n`;
+      css += `  gap: ${gap}px;\n`;
+      css += `  justify-content: ${justifyContent};\n`;
+      css += `  align-content: ${alignContent};\n`;
+      css += `  justify-items: ${justifyItems};\n`;
+      css += `  align-items: ${alignItems};\n`;
+    }
+
+    css += '}';
+
+    document.getElementById('cssDisplay').textContent = css;
+  }
+
+  // Initialize the display
+  updateGrid();
+  updateFromVisual('columns');
+  updateFromVisual('rows');
+</script>
+</body>
+</html>
