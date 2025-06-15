@@ -404,6 +404,10 @@
             scheduleUpdate();
         });
 
+        document.getElementById('toggle-children-visible').addEventListener('change', (e) => {
+            scheduleUpdate();
+        });
+
         // Gap control
         const gapSlider = document.getElementById('gap');
         const gapValue = document.getElementById('gap-value');
@@ -464,6 +468,10 @@
 
     // Ensure children count matches rows × columns
     function syncChildren() {
+        let checkbox = document.getElementById('toggle-children-visible');
+        container.innerHTML = ''; // Clear existing children
+        if(!checkbox.checked)
+            return;
         const cols = document.getElementById('template-columns').value.trim().split(/\s+/).filter(Boolean).length;
         const rows = document.getElementById('template-rows').value.trim().split(/\s+/).filter(Boolean).length;
         const desired = cols * rows;
@@ -473,7 +481,7 @@
         if (current < desired) {
             for (let i = current; i < desired; i++) {
                 const child = document.createElement('div');
-                if (document.getElementById('toggle-children-visible').checked) {
+                if (checkbox.checked) {
                     child.className = 'grid-item';
                 }
                 container.appendChild(child);
@@ -575,11 +583,6 @@
                 overlay.appendChild(line);
             }
         }
-
-        // Create grid lines based on actual grid structure
-        const children = Array.from(container.children);
-        if (children.length === 0)
-            return console.log(`No grid items found, skipping overlay update.`);
 
         // Get grid column and row tracks
         const columnTracks = computed.gridTemplateColumns.split(' ');
