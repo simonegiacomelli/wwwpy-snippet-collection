@@ -437,7 +437,8 @@
 
     function addChild() {
         const child = document.createElement('div');
-        child.className = 'grid-item';
+        if (document.getElementById('toggle-children-visible').checked)
+            child.className = 'grid-item';
         container.appendChild(child);
         scheduleUpdate();
     }
@@ -475,7 +476,9 @@
         if (current < desired) {
             for (let i = current; i < desired; i++) {
                 const child = document.createElement('div');
-                child.className = 'grid-item';
+                if (document.getElementById('toggle-children-visible').checked) {
+                    child.className = 'grid-item';
+                }
                 container.appendChild(child);
             }
         } else if (current > desired) {
