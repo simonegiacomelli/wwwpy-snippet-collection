@@ -454,6 +454,29 @@
         input.value = newTemplate;
         container.style[styleProp] = newTemplate;
         scheduleUpdate();
+        syncChildren();
+    }
+
+    // Ensure children count matches rows × columns
+    function syncChildren() {
+        const cols = document.getElementById('template-columns').value.trim().split(/\s+/).filter(Boolean).length;
+        const rows = document.getElementById('template-rows').value.trim().split(/\s+/).filter(Boolean).length;
+        const desired = cols * rows;
+        const current = container.children.length;
+        // add or remove children
+        if (current < desired) {
+            for (let i = current; i < desired; i++) {
+                const child = document.createElement('div');
+                child.className = 'grid-item';
+                container.appendChild(child);
+            }
+        } else if (current > desired) {
+            for (let i = current; i > desired; i--) {
+                container.removeChild(container.lastElementChild);
+            }
+        }
+        // relabel all children
+        Array.from(container.children).forEach((child, idx) => child.textContent = idx + 1);
     }
 
     function addColumn() {
