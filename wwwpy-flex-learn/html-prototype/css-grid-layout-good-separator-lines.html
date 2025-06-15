@@ -345,8 +345,8 @@
         <div class="control-group">
             <label>Child Elements</label>
             <div class="child-controls">
-                <button class="add-child" id="add-child">Add Child</button>
-                <button class="remove-child" id="remove-child">Remove Child</button>
+                <button id="add-child" onclick="explorer.addChild()">Add Child</button>
+                <button id="remove-child" onclick="explorer.removeChild()">Remove Child</button>
             </div>
         </div>
 
@@ -369,12 +369,12 @@
             <div class="grid-overlay" id="grid-overlay"></div>
             <div class="grid-controls">
                 <div class="column-controls">
-                    <button id="remove-column">−</button>
-                    <button id="add-column">+</button>
+                    <button id="remove-column" onclick="explorer.removeColumn()">−</button>
+                    <button id="add-column" onclick="explorer.addColumn()">+</button>
                 </div>
                 <div class="row-controls">
-                    <button id="remove-row">−</button>
-                    <button id="add-row">+</button>
+                    <button id="remove-row" onclick="explorer.removeRow()">−</button>
+                    <button id="add-row" onclick="explorer.addRow()">+</button>
                 </div>
             </div>
         </div>
@@ -430,18 +430,6 @@
                     this.scheduleUpdate();
                 });
             });
-
-            // Child controls
-            document.getElementById('add-child').addEventListener('click', () => this.addChild());
-
-            document.getElementById('remove-child').addEventListener('click', () => this.removeChild());
-
-            // Column/Row controls
-            document.getElementById('add-column').addEventListener('click', () => this.addColumn());
-
-            document.getElementById('remove-column').addEventListener('click', () => this.removeColumn());
-            document.getElementById('add-row').addEventListener('click', () => this.addRow());
-            document.getElementById('remove-row').addEventListener('click', () => this.removeRow());
         }
 
         addChild() {
@@ -625,7 +613,7 @@
     }
 
     // Initialize the grid explorer when DOM is ready
-    document.addEventListener('DOMContentLoaded', () => new GridExplorer());
+    document.addEventListener('DOMContentLoaded', () => { window.explorer = new GridExplorer(); });
 </script>
 </body>
 </html>
