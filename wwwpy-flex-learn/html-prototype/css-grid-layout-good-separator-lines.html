@@ -13,7 +13,8 @@
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             margin: 0;
             padding: 20px;
-            background: #f8f9fa;
+            background: #1e1e1e;
+            color: #ddd;
             min-height: 100vh;
         }
 
@@ -26,10 +27,10 @@
 
         .controls-panel {
             width: 300px;
-            background: white;
+            background: #2b2b2b;
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             height: fit-content;
             position: sticky;
             top: 20px;
@@ -37,7 +38,7 @@
 
         .controls-panel h2 {
             margin: 0 0 20px 0;
-            color: #2c3e50;
+            color: #ddd;
             font-size: 18px;
             font-weight: 600;
         }
@@ -49,7 +50,7 @@
         .control-group label {
             display: block;
             margin-bottom: 6px;
-            color: #34495e;
+            color: #ccc;
             font-weight: 500;
             font-size: 14px;
         }
@@ -59,7 +60,9 @@
         .control-group input[type="range"] {
             width: 100%;
             padding: 8px 12px;
-            border: 2px solid #e1e8ed;
+            background: #333;
+            color: #ddd;
+            border: 2px solid #555;
             border-radius: 6px;
             font-size: 14px;
             transition: border-color 0.2s;
@@ -68,13 +71,13 @@
         .control-group select:focus,
         .control-group input:focus {
             outline: none;
-            border-color: #3498db;
+            border-color: #888;
         }
 
         .range-value {
             display: inline-block;
             margin-left: 10px;
-            color: #7f8c8d;
+            color: #ccc;
             font-size: 12px;
             min-width: 30px;
         }
@@ -97,25 +100,25 @@
         }
 
         .add-child {
-            background: #27ae60;
+            background: #444;
             color: white;
         }
 
         .add-child:hover {
-            background: #229954;
+            background: #555;
         }
 
         .remove-child {
-            background: #e74c3c;
+            background: #444;
             color: white;
         }
 
         .remove-child:hover {
-            background: #c0392b;
+            background: #555;
         }
 
         .computed-styles {
-            background: #f8f9fa;
+            background: #2b2b2b;
             border-radius: 6px;
             padding: 15px;
             margin-top: 20px;
@@ -123,7 +126,7 @@
 
         .computed-styles h3 {
             margin: 0 0 10px 0;
-            color: #2c3e50;
+            color: #ddd;
             font-size: 14px;
             font-weight: 600;
         }
@@ -133,23 +136,23 @@
             font-family: 'Courier New', monospace;
             font-size: 11px;
             line-height: 1.4;
-            color: #34495e;
+            color: #ccc;
             overflow-x: auto;
         }
 
         .grid-area {
             flex: 1;
-            background: white;
+            background: #2b2b2b;
             border-radius: 12px;
             padding: 20px;
-            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
             position: relative;
         }
 
         .grid-container-wrapper {
             position: relative;
-            background: #fff;
-            border: 2px solid #e1e8ed;
+            background: #1e1e1e;
+            border: 2px solid #444;
             border-radius: 8px;
             min-height: 400px;
             margin: 20px;
@@ -162,8 +165,8 @@
         }
 
         .grid-item {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            border: 2px solid #5a67d8;
+            background: linear-gradient(135deg, #444 0%, #666 100%);
+            border: 2px solid #555;
             border-radius: 6px;
             display: flex;
             align-items: center;
@@ -195,8 +198,8 @@
             height: 32px;
             border: none;
             border-radius: 50%;
-            background: #3498db;
-            color: white;
+            background: #444;
+            color: #ddd;
             font-size: 16px;
             font-weight: bold;
             cursor: pointer;
@@ -210,7 +213,7 @@
         }
 
         .grid-controls button:hover {
-            background: #2980b9;
+            background: #555;
             transform: scale(1.1);
         }
 
@@ -253,7 +256,7 @@
 
         .grid-line {
             position: absolute;
-            background: rgba(52, 152, 219, 0.3);
+            background: rgba(255, 255, 255, 0.2);
         }
 
         .grid-line.vertical {
