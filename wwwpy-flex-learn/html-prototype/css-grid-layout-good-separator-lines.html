@@ -533,20 +533,16 @@
         const paddingRight = parseFloat(computed.paddingRight);
         const paddingBottom = parseFloat(computed.paddingBottom);
 
-        // Helper to draw grid lines in either direction
-        function drawLines(tracks, paddingBefore, paddingAfter, totalSize, gapSize, direction) {
-            if (tracks.length <= 1 || tracks[0] === 'none')
-                return console.log(`Not enough tracks to draw lines, skipping.`);
-
-            console.log(`Drawing ${direction} lines for tracks:`, tracks);
-
-            const contentSize = totalSize - paddingBefore - paddingAfter;
-            const trackSize = (contentSize - gapSize * (tracks.length - 1)) / tracks.length;
-            for (let i = 1; i < tracks.length; i++) {
+        // Helper to draw grid lines using actual computed track sizes
+        function drawLines(tracks, paddingBefore, gapSize, direction) {
+            if (tracks.length <= 1 || tracks[0] === 'none') return;
+            const sizes = tracks.map(val => parseFloat(val));
+            for (let i = 1; i < sizes.length; i++) {
+                const sumBefore = sizes.slice(0, i).reduce((a, b) => a + b, 0);
+                const pos = paddingBefore + sumBefore + gapSize * (i - 0.5);
                 const line = document.createElement('div');
                 line.className = 'grid-line ' + direction;
-                const pos = paddingBefore + (trackSize + gapSize) * i - gapSize / 2;
-                line.style[direction === 'vertical' ? 'left' : 'top'] = pos + 'px';
+                line.style[direction === 'vertical' ? 'left' : 'top'] = `${pos}px`;
                 overlay.appendChild(line);
             }
         }
@@ -559,8 +555,8 @@
         // Get grid column and row tracks
         const columnTracks = computed.gridTemplateColumns.split(' ');
         const rowTracks = computed.gridTemplateRows.split(' ');
-        drawLines(columnTracks, paddingLeft, paddingRight, containerRect.width, parseFloat(computed.columnGap) || 0, 'vertical');
-        drawLines(rowTracks, paddingTop, paddingBottom, containerRect.height, parseFloat(computed.rowGap) || 0, 'horizontal');
+        drawLines(columnTracks, paddingLeft, parseFloat(computed.columnGap) || 0, 'vertical');
+        drawLines(rowTracks, paddingTop, parseFloat(computed.rowGap) || 0, 'horizontal');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
