@@ -471,7 +471,8 @@
         const cols = document.getElementById('template-columns').value.trim().split(/\s+/).filter(Boolean).length;
         const rows = document.getElementById('template-rows').value.trim().split(/\s+/).filter(Boolean).length;
         const desired = cols * rows;
-        const current = container.children.length;
+        const items = container.querySelectorAll('.grid-item');
+        const current = items.length;
         // add or remove children
         if (current < desired) {
             for (let i = current; i < desired; i++) {
@@ -550,7 +551,14 @@
     }
 
     function updateGridOverlay() {
-        // Clear existing overlay
+        // Position overlay over the actual grid container
+        const wrapperRect = overlay.parentElement.getBoundingClientRect();
+        const containerRect = container.getBoundingClientRect();
+        overlay.style.top = `${containerRect.top - wrapperRect.top}px`;
+        overlay.style.left = `${containerRect.left - wrapperRect.left}px`;
+        overlay.style.width = `${containerRect.width}px`;
+        overlay.style.height = `${containerRect.height}px`;
+        // Clear any existing overlay lines
         overlay.innerHTML = '';
 
         if (container.style.display !== 'grid' && container.style.display !== 'inline-grid')
