@@ -444,52 +444,35 @@
         }
     }
 
-    function addColumn() {
-        const input = document.getElementById('template-columns');
-        const current = input.value.trim();
-        const tracks = current ? current.split(/\s+/) : [];
-        tracks.push('1fr');
+    // Refactored common logic for adding or removing grid tracks
+    function adjustTracks(inputId, styleProp, operation) {
+        const input = document.getElementById(inputId);
+        const tracks = input.value.trim().split(/\s+/).filter(Boolean);
+        if (operation === 'add') {
+            tracks.push('1fr');
+        } else if (operation === 'remove' && tracks.length > 1) {
+            tracks.pop();
+        }
         const newTemplate = tracks.join(' ');
         input.value = newTemplate;
-        container.style.gridTemplateColumns = newTemplate;
+        container.style[styleProp] = newTemplate;
         scheduleUpdate();
+    }
+
+    function addColumn() {
+        adjustTracks('template-columns', 'gridTemplateColumns', 'add');
     }
 
     function removeColumn() {
-        const input = document.getElementById('template-columns');
-        const current = input.value.trim();
-        const tracks = current ? current.split(/\s+/) : [];
-        if (tracks.length > 1) {
-            tracks.pop();
-            const newTemplate = tracks.join(' ');
-            input.value = newTemplate;
-            container.style.gridTemplateColumns = newTemplate;
-            scheduleUpdate();
-        }
+        adjustTracks('template-columns', 'gridTemplateColumns', 'remove');
     }
 
     function addRow() {
-        const input = document.getElementById('template-rows');
-        const current = input.value.trim();
-        const tracks = current ? current.split(/\s+/) : [];
-        tracks.push('1fr');
-        const newTemplate = tracks.join(' ');
-        input.value = newTemplate;
-        container.style.gridTemplateRows = newTemplate;
-        scheduleUpdate();
+        adjustTracks('template-rows', 'gridTemplateRows', 'add');
     }
 
     function removeRow() {
-        const input = document.getElementById('template-rows');
-        const current = input.value.trim();
-        const tracks = current ? current.split(/\s+/) : [];
-        if (tracks.length > 1) {
-            tracks.pop();
-            const newTemplate = tracks.join(' ');
-            input.value = newTemplate;
-            container.style.gridTemplateRows = newTemplate;
-            scheduleUpdate();
-        }
+        adjustTracks('template-rows', 'gridTemplateRows', 'remove');
     }
 
     function scheduleUpdate() {
