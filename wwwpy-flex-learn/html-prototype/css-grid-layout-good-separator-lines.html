@@ -506,9 +506,7 @@
         updateScheduled = true;
 
         requestAnimationFrame(() => {
-            updateContainer();
-            updateComputedStyles();
-            updateGridOverlay();
+            updateAll();
             updateScheduled = false;
         });
     }
@@ -590,20 +588,21 @@
         drawLines(rowTracks, paddingTop, parseFloat(computed.rowGap) || 0, 'horizontal');
     }
 
-    document.addEventListener('DOMContentLoaded', () => {
-
-        initializeControls();
+    function updateAll() {
         updateContainer();
         updateComputedStyles();
         updateGridOverlay();
         syncChildren();
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        initializeControls();
+        updateAll()
 
         // Resize observer setup
         if (window.ResizeObserver) {
-            const resizeObserver = new ResizeObserver(() => {
-                scheduleUpdate();
-            });
-
+            const resizeObserver = new ResizeObserver(() => scheduleUpdate());
             resizeObserver.observe(container);
             resizeObserver.observe(document.querySelector('.grid-container-wrapper'));
         }
