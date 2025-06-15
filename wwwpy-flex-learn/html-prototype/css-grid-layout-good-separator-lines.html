@@ -362,12 +362,6 @@
     <div class="grid-area">
         <div class="grid-container-wrapper">
             <div class="grid-container" id="grid-container">
-                <div class="grid-item">1</div>
-                <div class="grid-item">2</div>
-                <div class="grid-item">3</div>
-                <div class="grid-item">4</div>
-                <div class="grid-item">5</div>
-                <div class="grid-item">6</div>
             </div>
             <div class="grid-overlay" id="grid-overlay"></div>
             <div class="grid-controls">
@@ -433,7 +427,6 @@
         const child = document.createElement('div');
         child.className = 'grid-item';
         container.appendChild(child);
-        child.textContent = container.children.length;
         scheduleUpdate();
     }
 
@@ -478,8 +471,6 @@
                 container.removeChild(container.lastElementChild);
             }
         }
-        // relabel all children
-        Array.from(container.children).forEach((child, idx) => child.textContent = idx + 1);
     }
 
     function addColumn() {
@@ -550,14 +541,10 @@
         if (container.style.display !== 'grid' && container.style.display !== 'inline-grid')
             return console.log(`Grid display not set, skipping overlay update.`);
 
-        const containerRect = container.getBoundingClientRect();
-
         // Get computed styles for accurate measurements
         const computed = window.getComputedStyle(container);
         const paddingTop = parseFloat(computed.paddingTop);
         const paddingLeft = parseFloat(computed.paddingLeft);
-        const paddingRight = parseFloat(computed.paddingRight);
-        const paddingBottom = parseFloat(computed.paddingBottom);
 
         // Helper to draw grid lines using actual computed track sizes
         function drawLines(tracks, paddingBefore, gapSize, direction) {
@@ -591,6 +578,7 @@
         updateContainer();
         updateComputedStyles();
         updateGridOverlay();
+        syncChildren();
 
         // Resize observer setup
         if (window.ResizeObserver) {
