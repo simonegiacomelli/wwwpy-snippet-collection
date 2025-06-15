@@ -432,30 +432,16 @@
             });
 
             // Child controls
-            document.getElementById('add-child').addEventListener('click', () => {
-                this.addChild();
-            });
+            document.getElementById('add-child').addEventListener('click', () => this.addChild());
 
-            document.getElementById('remove-child').addEventListener('click', () => {
-                this.removeChild();
-            });
+            document.getElementById('remove-child').addEventListener('click', () => this.removeChild());
 
             // Column/Row controls
-            document.getElementById('add-column').addEventListener('click', () => {
-                this.addColumn();
-            });
+            document.getElementById('add-column').addEventListener('click', () => this.addColumn());
 
-            document.getElementById('remove-column').addEventListener('click', () => {
-                this.removeColumn();
-            });
-
-            document.getElementById('add-row').addEventListener('click', () => {
-                this.addRow();
-            });
-
-            document.getElementById('remove-row').addEventListener('click', () => {
-                this.removeRow();
-            });
+            document.getElementById('remove-column').addEventListener('click', () => this.removeColumn());
+            document.getElementById('add-row').addEventListener('click', () => this.addRow());
+            document.getElementById('remove-row').addEventListener('click', () => this.removeRow());
         }
 
         addChild() {
@@ -634,16 +620,12 @@
             }
 
             // Fallback for browsers without ResizeObserver
-            window.addEventListener('resize', () => {
-                this.scheduleUpdate();
-            });
+            window.addEventListener('resize', () => this.scheduleUpdate());
         }
     }
 
     // Initialize the grid explorer when DOM is ready
-    document.addEventListener('DOMContentLoaded', () => {
-        new GridExplorer();
-    });
+    document.addEventListener('DOMContentLoaded', () => new GridExplorer());
 </script>
 </body>
 </html>
