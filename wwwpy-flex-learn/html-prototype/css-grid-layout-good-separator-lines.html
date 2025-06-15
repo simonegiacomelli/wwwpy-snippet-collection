@@ -524,12 +524,10 @@
         // Clear existing overlay
         overlay.innerHTML = '';
 
-        if (container.style.display !== 'grid' && container.style.display !== 'inline-grid') {
-            return;
-        }
+        if (container.style.display !== 'grid' && container.style.display !== 'inline-grid')
+            return console.log(`Grid display not set, skipping overlay update.`);
 
         const containerRect = container.getBoundingClientRect();
-        const overlayRect = overlay.getBoundingClientRect();
 
         // Get computed styles for accurate measurements
         const computed = window.getComputedStyle(container);
@@ -538,41 +536,34 @@
         const paddingRight = parseFloat(computed.paddingRight);
         const paddingBottom = parseFloat(computed.paddingBottom);
 
+        // Helper to draw grid lines in either direction
+        function drawLines(tracks, paddingBefore, paddingAfter, totalSize, gapSize, direction) {
+            if (tracks.length <= 1 || tracks[0] === 'none')
+                return console.log(`Not enough tracks to draw lines, skipping.`);
+
+            console.log(`Drawing ${direction} lines for tracks:`, tracks);
+
+            const contentSize = totalSize - paddingBefore - paddingAfter;
+            const trackSize = (contentSize - gapSize * (tracks.length - 1)) / tracks.length;
+            for (let i = 1; i < tracks.length; i++) {
+                const line = document.createElement('div');
+                line.className = 'grid-line ' + direction;
+                const pos = paddingBefore + (trackSize + gapSize) * i - gapSize / 2;
+                line.style[direction === 'vertical' ? 'left' : 'top'] = pos + 'px';
+                overlay.appendChild(line);
+            }
+        }
+
         // Create grid lines based on actual grid structure
         const children = Array.from(container.children);
-        if (children.length === 0) return;
+        if (children.length === 0)
+            return console.log(`No grid items found, skipping overlay update.`);
 
         // Get grid column and row tracks
         const columnTracks = computed.gridTemplateColumns.split(' ');
         const rowTracks = computed.gridTemplateRows.split(' ');
-
-        if (columnTracks.length > 1 && columnTracks[0] !== 'none') {
-            // Draw vertical lines
-            const contentWidth = containerRect.width - paddingLeft - paddingRight;
-            const gap = parseFloat(computed.columnGap) || 0;
-            const trackWidth = (contentWidth - (gap * (columnTracks.length - 1))) / columnTracks.length;
-
-            for (let i = 1; i < columnTracks.length; i++) {
-                const line = document.createElement('div');
-                line.className = 'grid-line vertical';
-                line.style.left = `${paddingLeft + (trackWidth + gap) * i - gap / 2}px`;
-                overlay.appendChild(line);
-            }
-        }
-
-        if (rowTracks.length > 1 && rowTracks[0] !== 'none') {
-            // Draw horizontal lines
-            const contentHeight = containerRect.height - paddingTop - paddingBottom;
-            const gap = parseFloat(computed.rowGap) || 0;
-            const trackHeight = (contentHeight - (gap * (rowTracks.length - 1))) / rowTracks.length;
-
-            for (let i = 1; i < rowTracks.length; i++) {
-                const line = document.createElement('div');
-                line.className = 'grid-line horizontal';
-                line.style.top = `${paddingTop + (trackHeight + gap) * i - gap / 2}px`;
-                overlay.appendChild(line);
-            }
-        }
+        drawLines(columnTracks, paddingLeft, paddingRight, containerRect.width, parseFloat(computed.columnGap) || 0, 'vertical');
+        drawLines(rowTracks, paddingTop, paddingBottom, containerRect.height, parseFloat(computed.rowGap) || 0, 'horizontal');
     }
 
     document.addEventListener('DOMContentLoaded', () => {
