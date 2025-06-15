@@ -345,8 +345,8 @@
         <div class="control-group">
             <label>Child Elements</label>
             <div class="child-controls">
-                <button id="add-child" onclick="explorer.addChild()">Add Child</button>
-                <button id="remove-child" onclick="explorer.removeChild()">Remove Child</button>
+                <button id="add-child" onclick="addChild()">Add Child</button>
+                <button id="remove-child" onclick="removeChild()">Remove Child</button>
             </div>
         </div>
 
@@ -369,12 +369,12 @@
             <div class="grid-overlay" id="grid-overlay"></div>
             <div class="grid-controls">
                 <div class="column-controls">
-                    <button id="remove-column" onclick="explorer.removeColumn()">−</button>
-                    <button id="add-column" onclick="explorer.addColumn()">+</button>
+                    <button id="remove-column" onclick="removeColumn()">−</button>
+                    <button id="add-column" onclick="addColumn()">+</button>
                 </div>
                 <div class="row-controls">
-                    <button id="remove-row" onclick="explorer.removeRow()">−</button>
-                    <button id="add-row" onclick="explorer.addRow()">+</button>
+                    <button id="remove-row" onclick="removeRow()">−</button>
+                    <button id="add-row" onclick="addRow()">+</button>
                 </div>
             </div>
         </div>
@@ -382,238 +382,236 @@
 </div>
 
 <script>
-    class GridExplorer {
-        constructor() {
-            this.container = document.getElementById('grid-container');
-            this.overlay = document.getElementById('grid-overlay');
-            this.computedOutput = document.getElementById('computed-output');
-            this.childCount = 6;
+    // Initialize grid explorer functionality directly without a class
 
-            this.initializeControls();
-            this.updateContainer();
-            this.updateComputedStyles();
-            this.setupResizeObserver();
-        }
+    const container = document.getElementById('grid-container');
+    const overlay = document.getElementById('grid-overlay');
+    const computedOutput = document.getElementById('computed-output');
+    let childCount = 6;
+    let updateScheduled = false;
 
-        initializeControls() {
-            // Display control
-            document.getElementById('display').addEventListener('change', (e) => {
-                this.container.style.display = e.target.value;
-                this.scheduleUpdate();
+    function initializeControls() {
+        // Display control
+        document.getElementById('display').addEventListener('change', (e) => {
+            container.style.display = e.target.value;
+            scheduleUpdate();
+        });
+
+        // Template controls
+        document.getElementById('template-columns').addEventListener('input', (e) => {
+            container.style.gridTemplateColumns = e.target.value;
+            scheduleUpdate();
+        });
+
+        document.getElementById('template-rows').addEventListener('input', (e) => {
+            container.style.gridTemplateRows = e.target.value;
+            scheduleUpdate();
+        });
+
+        // Gap control
+        const gapSlider = document.getElementById('gap');
+        const gapValue = document.getElementById('gap-value');
+        gapSlider.addEventListener('input', (e) => {
+            const value = e.target.value + 'px';
+            gapValue.textContent = value;
+            container.style.gap = value;
+            scheduleUpdate();
+        });
+
+        // Alignment controls
+        ['justify-content', 'align-content', 'justify-items', 'align-items'].forEach(prop => {
+            document.getElementById(prop).addEventListener('change', (e) => {
+                container.style[prop.replace('-', '')] = e.target.value;
+                scheduleUpdate();
             });
+        });
+    }
 
-            // Template controls
-            document.getElementById('template-columns').addEventListener('input', (e) => {
-                this.container.style.gridTemplateColumns = e.target.value;
-                this.scheduleUpdate();
-            });
+    function addChild() {
+        childCount++;
+        const child = document.createElement('div');
+        child.className = 'grid-item';
+        child.textContent = childCount;
+        container.appendChild(child);
+        scheduleUpdate();
+    }
 
-            document.getElementById('template-rows').addEventListener('input', (e) => {
-                this.container.style.gridTemplateRows = e.target.value;
-                this.scheduleUpdate();
-            });
-
-            // Gap control
-            const gapSlider = document.getElementById('gap');
-            const gapValue = document.getElementById('gap-value');
-            gapSlider.addEventListener('input', (e) => {
-                const value = e.target.value + 'px';
-                gapValue.textContent = value;
-                this.container.style.gap = value;
-                this.scheduleUpdate();
-            });
-
-            // Alignment controls
-            ['justify-content', 'align-content', 'justify-items', 'align-items'].forEach(prop => {
-                document.getElementById(prop).addEventListener('change', (e) => {
-                    this.container.style[prop.replace('-', '')] = e.target.value;
-                    this.scheduleUpdate();
-                });
-            });
-        }
-
-        addChild() {
-            this.childCount++;
-            const child = document.createElement('div');
-            child.className = 'grid-item';
-            child.textContent = this.childCount;
-            this.container.appendChild(child);
-            this.scheduleUpdate();
-        }
-
-        removeChild() {
-            if (this.container.children.length > 1) {
-                this.container.removeChild(this.container.lastElementChild);
-                this.childCount--;
-                this.scheduleUpdate();
-            }
-        }
-
-        addColumn() {
-            const input = document.getElementById('template-columns');
-            const current = input.value.trim();
-            const tracks = current ? current.split(/\s+/) : [];
-            tracks.push('1fr');
-            const newTemplate = tracks.join(' ');
-            input.value = newTemplate;
-            this.container.style.gridTemplateColumns = newTemplate;
-            this.scheduleUpdate();
-        }
-
-        removeColumn() {
-            const input = document.getElementById('template-columns');
-            const current = input.value.trim();
-            const tracks = current ? current.split(/\s+/) : [];
-            if (tracks.length > 1) {
-                tracks.pop();
-                const newTemplate = tracks.join(' ');
-                input.value = newTemplate;
-                this.container.style.gridTemplateColumns = newTemplate;
-                this.scheduleUpdate();
-            }
-        }
-
-        addRow() {
-            const input = document.getElementById('template-rows');
-            const current = input.value.trim();
-            const tracks = current ? current.split(/\s+/) : [];
-            tracks.push('1fr');
-            const newTemplate = tracks.join(' ');
-            input.value = newTemplate;
-            this.container.style.gridTemplateRows = newTemplate;
-            this.scheduleUpdate();
-        }
-
-        removeRow() {
-            const input = document.getElementById('template-rows');
-            const current = input.value.trim();
-            const tracks = current ? current.split(/\s+/) : [];
-            if (tracks.length > 1) {
-                tracks.pop();
-                const newTemplate = tracks.join(' ');
-                input.value = newTemplate;
-                this.container.style.gridTemplateRows = newTemplate;
-                this.scheduleUpdate();
-            }
-        }
-
-        scheduleUpdate() {
-            if (this.updateScheduled) return;
-            this.updateScheduled = true;
-
-            requestAnimationFrame(() => {
-                this.updateContainer();
-                this.updateComputedStyles();
-                this.updateGridOverlay();
-                this.updateScheduled = false;
-            });
-        }
-
-        updateContainer() {
-            // Apply initial styles
-            this.container.style.display = document.getElementById('display').value;
-            this.container.style.gridTemplateColumns = document.getElementById('template-columns').value;
-            this.container.style.gridTemplateRows = document.getElementById('template-rows').value;
-            this.container.style.gap = document.getElementById('gap').value + 'px';
-            this.container.style.justifyContent = document.getElementById('justify-content').value;
-            this.container.style.alignContent = document.getElementById('align-content').value;
-            this.container.style.justifyItems = document.getElementById('justify-items').value;
-            this.container.style.alignItems = document.getElementById('align-items').value;
-        }
-
-        updateComputedStyles() {
-            const computed = window.getComputedStyle(this.container);
-            const styles = {
-                'display': computed.display,
-                'grid-template-columns': computed.gridTemplateColumns,
-                'grid-template-rows': computed.gridTemplateRows,
-                'gap': computed.gap,
-                'justify-content': computed.justifyContent,
-                'align-content': computed.alignContent,
-                'justify-items': computed.justifyItems,
-                'align-items': computed.alignItems
-            };
-
-            let output = '';
-            for (const [prop, value] of Object.entries(styles)) {
-                output += `${prop}: ${value}\n`;
-            }
-
-            this.computedOutput.textContent = output;
-        }
-
-        updateGridOverlay() {
-            // Clear existing overlay
-            this.overlay.innerHTML = '';
-
-            if (this.container.style.display !== 'grid' && this.container.style.display !== 'inline-grid') {
-                return;
-            }
-
-            const containerRect = this.container.getBoundingClientRect();
-            const overlayRect = this.overlay.getBoundingClientRect();
-
-            // Get computed styles for accurate measurements
-            const computed = window.getComputedStyle(this.container);
-            const paddingTop = parseFloat(computed.paddingTop);
-            const paddingLeft = parseFloat(computed.paddingLeft);
-            const paddingRight = parseFloat(computed.paddingRight);
-            const paddingBottom = parseFloat(computed.paddingBottom);
-
-            // Create grid lines based on actual grid structure
-            const children = Array.from(this.container.children);
-            if (children.length === 0) return;
-
-            // Get grid column and row tracks
-            const columnTracks = computed.gridTemplateColumns.split(' ');
-            const rowTracks = computed.gridTemplateRows.split(' ');
-
-            if (columnTracks.length > 1 && columnTracks[0] !== 'none') {
-                // Draw vertical lines
-                const contentWidth = containerRect.width - paddingLeft - paddingRight;
-                const gap = parseFloat(computed.columnGap) || 0;
-                const trackWidth = (contentWidth - (gap * (columnTracks.length - 1))) / columnTracks.length;
-
-                for (let i = 1; i < columnTracks.length; i++) {
-                    const line = document.createElement('div');
-                    line.className = 'grid-line vertical';
-                    line.style.left = `${paddingLeft + (trackWidth + gap) * i - gap / 2}px`;
-                    this.overlay.appendChild(line);
-                }
-            }
-
-            if (rowTracks.length > 1 && rowTracks[0] !== 'none') {
-                // Draw horizontal lines
-                const contentHeight = containerRect.height - paddingTop - paddingBottom;
-                const gap = parseFloat(computed.rowGap) || 0;
-                const trackHeight = (contentHeight - (gap * (rowTracks.length - 1))) / rowTracks.length;
-
-                for (let i = 1; i < rowTracks.length; i++) {
-                    const line = document.createElement('div');
-                    line.className = 'grid-line horizontal';
-                    line.style.top = `${paddingTop + (trackHeight + gap) * i - gap / 2}px`;
-                    this.overlay.appendChild(line);
-                }
-            }
-        }
-
-        setupResizeObserver() {
-            if (window.ResizeObserver) {
-                const resizeObserver = new ResizeObserver(() => {
-                    this.scheduleUpdate();
-                });
-
-                resizeObserver.observe(this.container);
-                resizeObserver.observe(document.querySelector('.grid-container-wrapper'));
-            }
-
-            // Fallback for browsers without ResizeObserver
-            window.addEventListener('resize', () => this.scheduleUpdate());
+    function removeChild() {
+        if (container.children.length > 1) {
+            container.removeChild(container.lastElementChild);
+            childCount--;
+            scheduleUpdate();
         }
     }
 
-    // Initialize the grid explorer when DOM is ready
-    document.addEventListener('DOMContentLoaded', () => { window.explorer = new GridExplorer(); });
+    function addColumn() {
+        const input = document.getElementById('template-columns');
+        const current = input.value.trim();
+        const tracks = current ? current.split(/\s+/) : [];
+        tracks.push('1fr');
+        const newTemplate = tracks.join(' ');
+        input.value = newTemplate;
+        container.style.gridTemplateColumns = newTemplate;
+        scheduleUpdate();
+    }
+
+    function removeColumn() {
+        const input = document.getElementById('template-columns');
+        const current = input.value.trim();
+        const tracks = current ? current.split(/\s+/) : [];
+        if (tracks.length > 1) {
+            tracks.pop();
+            const newTemplate = tracks.join(' ');
+            input.value = newTemplate;
+            container.style.gridTemplateColumns = newTemplate;
+            scheduleUpdate();
+        }
+    }
+
+    function addRow() {
+        const input = document.getElementById('template-rows');
+        const current = input.value.trim();
+        const tracks = current ? current.split(/\s+/) : [];
+        tracks.push('1fr');
+        const newTemplate = tracks.join(' ');
+        input.value = newTemplate;
+        container.style.gridTemplateRows = newTemplate;
+        scheduleUpdate();
+    }
+
+    function removeRow() {
+        const input = document.getElementById('template-rows');
+        const current = input.value.trim();
+        const tracks = current ? current.split(/\s+/) : [];
+        if (tracks.length > 1) {
+            tracks.pop();
+            const newTemplate = tracks.join(' ');
+            input.value = newTemplate;
+            container.style.gridTemplateRows = newTemplate;
+            scheduleUpdate();
+        }
+    }
+
+    function scheduleUpdate() {
+        if (updateScheduled) return;
+        updateScheduled = true;
+
+        requestAnimationFrame(() => {
+            updateContainer();
+            updateComputedStyles();
+            updateGridOverlay();
+            updateScheduled = false;
+        });
+    }
+
+    function updateContainer() {
+        // Apply initial styles
+        container.style.display = document.getElementById('display').value;
+        container.style.gridTemplateColumns = document.getElementById('template-columns').value;
+        container.style.gridTemplateRows = document.getElementById('template-rows').value;
+        container.style.gap = document.getElementById('gap').value + 'px';
+        container.style.justifyContent = document.getElementById('justify-content').value;
+        container.style.alignContent = document.getElementById('align-content').value;
+        container.style.justifyItems = document.getElementById('justify-items').value;
+        container.style.alignItems = document.getElementById('align-items').value;
+    }
+
+    function updateComputedStyles() {
+        const computed = window.getComputedStyle(container);
+        const styles = {
+            'display': computed.display,
+            'grid-template-columns': computed.gridTemplateColumns,
+            'grid-template-rows': computed.gridTemplateRows,
+            'gap': computed.gap,
+            'justify-content': computed.justifyContent,
+            'align-content': computed.alignContent,
+            'justify-items': computed.justifyItems,
+            'align-items': computed.alignItems
+        };
+
+        let output = '';
+        for (const [prop, value] of Object.entries(styles)) {
+            output += `${prop}: ${value}\n`;
+        }
+
+        computedOutput.textContent = output;
+    }
+
+    function updateGridOverlay() {
+        // Clear existing overlay
+        overlay.innerHTML = '';
+
+        if (container.style.display !== 'grid' && container.style.display !== 'inline-grid') {
+            return;
+        }
+
+        const containerRect = container.getBoundingClientRect();
+        const overlayRect = overlay.getBoundingClientRect();
+
+        // Get computed styles for accurate measurements
+        const computed = window.getComputedStyle(container);
+        const paddingTop = parseFloat(computed.paddingTop);
+        const paddingLeft = parseFloat(computed.paddingLeft);
+        const paddingRight = parseFloat(computed.paddingRight);
+        const paddingBottom = parseFloat(computed.paddingBottom);
+
+        // Create grid lines based on actual grid structure
+        const children = Array.from(container.children);
+        if (children.length === 0) return;
+
+        // Get grid column and row tracks
+        const columnTracks = computed.gridTemplateColumns.split(' ');
+        const rowTracks = computed.gridTemplateRows.split(' ');
+
+        if (columnTracks.length > 1 && columnTracks[0] !== 'none') {
+            // Draw vertical lines
+            const contentWidth = containerRect.width - paddingLeft - paddingRight;
+            const gap = parseFloat(computed.columnGap) || 0;
+            const trackWidth = (contentWidth - (gap * (columnTracks.length - 1))) / columnTracks.length;
+
+            for (let i = 1; i < columnTracks.length; i++) {
+                const line = document.createElement('div');
+                line.className = 'grid-line vertical';
+                line.style.left = `${paddingLeft + (trackWidth + gap) * i - gap / 2}px`;
+                overlay.appendChild(line);
+            }
+        }
+
+        if (rowTracks.length > 1 && rowTracks[0] !== 'none') {
+            // Draw horizontal lines
+            const contentHeight = containerRect.height - paddingTop - paddingBottom;
+            const gap = parseFloat(computed.rowGap) || 0;
+            const trackHeight = (contentHeight - (gap * (rowTracks.length - 1))) / rowTracks.length;
+
+            for (let i = 1; i < rowTracks.length; i++) {
+                const line = document.createElement('div');
+                line.className = 'grid-line horizontal';
+                line.style.top = `${paddingTop + (trackHeight + gap) * i - gap / 2}px`;
+                overlay.appendChild(line);
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+
+        initializeControls();
+        updateContainer();
+        updateComputedStyles();
+        updateGridOverlay();
+
+        // Resize observer setup
+        if (window.ResizeObserver) {
+            const resizeObserver = new ResizeObserver(() => {
+                scheduleUpdate();
+            });
+
+            resizeObserver.observe(container);
+            resizeObserver.observe(document.querySelector('.grid-container-wrapper'));
+        }
+
+        // Fallback for browsers without ResizeObserver
+        window.addEventListener('resize', () => scheduleUpdate());
+    });
 </script>
 </body>
 </html>
