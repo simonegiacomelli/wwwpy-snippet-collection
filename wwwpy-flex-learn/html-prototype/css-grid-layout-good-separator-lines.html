@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Grid Container Explorer</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: #f8f9fa;
+      min-height: 100vh;
+    }
+
+    .app-container {
+      display: flex;
+      gap: 20px;
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .controls-panel {
+      width: 300px;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      height: fit-content;
+      position: sticky;
+      top: 20px;
+    }
+
+    .controls-panel h2 {
+      margin: 0 0 20px 0;
+      color: #2c3e50;
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 6px;
+      color: #34495e;
+      font-weight: 500;
+      font-size: 14px;
+    }
+
+    .control-group select,
+    .control-group input[type="text"],
+    .control-group input[type="range"] {
+      width: 100%;
+      padding: 8px 12px;
+      border: 2px solid #e1e8ed;
+      border-radius: 6px;
+      font-size: 14px;
+      transition: border-color 0.2s;
+    }
+
+    .control-group select:focus,
+    .control-group input:focus {
+      outline: none;
+      border-color: #3498db;
+    }
+
+    .range-value {
+      display: inline-block;
+      margin-left: 10px;
+      color: #7f8c8d;
+      font-size: 12px;
+      min-width: 30px;
+    }
+
+    .child-controls {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .child-controls button {
+      flex: 1;
+      padding: 8px 12px;
+      border: none;
+      border-radius: 6px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .add-child {
+      background: #27ae60;
+      color: white;
+    }
+
+    .add-child:hover {
+      background: #229954;
+    }
+
+    .remove-child {
+      background: #e74c3c;
+      color: white;
+    }
+
+    .remove-child:hover {
+      background: #c0392b;
+    }
+
+    .computed-styles {
+      background: #f8f9fa;
+      border-radius: 6px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+
+    .computed-styles h3 {
+      margin: 0 0 10px 0;
+      color: #2c3e50;
+      font-size: 14px;
+      font-weight: 600;
+    }
+
+    .computed-styles pre {
+      margin: 0;
+      font-family: 'Courier New', monospace;
+      font-size: 11px;
+      line-height: 1.4;
+      color: #34495e;
+      overflow-x: auto;
+    }
+
+    .grid-area {
+      flex: 1;
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+      position: relative;
+    }
+
+    .grid-container-wrapper {
+      position: relative;
+      background: #fff;
+      border: 2px solid #e1e8ed;
+      border-radius: 8px;
+      min-height: 400px;
+      margin: 20px;
+    }
+
+    .grid-container {
+      padding: 20px;
+      min-height: 360px;
+      position: relative;
+    }
+
+    .grid-item {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 2px solid #5a67d8;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: 600;
+      font-size: 14px;
+      min-height: 60px;
+      transition: all 0.2s;
+    }
+
+    .grid-item:hover {
+      transform: scale(1.02);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+    }
+
+    .grid-controls {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+
+    .grid-controls button {
+      position: absolute;
+      width: 32px;
+      height: 32px;
+      border: none;
+      border-radius: 50%;
+      background: #3498db;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+      pointer-events: all;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 10;
+    }
+
+    .grid-controls button:hover {
+      background: #2980b9;
+      transform: scale(1.1);
+    }
+
+    .column-controls {
+      position: absolute;
+      bottom: -16px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 8px;
+    }
+
+    .row-controls {
+      position: absolute;
+      right: -16px;
+      top: 50%;
+      transform: translateY(-50%);
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    .grid-line {
+      position: absolute;
+      background: rgba(52, 152, 219, 0.3);
+    }
+
+    .grid-line.vertical {
+      width: 1px;
+      height: 100%;
+    }
+
+    .grid-line.horizontal {
+      height: 1px;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+<div class="app-container">
+  <div class="controls-panel">
+    <h2>Grid Container Controls</h2>
+
+    <div class="control-group">
+      <label for="display">Display</label>
+      <select id="display">
+        <option value="grid">grid</option>
+        <option value="inline-grid">inline-grid</option>
+        <option value="block">block</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="template-columns">Grid Template Columns</label>
+      <input type="text" id="template-columns" value="repeat(3, 1fr)" placeholder="e.g. repeat(3, 1fr)">
+    </div>
+
+    <div class="control-group">
+      <label for="template-rows">Grid Template Rows</label>
+      <input type="text" id="template-rows" value="repeat(2, 1fr)" placeholder="e.g. repeat(2, 1fr)">
+    </div>
+
+    <div class="control-group">
+      <label for="gap">Gap <span class="range-value" id="gap-value">20px</span></label>
+      <input type="range" id="gap" min="0" max="50" value="20">
+    </div>
+
+    <div class="control-group">
+      <label for="justify-content">Justify Content</label>
+      <select id="justify-content">
+        <option value="stretch">stretch</option>
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+        <option value="space-between">space-between</option>
+        <option value="space-around">space-around</option>
+        <option value="space-evenly">space-evenly</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="align-content">Align Content</label>
+      <select id="align-content">
+        <option value="stretch">stretch</option>
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+        <option value="space-between">space-between</option>
+        <option value="space-around">space-around</option>
+        <option value="space-evenly">space-evenly</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="justify-items">Justify Items</label>
+      <select id="justify-items">
+        <option value="stretch">stretch</option>
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="align-items">Align Items</label>
+      <select id="align-items">
+        <option value="stretch">stretch</option>
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label>Child Elements</label>
+      <div class="child-controls">
+        <button class="add-child" id="add-child">Add Child</button>
+        <button class="remove-child" id="remove-child">Remove Child</button>
+      </div>
+    </div>
+
+    <div class="computed-styles">
+      <h3>Computed Styles</h3>
+      <pre id="computed-output"></pre>
+    </div>
+  </div>
+
+  <div class="grid-area">
+    <div class="grid-container-wrapper">
+      <div class="grid-container" id="grid-container">
+        <div class="grid-item">1</div>
+        <div class="grid-item">2</div>
+        <div class="grid-item">3</div>
+        <div class="grid-item">4</div>
+        <div class="grid-item">5</div>
+        <div class="grid-item">6</div>
+      </div>
+      <div class="grid-overlay" id="grid-overlay"></div>
+      <div class="grid-controls">
+        <div class="column-controls">
+          <button id="remove-column">−</button>
+          <button id="add-column">+</button>
+        </div>
+        <div class="row-controls">
+          <button id="remove-row">−</button>
+          <button id="add-row">+</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  class GridExplorer {
+    constructor() {
+      this.container = document.getElementById('grid-container');
+      this.overlay = document.getElementById('grid-overlay');
+      this.computedOutput = document.getElementById('computed-output');
+      this.childCount = 6;
+      this.columnCount = 3;
+      this.rowCount = 2;
+
+      this.initializeControls();
+      this.updateContainer();
+      this.updateComputedStyles();
+      this.setupResizeObserver();
+    }
+
+    initializeControls() {
+      // Display control
+      document.getElementById('display').addEventListener('change', (e) => {
+        this.container.style.display = e.target.value;
+        this.scheduleUpdate();
+      });
+
+      // Template controls
+      document.getElementById('template-columns').addEventListener('input', (e) => {
+        this.container.style.gridTemplateColumns = e.target.value;
+        this.scheduleUpdate();
+      });
+
+      document.getElementById('template-rows').addEventListener('input', (e) => {
+        this.container.style.gridTemplateRows = e.target.value;
+        this.scheduleUpdate();
+      });
+
+      // Gap control
+      const gapSlider = document.getElementById('gap');
+      const gapValue = document.getElementById('gap-value');
+      gapSlider.addEventListener('input', (e) => {
+        const value = e.target.value + 'px';
+        gapValue.textContent = value;
+        this.container.style.gap = value;
+        this.scheduleUpdate();
+      });
+
+      // Alignment controls
+      ['justify-content', 'align-content', 'justify-items', 'align-items'].forEach(prop => {
+        document.getElementById(prop).addEventListener('change', (e) => {
+          this.container.style[prop.replace('-', '')] = e.target.value;
+          this.scheduleUpdate();
+        });
+      });
+
+      // Child controls
+      document.getElementById('add-child').addEventListener('click', () => {
+        this.addChild();
+      });
+
+      document.getElementById('remove-child').addEventListener('click', () => {
+        this.removeChild();
+      });
+
+      // Column/Row controls
+      document.getElementById('add-column').addEventListener('click', () => {
+        this.addColumn();
+      });
+
+      document.getElementById('remove-column').addEventListener('click', () => {
+        this.removeColumn();
+      });
+
+      document.getElementById('add-row').addEventListener('click', () => {
+        this.addRow();
+      });
+
+      document.getElementById('remove-row').addEventListener('click', () => {
+        this.removeRow();
+      });
+    }
+
+    addChild() {
+      this.childCount++;
+      const child = document.createElement('div');
+      child.className = 'grid-item';
+      child.textContent = this.childCount;
+      this.container.appendChild(child);
+      this.scheduleUpdate();
+    }
+
+    removeChild() {
+      if (this.container.children.length > 1) {
+        this.container.removeChild(this.container.lastElementChild);
+        this.childCount--;
+        this.scheduleUpdate();
+      }
+    }
+
+    addColumn() {
+      this.columnCount++;
+      const template = `repeat(${this.columnCount}, 1fr)`;
+      document.getElementById('template-columns').value = template;
+      this.container.style.gridTemplateColumns = template;
+      this.scheduleUpdate();
+    }
+
+    removeColumn() {
+      if (this.columnCount > 1) {
+        this.columnCount--;
+        const template = `repeat(${this.columnCount}, 1fr)`;
+        document.getElementById('template-columns').value = template;
+        this.container.style.gridTemplateColumns = template;
+        this.scheduleUpdate();
+      }
+    }
+
+    addRow() {
+      this.rowCount++;
+      const template = `repeat(${this.rowCount}, 1fr)`;
+      document.getElementById('template-rows').value = template;
+      this.container.style.gridTemplateRows = template;
+      this.scheduleUpdate();
+    }
+
+    removeRow() {
+      if (this.rowCount > 1) {
+        this.rowCount--;
+        const template = `repeat(${this.rowCount}, 1fr)`;
+        document.getElementById('template-rows').value = template;
+        this.container.style.gridTemplateRows = template;
+        this.scheduleUpdate();
+      }
+    }
+
+    scheduleUpdate() {
+      if (this.updateScheduled) return;
+      this.updateScheduled = true;
+
+      requestAnimationFrame(() => {
+        this.updateContainer();
+        this.updateComputedStyles();
+        this.updateGridOverlay();
+        this.updateScheduled = false;
+      });
+    }
+
+    updateContainer() {
+      // Apply initial styles
+      this.container.style.display = document.getElementById('display').value;
+      this.container.style.gridTemplateColumns = document.getElementById('template-columns').value;
+      this.container.style.gridTemplateRows = document.getElementById('template-rows').value;
+      this.container.style.gap = document.getElementById('gap').value + 'px';
+      this.container.style.justifyContent = document.getElementById('justify-content').value;
+      this.container.style.alignContent = document.getElementById('align-content').value;
+      this.container.style.justifyItems = document.getElementById('justify-items').value;
+      this.container.style.alignItems = document.getElementById('align-items').value;
+    }
+
+    updateComputedStyles() {
+      const computed = window.getComputedStyle(this.container);
+      const styles = {
+        'display': computed.display,
+        'grid-template-columns': computed.gridTemplateColumns,
+        'grid-template-rows': computed.gridTemplateRows,
+        'gap': computed.gap,
+        'justify-content': computed.justifyContent,
+        'align-content': computed.alignContent,
+        'justify-items': computed.justifyItems,
+        'align-items': computed.alignItems
+      };
+
+      let output = '';
+      for (const [prop, value] of Object.entries(styles)) {
+        output += `${prop}: ${value}\n`;
+      }
+
+      this.computedOutput.textContent = output;
+    }
+
+    updateGridOverlay() {
+      // Clear existing overlay
+      this.overlay.innerHTML = '';
+
+      if (this.container.style.display !== 'grid' && this.container.style.display !== 'inline-grid') {
+        return;
+      }
+
+      const containerRect = this.container.getBoundingClientRect();
+      const overlayRect = this.overlay.getBoundingClientRect();
+
+      // Get computed styles for accurate measurements
+      const computed = window.getComputedStyle(this.container);
+      const paddingTop = parseFloat(computed.paddingTop);
+      const paddingLeft = parseFloat(computed.paddingLeft);
+      const paddingRight = parseFloat(computed.paddingRight);
+      const paddingBottom = parseFloat(computed.paddingBottom);
+
+      // Create grid lines based on actual grid structure
+      const children = Array.from(this.container.children);
+      if (children.length === 0) return;
+
+      // Get grid column and row tracks
+      const columnTracks = computed.gridTemplateColumns.split(' ');
+      const rowTracks = computed.gridTemplateRows.split(' ');
+
+      if (columnTracks.length > 1 && columnTracks[0] !== 'none') {
+        // Draw vertical lines
+        const contentWidth = containerRect.width - paddingLeft - paddingRight;
+        const gap = parseFloat(computed.columnGap) || 0;
+        const trackWidth = (contentWidth - (gap * (columnTracks.length - 1))) / columnTracks.length;
+
+        for (let i = 1; i < columnTracks.length; i++) {
+          const line = document.createElement('div');
+          line.className = 'grid-line vertical';
+          line.style.left = `${paddingLeft + (trackWidth + gap) * i - gap/2}px`;
+          this.overlay.appendChild(line);
+        }
+      }
+
+      if (rowTracks.length > 1 && rowTracks[0] !== 'none') {
+        // Draw horizontal lines
+        const contentHeight = containerRect.height - paddingTop - paddingBottom;
+        const gap = parseFloat(computed.rowGap) || 0;
+        const trackHeight = (contentHeight - (gap * (rowTracks.length - 1))) / rowTracks.length;
+
+        for (let i = 1; i < rowTracks.length; i++) {
+          const line = document.createElement('div');
+          line.className = 'grid-line horizontal';
+          line.style.top = `${paddingTop + (trackHeight + gap) * i - gap/2}px`;
+          this.overlay.appendChild(line);
+        }
+      }
+    }
+
+    setupResizeObserver() {
+      if (window.ResizeObserver) {
+        const resizeObserver = new ResizeObserver(() => {
+          this.scheduleUpdate();
+        });
+
+        resizeObserver.observe(this.container);
+        resizeObserver.observe(document.querySelector('.grid-container-wrapper'));
+      }
+
+      // Fallback for browsers without ResizeObserver
+      window.addEventListener('resize', () => {
+        this.scheduleUpdate();
+      });
+    }
+  }
+
+  // Initialize the grid explorer when DOM is ready
+  document.addEventListener('DOMContentLoaded', () => {
+    new GridExplorer();
+  });
+</script>
+</body>
+</html>

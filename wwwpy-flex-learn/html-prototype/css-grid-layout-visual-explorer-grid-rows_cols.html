@@ -175,9 +175,7 @@
     }
 
     .grid-container.show-lines {
-      background-image:
-              linear-gradient(to right, rgba(74, 144, 226, 0.2) 1px, transparent 1px),
-              linear-gradient(to bottom, rgba(74, 144, 226, 0.2) 1px, transparent 1px);
+      /* Background image will be set dynamically via JavaScript */
     }
 
     .grid-line-numbers {
@@ -1214,6 +1212,7 @@
       updateGridLines();
     } else {
       container.classList.remove('show-lines');
+      container.style.backgroundImage = '';
       removeGridLines();
     }
   }
@@ -1228,25 +1227,96 @@
 
     if (!displayGrid) return;
 
-    const columnTracks = parseGridTemplate(document.getElementById('templateColumns').value);
-    const rowTracks = parseGridTemplate(document.getElementById('templateRows').value);
+    // Get the actual computed grid track sizes from the browser
+    const computedStyle = window.getComputedStyle(container);
+    const computedColumns = computedStyle.gridTemplateColumns;
+    const computedRows = computedStyle.gridTemplateRows;
 
-    // Add column line numbers
-    for (let i = 1; i <= columnTracks.length + 1; i++) {
+    if (computedColumns === 'none' || computedRows === 'none') return;
+
+    // Parse the computed track sizes (they come back as space-separated px values)
+    const columnSizes = computedColumns.split(' ').map(size => parseFloat(size.replace('px', '')));
+    const rowSizes = computedRows.split(' ').map(size => parseFloat(size.replace('px', '')));
+
+    // Calculate cumulative positions for column lines
+    const containerRect = container.getBoundingClientRect();
+    const containerWidth = containerRect.width;
+    const containerHeight = containerRect.height;
+
+    let cumulativeWidth = 0;
+    for (let i = 0; i <= columnSizes.length; i++) {
       const lineNumber = document.createElement('div');
       lineNumber.className = 'grid-line-number column';
-      lineNumber.textContent = i;
-      lineNumber.style.left = `${(i - 1) / columnTracks.length * 100}%`;
+      lineNumber.textContent = i + 1;
+
+      // Calculate position as percentage of container width
+      const positionPercent = containerWidth > 0 ? (cumulativeWidth / containerWidth) * 100 : 0;
+      lineNumber.style.left = `${positionPercent}%`;
+
       container.appendChild(lineNumber);
+
+      // Add the current track width for next iteration
+      if (i < columnSizes.length) {
+        cumulativeWidth += columnSizes[i];
+      }
     }
 
-    // Add row line numbers
-    for (let i = 1; i <= rowTracks.length + 1; i++) {
+    // Calculate cumulative positions for row lines
+    let cumulativeHeight = 0;
+    for (let i = 0; i <= rowSizes.length; i++) {
       const lineNumber = document.createElement('div');
       lineNumber.className = 'grid-line-number row';
-      lineNumber.textContent = i;
-      lineNumber.style.top = `${(i - 1) / rowTracks.length * 100}%`;
+      lineNumber.textContent = i + 1;
+
+      // Calculate position as percentage of container height
+      const positionPercent = containerHeight > 0 ? (cumulativeHeight / containerHeight) * 100 : 0;
+      lineNumber.style.top = `${positionPercent}%`;
+
       container.appendChild(lineNumber);
+
+      // Add the current track height for next iteration
+      if (i < rowSizes.length) {
+        cumulativeHeight += rowSizes[i];
+      }
+    }
+
+    // Also update the background grid lines to match
+    if (columnSizes.length > 0 && rowSizes.length > 0) {
+      const columnPositions = [];
+      cumulativeWidth = 0;
+      for (let i = 1; i < columnSizes.length; i++) {
+        cumulativeWidth += columnSizes[i - 1];
+        const positionPercent = (cumulativeWidth / containerWidth) * 100;
+        columnPositions.push(`${positionPercent}%`);
+      }
+
+      const rowPositions = [];
+      cumulativeHeight = 0;
+      for (let i = 1; i < rowSizes.length; i++) {
+        cumulativeHeight += rowSizes[i - 1];
+        const positionPercent = (cumulativeHeight / containerHeight) * 100;
+        rowPositions.push(`${positionPercent}%`);
+      }
+
+      // Update background image with accurate positions
+      let backgroundImage = '';
+      if (columnPositions.length > 0) {
+        const columnStops = columnPositions.map(pos => `transparent ${pos}, rgba(74, 144, 226, 0.2) ${pos}, rgba(74, 144, 226, 0.2) calc(${pos} + 1px), transparent calc(${pos} + 1px)`).join(', ');
+        backgroundImage += `linear-gradient(to right, ${columnStops})`;
+      }
+      if (rowPositions.length > 0) {
+        if (backgroundImage) backgroundImage += ', ';
+        const rowStops = rowPositions.map(pos => `transparent ${pos}, rgba(74, 144, 226, 0.2) ${pos}, rgba(74, 144, 226, 0.2) calc(${pos} + 1px), transparent calc(${pos} + 1px)`).join(', ');
+        backgroundImage += `linear-gradient(to bottom, ${rowStops})`;
+      }
+
+      if (backgroundImage) {
+        container.style.backgroundImage = backgroundImage;
+      } else {
+        // Fallback to original simple grid if we can't compute positions
+        container.style.backgroundImage = 'linear-gradient(to right, rgba(74, 144, 226, 0.2) 1px, transparent 1px), linear-gradient(to bottom, rgba(74, 144, 226, 0.2) 1px, transparent 1px)';
+        container.style.backgroundSize = `${100/columnSizes.length}% ${100/rowSizes.length}%`;
+      }
     }
   }
 
@@ -1293,7 +1363,11 @@
 
     // Update CSS display
     updateCSSDisplay();
-    updateGridLines();
+
+    // Update grid lines after layout is computed
+    requestAnimationFrame(() => {
+      updateGridLines();
+    });
   }
 
   function updateCSSDisplay() {

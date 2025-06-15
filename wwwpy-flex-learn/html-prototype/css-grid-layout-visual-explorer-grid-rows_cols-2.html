@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CSS Grid Layout Prototype</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      padding: 20px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f5f5;
+      min-height: 100vh;
+    }
+
+    .container {
+      display: flex;
+      gap: 20px;
+      height: calc(100vh - 40px);
+    }
+
+    .controls {
+      width: 300px;
+      background: white;
+      border-radius: 8px;
+      padding: 20px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow-y: auto;
+    }
+
+    .grid-playground {
+      flex: 1;
+      position: relative;
+      background: white;
+      border-radius: 8px;
+      padding: 60px 80px 80px 20px; /* Extra padding for button space: top right bottom left */
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      overflow: visible; /* Allow buttons to be visible outside */
+    }
+
+    .grid-container {
+      position: relative;
+      width: 100%;
+      height: 400px;
+      border: 2px solid #333;
+      background: #fafafa;
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 10px;
+      padding: 10px;
+    }
+
+    .grid-container::after {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -10px;
+      right: -10px;
+      bottom: -10px;
+      pointer-events: none;
+      border: 2px dashed rgba(76, 175, 80, 0);
+      border-radius: 8px;
+      transition: border-color 0.3s ease;
+    }
+
+    .grid-playground:hover .grid-container::after {
+      border-color: rgba(76, 175, 80, 0.3);
+    }
+
+    .grid-child {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      border: 2px solid #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 18px;
+      border-radius: 4px;
+      transition: all 0.2s ease;
+    }
+
+    .grid-child:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+    }
+
+    .grid-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 10;
+    }
+
+    .grid-line {
+      position: absolute;
+      background: rgba(255, 0, 0, 0.5);
+      pointer-events: auto;
+      transition: all 0.1s ease;
+    }
+
+    .grid-line.vertical {
+      width: 2px;
+      cursor: ew-resize;
+    }
+
+    .grid-line.horizontal {
+      height: 2px;
+      cursor: ns-resize;
+    }
+
+    .grid-line:hover {
+      background: rgba(255, 0, 0, 0.8);
+      transform: scale(1.5);
+    }
+
+    .add-line-button {
+      position: absolute;
+      width: 30px;
+      height: 30px;
+      background: #4CAF50;
+      border: 2px solid white;
+      border-radius: 50%;
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      opacity: 0;
+      visibility: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 15;
+      transition: all 0.3s ease;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+    }
+
+    .add-line-button:hover {
+      background: #45a049;
+      transform: scale(1.2);
+    }
+
+    .grid-playground:hover .add-line-button {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .hover-zone {
+      position: absolute;
+      background: rgba(76, 175, 80, 0.1);
+      transition: background 0.3s ease;
+      z-index: 5;
+    }
+
+    .hover-zone:hover {
+      background: rgba(76, 175, 80, 0.2);
+    }
+
+    .hover-zone-right {
+      top: 20px;
+      right: 0;
+      width: 40px;
+      height: 400px;
+    }
+
+    .hover-zone-bottom {
+      left: 20px;
+      bottom: 0;
+      width: calc(100% - 60px);
+      height: 40px;
+    }
+
+    .control-group {
+      margin-bottom: 20px;
+    }
+
+    .control-group label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .control-group input,
+    .control-group select {
+      width: 100%;
+      padding: 8px;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+
+    .control-group input[type="range"] {
+      margin: 5px 0;
+    }
+
+    .range-value {
+      display: inline-block;
+      margin-left: 10px;
+      font-weight: bold;
+      color: #666;
+    }
+
+    .child-controls {
+      display: flex;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+
+    .child-controls button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-weight: bold;
+      transition: all 0.2s ease;
+    }
+
+    .add-child {
+      background: #4CAF50;
+      color: white;
+    }
+
+    .add-child:hover {
+      background: #45a049;
+    }
+
+    .remove-child {
+      background: #f44336;
+      color: white;
+    }
+
+    .remove-child:hover {
+      background: #da190b;
+    }
+
+    .property-display {
+      background: #f8f9fa;
+      border: 1px solid #e9ecef;
+      border-radius: 4px;
+      padding: 10px;
+      margin-top: 10px;
+      font-family: 'Courier New', monospace;
+      font-size: 12px;
+      color: #495057;
+    }
+
+    h2 {
+      margin-top: 0;
+      color: #333;
+      border-bottom: 2px solid #667eea;
+      padding-bottom: 10px;
+    }
+
+    h3 {
+      color: #555;
+      margin-bottom: 10px;
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <div class="controls">
+    <h2>CSS Grid Controls</h2>
+
+    <div class="child-controls">
+      <button class="add-child" onclick="addChild()">+ Add Child</button>
+      <button class="remove-child" onclick="removeChild()">- Remove Child</button>
+    </div>
+
+    <div class="control-group">
+      <label for="display">Display:</label>
+      <select id="display" onchange="updateGridProperty('display', this.value)">
+        <option value="grid">grid</option>
+        <option value="inline-grid">inline-grid</option>
+        <option value="block">block</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="grid-template-columns">Grid Template Columns:</label>
+      <input type="text" id="grid-template-columns" value="1fr 1fr 1fr"
+             oninput="updateGridProperty('gridTemplateColumns', this.value)">
+      <div class="property-display" id="columns-display"></div>
+    </div>
+
+    <div class="control-group">
+      <label for="grid-template-rows">Grid Template Rows:</label>
+      <input type="text" id="grid-template-rows" value="1fr 1fr"
+             oninput="updateGridProperty('gridTemplateRows', this.value)">
+      <div class="property-display" id="rows-display"></div>
+    </div>
+
+    <div class="control-group">
+      <label for="gap">Gap:</label>
+      <input type="range" id="gap" min="0" max="50" value="10"
+             oninput="updateGridProperty('gap', this.value + 'px')">
+      <span class="range-value" id="gap-value">10px</span>
+    </div>
+
+    <div class="control-group">
+      <label for="justify-content">Justify Content:</label>
+      <select id="justify-content" onchange="updateGridProperty('justifyContent', this.value)">
+        <option value="stretch">stretch</option>
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+        <option value="space-between">space-between</option>
+        <option value="space-around">space-around</option>
+        <option value="space-evenly">space-evenly</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="align-content">Align Content:</label>
+      <select id="align-content" onchange="updateGridProperty('alignContent', this.value)">
+        <option value="stretch">stretch</option>
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+        <option value="space-between">space-between</option>
+        <option value="space-around">space-around</option>
+        <option value="space-evenly">space-evenly</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="align-items">Align Items:</label>
+      <select id="align-items" onchange="updateGridProperty('alignItems', this.value)">
+        <option value="stretch">stretch</option>
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+      </select>
+    </div>
+
+    <div class="control-group">
+      <label for="justify-items">Justify Items:</label>
+      <select id="justify-items" onchange="updateGridProperty('justifyItems', this.value)">
+        <option value="stretch">stretch</option>
+        <option value="start">start</option>
+        <option value="end">end</option>
+        <option value="center">center</option>
+      </select>
+    </div>
+
+    <h3>Live Grid Properties</h3>
+    <div class="property-display" id="computed-styles"></div>
+  </div>
+
+  <div class="grid-playground">
+    <div class="grid-container" id="gridContainer">
+      <div class="grid-child">1</div>
+      <div class="grid-child">2</div>
+      <div class="grid-child">3</div>
+      <div class="grid-child">4</div>
+    </div>
+    <div class="grid-overlay" id="gridOverlay"></div>
+
+    <!-- Hover zones for easier triggering -->
+    <div class="hover-zone hover-zone-right" onmouseenter="showAddColumn()" onmouseleave="hideAddColumn()"></div>
+    <div class="hover-zone hover-zone-bottom" onmouseenter="showAddRow()" onmouseleave="hideAddRow()"></div>
+
+    <!-- Add line buttons -->
+    <button class="add-line-button" id="addColumnBtn" onclick="addColumn()" title="Add Column">+</button>
+    <button class="add-line-button" id="addRowBtn" onclick="addRow()" title="Add Row">+</button>
+  </div>
+</div>
+
+<script>
+  let childCount = 4;
+  const gridContainer = document.getElementById('gridContainer');
+  const gridOverlay = document.getElementById('gridOverlay');
+  const addColumnBtn = document.getElementById('addColumnBtn');
+  const addRowBtn = document.getElementById('addRowBtn');
+
+  function showAddColumn() {
+    positionAddButtons();
+    addColumnBtn.style.opacity = '1';
+    addColumnBtn.style.visibility = 'visible';
+  }
+
+  function hideAddColumn() {
+    addColumnBtn.style.opacity = '0';
+    addColumnBtn.style.visibility = 'hidden';
+  }
+
+  function showAddRow() {
+    positionAddButtons();
+    addRowBtn.style.opacity = '1';
+    addRowBtn.style.visibility = 'visible';
+  }
+
+  function hideAddRow() {
+    addRowBtn.style.opacity = '0';
+    addRowBtn.style.visibility = 'hidden';
+  }
+
+  function updateGridProperty(property, value) {
+    gridContainer.style[property] = value;
+
+    // Update range value display
+    if (property === 'gap') {
+      document.getElementById('gap-value').textContent = value;
+    }
+
+    // Schedule grid line update
+    requestAnimationFrame(updateGridLines);
+    updateComputedStyles();
+  }
+
+  function addChild() {
+    childCount++;
+    const child = document.createElement('div');
+    child.className = 'grid-child';
+    child.textContent = childCount;
+    gridContainer.appendChild(child);
+  }
+
+  function removeChild() {
+    if (gridContainer.children.length > 0) {
+      gridContainer.removeChild(gridContainer.lastElementChild);
+    }
+  }
+
+  function addColumn() {
+    const current = document.getElementById('grid-template-columns').value;
+    const newValue = current + ' 1fr';
+    document.getElementById('grid-template-columns').value = newValue;
+    updateGridProperty('gridTemplateColumns', newValue);
+  }
+
+  function addRow() {
+    const current = document.getElementById('grid-template-rows').value;
+    const newValue = current + ' 1fr';
+    document.getElementById('grid-template-rows').value = newValue;
+    updateGridProperty('gridTemplateRows', newValue);
+  }
+
+  function updateGridLines() {
+    // Clear existing grid lines
+    gridOverlay.innerHTML = '';
+
+    const containerRect = gridContainer.getBoundingClientRect();
+    const overlayRect = gridOverlay.getBoundingClientRect();
+
+    // Calculate offset from overlay to container
+    const offsetX = containerRect.left - overlayRect.left;
+    const offsetY = containerRect.top - overlayRect.top;
+
+    const computedStyle = window.getComputedStyle(gridContainer);
+    const columns = computedStyle.gridTemplateColumns.split(' ');
+    const rows = computedStyle.gridTemplateRows.split(' ');
+
+    // Get container dimensions including padding and borders
+    const containerStyle = window.getComputedStyle(gridContainer);
+    const paddingLeft = parseFloat(containerStyle.paddingLeft);
+    const paddingTop = parseFloat(containerStyle.paddingTop);
+    const borderLeft = parseFloat(containerStyle.borderLeftWidth);
+    const borderTop = parseFloat(containerStyle.borderTopWidth);
+
+    const contentWidth = gridContainer.clientWidth - paddingLeft - parseFloat(containerStyle.paddingRight);
+    const contentHeight = gridContainer.clientHeight - paddingTop - parseFloat(containerStyle.paddingBottom);
+
+    // Draw vertical grid lines (column separators)
+    if (columns.length > 1) {
+      let currentX = paddingLeft + borderLeft;
+
+      for (let i = 0; i < columns.length - 1; i++) {
+        // Calculate actual column width
+        const columnWidth = contentWidth / columns.length; // Simplified for fr units
+        currentX += columnWidth;
+
+        const line = document.createElement('div');
+        line.className = 'grid-line vertical';
+        line.style.left = (offsetX + currentX) + 'px';
+        line.style.top = (offsetY + borderTop) + 'px';
+        line.style.height = (gridContainer.clientHeight - borderTop - parseFloat(containerStyle.borderBottomWidth)) + 'px';
+        gridOverlay.appendChild(line);
+      }
+    }
+
+    // Draw horizontal grid lines (row separators)
+    if (rows.length > 1) {
+      let currentY = paddingTop + borderTop;
+
+      for (let i = 0; i < rows.length - 1; i++) {
+        // Calculate actual row height
+        const rowHeight = contentHeight / rows.length; // Simplified for fr units
+        currentY += rowHeight;
+
+        const line = document.createElement('div');
+        line.className = 'grid-line horizontal';
+        line.style.top = (offsetY + currentY) + 'px';
+        line.style.left = (offsetX + borderLeft) + 'px';
+        line.style.width = (gridContainer.clientWidth - borderLeft - parseFloat(containerStyle.borderRightWidth)) + 'px';
+        gridOverlay.appendChild(line);
+      }
+    }
+
+    // Position add buttons
+    positionAddButtons();
+  }
+
+  function positionAddButtons() {
+    const playground = document.querySelector('.grid-playground');
+    const containerRect = gridContainer.getBoundingClientRect();
+    const playgroundRect = playground.getBoundingClientRect();
+
+    const offsetX = containerRect.left - playgroundRect.left;
+    const offsetY = containerRect.top - playgroundRect.top;
+
+    // Position add column button (right side, middle of container)
+    addColumnBtn.style.left = (offsetX + containerRect.width + 10) + 'px';
+    addColumnBtn.style.top = (offsetY + containerRect.height / 2 - 15) + 'px';
+
+    // Position add row button (bottom side, middle of container)
+    addRowBtn.style.left = (offsetX + containerRect.width / 2 - 15) + 'px';
+    addRowBtn.style.top = (offsetY + containerRect.height + 10) + 'px';
+
+    console.log('Positioning buttons:', {
+      container: containerRect,
+      playground: playgroundRect,
+      columnBtn: { left: addColumnBtn.style.left, top: addColumnBtn.style.top },
+      rowBtn: { left: addRowBtn.style.left, top: addRowBtn.style.top }
+    });
+  }
+
+  function updateComputedStyles() {
+    const computedStyle = window.getComputedStyle(gridContainer);
+    const display = document.getElementById('computed-styles');
+
+    display.innerHTML = `
+                <strong>Computed Grid Properties:</strong><br>
+                grid-template-columns: ${computedStyle.gridTemplateColumns}<br>
+                grid-template-rows: ${computedStyle.gridTemplateRows}<br>
+                gap: ${computedStyle.gap}<br>
+                justify-content: ${computedStyle.justifyContent}<br>
+                align-content: ${computedStyle.alignContent}<br>
+                justify-items: ${computedStyle.justifyItems}<br>
+                align-items: ${computedStyle.alignItems}
+            `;
+
+    // Update property displays
+    document.getElementById('columns-display').textContent = computedStyle.gridTemplateColumns;
+    document.getElementById('rows-display').textContent = computedStyle.gridTemplateRows;
+  }
+
+  // Animation loop for continuous updates
+  function animationLoop() {
+    updateGridLines();
+    requestAnimationFrame(animationLoop);
+  }
+
+  // Initialize
+  window.addEventListener('load', () => {
+    updateComputedStyles();
+    updateGridLines();
+    positionAddButtons();
+    // Start animation loop for responsive updates
+    requestAnimationFrame(animationLoop);
+  });
+
+  // Handle window resize
+  window.addEventListener('resize', () => {
+    requestAnimationFrame(() => {
+      updateGridLines();
+      positionAddButtons();
+    });
+  });
+
+  // Handle grid container resize
+  const resizeObserver = new ResizeObserver(() => {
+    requestAnimationFrame(() => {
+      updateGridLines();
+      positionAddButtons();
+    });
+  });
+  resizeObserver.observe(gridContainer);
+</script>
+</body>
+</html>
