@@ -346,7 +346,7 @@
             <label>Child Elements</label>
             <div class="child-controls">
                 <button id="add-child" onclick="addChild()">Add Child</button>
-                <button id="remove-child" onclick="removeChild()">Remove Child</button>
+                <button id="remove-child" onclick="deleteChild()">Remove Child</button>
             </div>
         </div>
 
@@ -387,7 +387,6 @@
     const container = document.getElementById('grid-container');
     const overlay = document.getElementById('grid-overlay');
     const computedOutput = document.getElementById('computed-output');
-    let childCount = 6;
     let updateScheduled = false;
 
     function initializeControls() {
@@ -428,18 +427,16 @@
     }
 
     function addChild() {
-        childCount++;
         const child = document.createElement('div');
         child.className = 'grid-item';
-        child.textContent = childCount;
         container.appendChild(child);
+        child.textContent = container.children.length;
         scheduleUpdate();
     }
 
-    function removeChild() {
+    function deleteChild() {
         if (container.children.length > 1) {
             container.removeChild(container.lastElementChild);
-            childCount--;
             scheduleUpdate();
         }
     }
