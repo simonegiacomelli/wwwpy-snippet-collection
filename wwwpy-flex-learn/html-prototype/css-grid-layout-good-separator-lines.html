@@ -346,6 +346,10 @@
         </div>
 
         <div class="control-group">
+            <label><input type="checkbox" id="toggle-children-visible" checked> Children Visible</label>
+        </div>
+
+        <div class="control-group">
             <label>Child Elements</label>
             <div class="child-controls">
                 <button id="add-child" onclick="addChild()">Add Child</button>
@@ -420,6 +424,14 @@
                 container.style[prop.replace('-', '')] = e.target.value;
                 scheduleUpdate();
             });
+        });
+
+        // Children visible toggle
+        document.getElementById('toggle-children-visible').addEventListener('change', e => {
+            Array.from(container.children).forEach(child => {
+                e.target.checked ? child.classList.add('grid-item') : child.classList.remove('grid-item');
+            });
+            scheduleUpdate();
         });
     }
 
