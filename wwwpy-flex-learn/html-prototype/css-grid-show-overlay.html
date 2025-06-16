@@ -1,0 +1,367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Grid Overlay Visualizer</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+
+        .demo-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .grid-container {
+            display: grid;
+            grid-template-columns: 100px 1fr 80px;
+            grid-template-rows: 60px auto 40px;
+            gap: 10px;
+            background: #fff;
+            border: 2px solid #333;
+            padding: 15px;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .grid-item {
+            background: linear-gradient(45deg, #e3f2fd, #bbdefb);
+            border: 1px solid #1976d2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: #1565c0;
+        }
+
+        .controls {
+            margin: 20px 0;
+        }
+
+        button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+
+        button:hover {
+            background: #1565c0;
+        }
+
+        .info {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+
+        /* Grid overlay styles */
+        .grid-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .grid-line {
+            position: absolute;
+            background: rgba(255, 0, 0, 0.7);
+            border: 1px solid #ff0000;
+        }
+
+        .grid-corridor {
+            position: absolute;
+            background: rgba(255, 0, 0, 0.2);
+            border: 1px dashed #ff0000;
+        }
+    </style>
+</head>
+<body>
+<div class="demo-container">
+    <h1>CSS Grid Overlay Visualizer</h1>
+
+    <div class="info">
+        <strong>Function:</strong> <code>showGridOverlay(element)</code><br>
+        This function creates a visual overlay showing all grid lines and gaps. Red areas show gaps, red lines show grid boundaries.
+    </div>
+
+    <div class="controls">
+        <button onclick="showOverlay()">Show Grid Overlay</button>
+        <button onclick="clearOverlay()">Clear Overlay</button>
+        <button onclick="toggleGaps()">Toggle Gaps</button>
+    </div>
+
+    <div class="grid-container" id="gridContainer">
+        <div class="grid-item">Item 1</div>
+        <div class="grid-item">Item 2</div>
+        <div class="grid-item">Item 3</div>
+        <div class="grid-item">Item 4</div>
+        <div class="grid-item">Item 5</div>
+        <div class="grid-item">Item 6</div>
+        <div class="grid-item">Item 7</div>
+        <div class="grid-item">Item 8</div>
+        <div class="grid-item">Item 9</div>
+    </div>
+
+    <div class="info">
+        <strong>Grid Properties:</strong><br>
+        <code>grid-template-columns: 100px 1fr 80px;</code><br>
+        <code>grid-template-rows: 60px auto 40px;</code><br>
+        <code>gap: 10px;</code>
+    </div>
+</div>
+
+<script>
+    function showGridOverlay(element) {
+        // Clear any existing overlay
+        const existingOverlay = element.querySelector('.grid-overlay');
+        if (existingOverlay) {
+            existingOverlay.remove();
+        }
+
+        // Get computed styles
+        const computedStyle = getComputedStyle(element);
+        const paddingLeft = parseFloat(computedStyle.paddingLeft);
+        const paddingTop = parseFloat(computedStyle.paddingTop);
+        const paddingRight = parseFloat(computedStyle.paddingRight);
+        const paddingBottom = parseFloat(computedStyle.paddingBottom);
+
+        // Get grid properties
+        const gridTemplateColumns = computedStyle.gridTemplateColumns;
+        const gridTemplateRows = computedStyle.gridTemplateRows;
+        const columnGap = parseFloat(computedStyle.columnGap) || 0;
+        const rowGap = parseFloat(computedStyle.rowGap) || 0;
+
+        // Parse grid template values to get track sizes
+        const columnSizes = parseGridTemplate(gridTemplateColumns);
+        const rowSizes = parseGridTemplate(gridTemplateRows);
+
+        // Get the content area dimensions (excluding padding)
+        const contentWidth = element.clientWidth - paddingLeft - paddingRight;
+        const contentHeight = element.clientHeight - paddingTop - paddingBottom;
+
+        // Calculate actual track dimensions
+        const actualColumnSizes = calculateTrackSizes(columnSizes, contentWidth, columnGap, columnSizes.length);
+        const actualRowSizes = calculateTrackSizes(rowSizes, contentHeight, rowGap, rowSizes.length);
+
+        // Create overlay container
+        const overlay = document.createElement('div');
+        overlay.className = 'grid-overlay';
+        overlay.style.position = 'absolute';
+        overlay.style.top = paddingTop + 'px';
+        overlay.style.left = paddingLeft + 'px';
+        overlay.style.width = contentWidth + 'px';
+        overlay.style.height = contentHeight + 'px';
+        overlay.style.pointerEvents = 'none';
+        overlay.style.zIndex = '10';
+
+        // Draw column lines and gaps
+        let xPos = 0;
+        for (let i = 0; i < actualColumnSizes.length; i++) {
+            if (i > 0) {
+                // Draw gap or line before this column
+                const gapElement = document.createElement('div');
+                if (columnGap > 0) {
+                    gapElement.className = 'grid-corridor';
+                    gapElement.style.left = (xPos - columnGap) + 'px';
+                    gapElement.style.top = '0px';
+                    gapElement.style.width = columnGap + 'px';
+                    gapElement.style.height = contentHeight + 'px';
+                    gapElement.style.background = 'rgba(255, 0, 0, 0.3)';
+                } else {
+                    gapElement.className = 'grid-line';
+                    gapElement.style.left = (xPos - 1) + 'px';
+                    gapElement.style.top = '0px';
+                    gapElement.style.width = '1px';
+                    gapElement.style.height = contentHeight + 'px';
+                    gapElement.style.background = 'rgba(255, 0, 0, 0.8)';
+                }
+                overlay.appendChild(gapElement);
+            }
+            xPos += actualColumnSizes[i] + columnGap;
+        }
+
+        // Draw row lines and gaps
+        let yPos = 0;
+        for (let i = 0; i < actualRowSizes.length; i++) {
+            if (i > 0) {
+                // Draw gap or line before this row
+                const gapElement = document.createElement('div');
+                if (rowGap > 0) {
+                    gapElement.className = 'grid-corridor';
+                    gapElement.style.left = '0px';
+                    gapElement.style.top = (yPos - rowGap) + 'px';
+                    gapElement.style.width = contentWidth + 'px';
+                    gapElement.style.height = rowGap + 'px';
+                    gapElement.style.background = 'rgba(255, 0, 0, 0.3)';
+                } else {
+                    gapElement.className = 'grid-line';
+                    gapElement.style.left = '0px';
+                    gapElement.style.top = (yPos - 1) + 'px';
+                    gapElement.style.width = contentWidth + 'px';
+                    gapElement.style.height = '1px';
+                    gapElement.style.background = 'rgba(255, 0, 0, 0.8)';
+                }
+                overlay.appendChild(gapElement);
+            }
+            yPos += actualRowSizes[i] + rowGap;
+        }
+
+        // Draw border lines
+        const borderTop = document.createElement('div');
+        borderTop.style.position = 'absolute';
+        borderTop.style.left = '0px';
+        borderTop.style.top = '0px';
+        borderTop.style.width = contentWidth + 'px';
+        borderTop.style.height = '2px';
+        borderTop.style.background = 'rgba(255, 0, 0, 0.8)';
+        overlay.appendChild(borderTop);
+
+        const borderBottom = document.createElement('div');
+        borderBottom.style.position = 'absolute';
+        borderBottom.style.left = '0px';
+        borderBottom.style.top = (contentHeight - 2) + 'px';
+        borderBottom.style.width = contentWidth + 'px';
+        borderBottom.style.height = '2px';
+        borderBottom.style.background = 'rgba(255, 0, 0, 0.8)';
+        overlay.appendChild(borderBottom);
+
+        const borderLeft = document.createElement('div');
+        borderLeft.style.position = 'absolute';
+        borderLeft.style.left = '0px';
+        borderLeft.style.top = '0px';
+        borderLeft.style.width = '2px';
+        borderLeft.style.height = contentHeight + 'px';
+        borderLeft.style.background = 'rgba(255, 0, 0, 0.8)';
+        overlay.appendChild(borderLeft);
+
+        const borderRight = document.createElement('div');
+        borderRight.style.position = 'absolute';
+        borderRight.style.left = (contentWidth - 2) + 'px';
+        borderRight.style.top = '0px';
+        borderRight.style.width = '2px';
+        borderRight.style.height = contentHeight + 'px';
+        borderRight.style.background = 'rgba(255, 0, 0, 0.8)';
+        overlay.appendChild(borderRight);
+
+        element.appendChild(overlay);
+    }
+
+    function parseGridTemplate(template) {
+        // Simple parser for computed grid template values
+        if (!template || template === 'none') return [];
+
+        // Remove any 'none' values and split by spaces
+        const parts = template.trim().split(/\s+/);
+        const sizes = [];
+
+        for (const part of parts) {
+            if (part.includes('px')) {
+                sizes.push(parseFloat(part));
+            } else if (part.includes('fr')) {
+                sizes.push({ fr: parseFloat(part) });
+            } else if (part === 'auto') {
+                sizes.push('auto');
+            } else if (!isNaN(parseFloat(part))) {
+                sizes.push(parseFloat(part));
+            }
+        }
+
+        return sizes;
+    }
+
+    function calculateTrackSizes(trackSizes, availableSpace, gap, trackCount) {
+        const totalGapSpace = gap * (trackCount - 1);
+        const contentSpace = availableSpace - totalGapSpace;
+
+        // Calculate fr units and fixed sizes
+        let totalFr = 0;
+        let usedSpace = 0;
+        const actualSizes = [];
+
+        // First pass: calculate fixed sizes and count fr units
+        for (const size of trackSizes) {
+            if (typeof size === 'object' && size.fr) {
+                totalFr += size.fr;
+                actualSizes.push(null); // placeholder
+            } else if (size === 'auto') {
+                // For auto, we'll assume it takes remaining space divided by auto count
+                actualSizes.push(null); // placeholder
+            } else {
+                actualSizes.push(size);
+                usedSpace += size;
+            }
+        }
+
+        // Second pass: distribute remaining space to fr and auto tracks
+        const remainingSpace = contentSpace - usedSpace;
+        let autoTracks = 0;
+
+        for (let i = 0; i < trackSizes.length; i++) {
+            if (actualSizes[i] === null) {
+                const size = trackSizes[i];
+                if (typeof size === 'object' && size.fr) {
+                    actualSizes[i] = (remainingSpace * size.fr) / totalFr;
+                } else if (size === 'auto') {
+                    autoTracks++;
+                }
+            }
+        }
+
+        // Handle auto tracks
+        if (autoTracks > 0) {
+            const autoSpace = remainingSpace / autoTracks;
+            for (let i = 0; i < actualSizes.length; i++) {
+                if (actualSizes[i] === null) {
+                    actualSizes[i] = autoSpace;
+                }
+            }
+        }
+
+        return actualSizes;
+    }
+
+    // Demo functions
+    function showOverlay() {
+        const gridContainer = document.getElementById('gridContainer');
+        showGridOverlay(gridContainer);
+    }
+
+    function clearOverlay() {
+        const gridContainer = document.getElementById('gridContainer');
+        const overlay = gridContainer.querySelector('.grid-overlay');
+        if (overlay) {
+            overlay.remove();
+        }
+    }
+
+    let hasGaps = true;
+    function toggleGaps() {
+        const gridContainer = document.getElementById('gridContainer');
+        if (hasGaps) {
+            gridContainer.style.gap = '0px';
+            hasGaps = false;
+        } else {
+            gridContainer.style.gap = '10px';
+            hasGaps = true;
+        }
+        // Clear overlay so user can re-apply to see the difference
+        clearOverlay();
+    }
+
+    // Show overlay on page load
+    window.addEventListener('load', showOverlay);
+</script>
+</body>
+</html>
