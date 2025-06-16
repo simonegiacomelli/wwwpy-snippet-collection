@@ -20,9 +20,9 @@
             display: grid;
             grid-template-columns: 100px 1fr 80px;
             grid-template-rows: 60px auto 40px;
-            gap: 10px;
+            column-gap: 10px;
+            row-gap: 30px;
             background: #fff;
-            border: 2px solid #333;
             padding: 15px;
             margin: 20px 0;
             position: relative;
@@ -30,7 +30,6 @@
 
         .grid-item {
             background: linear-gradient(45deg, #e3f2fd, #bbdefb);
-            border: 1px solid #1976d2;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -114,12 +113,6 @@
         <div class="grid-item">Item 9</div>
     </div>
 
-    <div class="info">
-        <strong>Grid Properties:</strong><br>
-        <code>grid-template-columns: 100px 1fr 80px;</code><br>
-        <code>grid-template-rows: 60px auto 40px;</code><br>
-        <code>gap: 10px;</code>
-    </div>
 </div>
 
 <script>
@@ -224,7 +217,7 @@
         borderTop.style.left = '0px';
         borderTop.style.top = '0px';
         borderTop.style.width = contentWidth + 'px';
-        borderTop.style.height = '2px';
+        borderTop.style.height = '1px';
         borderTop.style.background = 'rgba(255, 0, 0, 0.8)';
         overlay.appendChild(borderTop);
 
@@ -233,7 +226,7 @@
         borderBottom.style.left = '0px';
         borderBottom.style.top = (contentHeight - 2) + 'px';
         borderBottom.style.width = contentWidth + 'px';
-        borderBottom.style.height = '2px';
+        borderBottom.style.height = '1px';
         borderBottom.style.background = 'rgba(255, 0, 0, 0.8)';
         overlay.appendChild(borderBottom);
 
@@ -241,7 +234,7 @@
         borderLeft.style.position = 'absolute';
         borderLeft.style.left = '0px';
         borderLeft.style.top = '0px';
-        borderLeft.style.width = '2px';
+        borderLeft.style.width = '1px';
         borderLeft.style.height = contentHeight + 'px';
         borderLeft.style.background = 'rgba(255, 0, 0, 0.8)';
         overlay.appendChild(borderLeft);
@@ -250,7 +243,7 @@
         borderRight.style.position = 'absolute';
         borderRight.style.left = (contentWidth - 2) + 'px';
         borderRight.style.top = '0px';
-        borderRight.style.width = '2px';
+        borderRight.style.width = '1px';
         borderRight.style.height = contentHeight + 'px';
         borderRight.style.background = 'rgba(255, 0, 0, 0.8)';
         overlay.appendChild(borderRight);
