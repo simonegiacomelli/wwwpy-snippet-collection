@@ -8,3 +8,5 @@
   - scroll node into view
   - Event handling - e.g., on before expand to lazy load
   - Event handling - e.g., on click on a Location node to change the selection in the canvas
+- comp_structure.py:
+  - All Location nodes should be collapsed by default
