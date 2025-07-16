@@ -604,33 +604,28 @@
         // Clear any existing overlay lines
         overlay.innerHTML = '';
 
-        if (container.style.display !== 'grid' && container.style.display !== 'inline-grid')
+        // Use calculateGridLines to get the line positions
+        const gridData = calculateGridLines(container);
+
+        if (!gridData.isGrid) {
             return console.log(`Grid display not set, skipping overlay update.`);
-
-        // Get computed styles for accurate measurements
-        const computed = window.getComputedStyle(container);
-        const paddingTop = parseFloat(computed.paddingTop);
-        const paddingLeft = parseFloat(computed.paddingLeft);
-
-        // Helper to draw grid lines using actual computed track sizes
-        function drawLines(tracks, paddingBefore, gapSize, direction) {
-            if (tracks.length <= 1 || tracks[0] === 'none') return;
-            const sizes = tracks.map(val => parseFloat(val));
-            for (let i = 1; i < sizes.length; i++) {
-                const sumBefore = sizes.slice(0, i).reduce((a, b) => a + b, 0);
-                const pos = paddingBefore + sumBefore + gapSize * (i - 0.5);
-                const line = document.createElement('div');
-                line.className = 'grid-line ' + direction;
-                line.style[direction === 'vertical' ? 'left' : 'top'] = `${pos}px`;
-                overlay.appendChild(line);
-            }
         }
 
-        // Get grid column and row tracks
-        const columnTracks = computed.gridTemplateColumns.split(' ');
-        const rowTracks = computed.gridTemplateRows.split(' ');
-        drawLines(columnTracks, paddingLeft, parseFloat(computed.columnGap) || 0, 'vertical');
-        drawLines(rowTracks, paddingTop, parseFloat(computed.rowGap) || 0, 'horizontal');
+        // Create DOM elements for vertical lines
+        gridData.verticalLines.forEach(pos => {
+            const line = document.createElement('div');
+            line.className = 'grid-line vertical';
+            line.style.left = `${pos}px`;
+            overlay.appendChild(line);
+        });
+
+        // Create DOM elements for horizontal lines
+        gridData.horizontalLines.forEach(pos => {
+            const line = document.createElement('div');
+            line.className = 'grid-line horizontal';
+            line.style.top = `${pos}px`;
+            overlay.appendChild(line);
+        });
     }
 
     function updateAll() {
