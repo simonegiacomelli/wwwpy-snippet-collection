@@ -554,10 +554,10 @@
 
     function calculateGridLines(gridElement) {
         const c = window.getComputedStyle(gridElement)
-        const pt = parseFloat(c.paddingTop)
-        const pl = parseFloat(c.paddingLeft)
-        const cg = parseFloat(c.columnGap) || 0
-        const rg = parseFloat(c.rowGap) || 0
+        const paddingTop = parseFloat(c.paddingTop)
+        const paddingLeft = parseFloat(c.paddingLeft)
+        const colGap = parseFloat(c.columnGap) || 0
+        const rowGap = parseFloat(c.rowGap) || 0
         const colSizes = c.gridTemplateColumns.split(' ').map(s => parseFloat(s))
         const rowSizes = c.gridTemplateRows.split(' ').map(s => parseFloat(s))
 
@@ -577,8 +577,8 @@
 
         return {
             container: gridElement.getBoundingClientRect(),
-            verticalCorridors: buildCorridors(pl, colSizes, cg),
-            horizontalCorridors: buildCorridors(pt, rowSizes, rg),
+            verticalCorridors: buildCorridors(paddingLeft, colSizes, colGap),
+            horizontalCorridors: buildCorridors(paddingTop, rowSizes, rowGap),
             isGrid: c.display === 'grid' || c.display === 'inline-grid'
         }
     }
