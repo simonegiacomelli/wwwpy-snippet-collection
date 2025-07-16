@@ -565,32 +565,42 @@
         const columnTracks = computed.gridTemplateColumns.split(' ');
         const rowTracks = computed.gridTemplateRows.split(' ');
 
-        // Calculate vertical line positions (between columns)
-        const verticalLines = [];
+        // Calculate vertical corridor line pairs (for gutters)
+        const verticalCorridors = [];
         if (columnTracks.length > 1 && columnTracks[0] !== 'none') {
-            const sizes = columnTracks.map(val => parseFloat(val));
-            for (let i = 1; i < sizes.length; i++) {
-                const sumBefore = sizes.slice(0, i).reduce((a, b) => a + b, 0);
-                const pos = paddingLeft + sumBefore + columnGap * (i - 0.5);
-                verticalLines.push(pos);
+            let x = paddingLeft;
+            for (let i = 0; i < columnTracks.length - 1; i++) {
+                const colSize = parseFloat(columnTracks[i]);
+                x += colSize;
+                // corridor: from x to x+columnGap
+                verticalCorridors.push({
+                    start: x,
+                    end: x + columnGap
+                });
+                x += columnGap;
             }
         }
 
-        // Calculate horizontal line positions (between rows)
-        const horizontalLines = [];
+        // Calculate horizontal corridor line pairs (for gutters)
+        const horizontalCorridors = [];
         if (rowTracks.length > 1 && rowTracks[0] !== 'none') {
-            const sizes = rowTracks.map(val => parseFloat(val));
-            for (let i = 1; i < sizes.length; i++) {
-                const sumBefore = sizes.slice(0, i).reduce((a, b) => a + b, 0);
-                const pos = paddingTop + sumBefore + rowGap * (i - 0.5);
-                horizontalLines.push(pos);
+            let y = paddingTop;
+            for (let i = 0; i < rowTracks.length - 1; i++) {
+                const rowSize = parseFloat(rowTracks[i]);
+                y += rowSize;
+                // corridor: from y to y+rowGap
+                horizontalCorridors.push({
+                    start: y,
+                    end: y + rowGap
+                });
+                y += rowGap;
             }
         }
 
         return {
             container: gridElement.getBoundingClientRect(),
-            verticalLines,   // Positions for column separators
-            horizontalLines, // Positions for row separators
+            verticalCorridors,   // Array of {start, end} for each vertical gutter
+            horizontalCorridors, // Array of {start, end} for each horizontal gutter
             isGrid: computed.display === 'grid' || computed.display === 'inline-grid'
         };
     }
@@ -609,28 +619,36 @@
         overlayCanvas.style.zIndex = 1;
         overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
-        // Use calculateGridLines to get the line positions
+        // Use calculateGridLines to get the corridor line pairs
         const gridData = calculateGridLines(container);
 
         if (!gridData.isGrid) {
             return console.log(`Grid display not set, skipping overlay update.`);
         }
 
-        // Draw vertical lines
+        // Draw vertical corridors (two lines for each gutter)
         overlayCtx.save();
-        overlayCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+        overlayCtx.strokeStyle = 'rgba(255,255,255,0.25)';
         overlayCtx.lineWidth = 1;
-        gridData.verticalLines.forEach(pos => {
+        gridData.verticalCorridors.forEach(({start, end}) => {
             overlayCtx.beginPath();
-            overlayCtx.moveTo(pos, 0);
-            overlayCtx.lineTo(pos, overlayCanvas.height);
+            overlayCtx.moveTo(start, 0);
+            overlayCtx.lineTo(start, overlayCanvas.height);
+            overlayCtx.stroke();
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(end, 0);
+            overlayCtx.lineTo(end, overlayCanvas.height);
             overlayCtx.stroke();
         });
-        // Draw horizontal lines
-        gridData.horizontalLines.forEach(pos => {
+        // Draw horizontal corridors (two lines for each gutter)
+        gridData.horizontalCorridors.forEach(({start, end}) => {
             overlayCtx.beginPath();
-            overlayCtx.moveTo(0, pos);
-            overlayCtx.lineTo(overlayCanvas.width, pos);
+            overlayCtx.moveTo(0, start);
+            overlayCtx.lineTo(overlayCanvas.width, start);
+            overlayCtx.stroke();
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(0, end);
+            overlayCtx.lineTo(overlayCanvas.width, end);
             overlayCtx.stroke();
         });
         overlayCtx.restore();
