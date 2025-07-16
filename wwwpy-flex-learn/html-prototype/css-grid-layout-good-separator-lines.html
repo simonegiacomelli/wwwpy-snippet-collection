@@ -568,41 +568,35 @@
         const verticalCorridors = [];
         let x = paddingLeft;
         // Always add the left perimeter line
-        verticalCorridors.push({ start: x, end: x });
+        verticalCorridors.push({start: x, end: x});
         for (let i = 0; i < columnTracks.length; i++) {
             const colSize = parseFloat(columnTracks[i]);
             x += colSize;
             // For all but the last track, add the gutter corridor
             if (i < columnTracks.length - 1) {
-                verticalCorridors.push({
-                    start: x,
-                    end: x + columnGap
-                });
+                verticalCorridors.push({start: x, end: x + columnGap});
                 x += columnGap;
             }
         }
         // Always add the right perimeter line (after last track)
-        verticalCorridors.push({ start: x, end: x });
+        verticalCorridors.push({start: x, end: x});
 
         // Calculate horizontal corridor line pairs (for gutters)
         const horizontalCorridors = [];
         let y = paddingTop;
         // Always add the top perimeter line
-        horizontalCorridors.push({ start: y, end: y });
+        horizontalCorridors.push({start: y, end: y});
         for (let i = 0; i < rowTracks.length; i++) {
             const rowSize = parseFloat(rowTracks[i]);
             y += rowSize;
             // For all but the last track, add the gutter corridor
             if (i < rowTracks.length - 1) {
-                horizontalCorridors.push({
-                    start: y,
-                    end: y + rowGap
-                });
+                horizontalCorridors.push({start: y, end: y + rowGap});
                 y += rowGap;
             }
         }
         // Always add the bottom perimeter line (after last track)
-        horizontalCorridors.push({ start: y, end: y });
+        horizontalCorridors.push({start: y, end: y});
 
         return {
             container: gridElement.getBoundingClientRect(),
