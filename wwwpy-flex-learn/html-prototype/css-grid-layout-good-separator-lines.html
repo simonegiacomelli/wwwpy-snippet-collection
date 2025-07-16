@@ -561,7 +561,7 @@
         const colSizes = c.gridTemplateColumns.split(' ').map(s => parseFloat(s))
         const rowSizes = c.gridTemplateRows.split(' ').map(s => parseFloat(s))
 
-        const buildCorridors = (start, sizes, gap) => {
+        function buildCorridors(start, sizes, gap) {
             const corridors = [{start, end: start}]
             let pos = start
             sizes.forEach((size, i) => {
