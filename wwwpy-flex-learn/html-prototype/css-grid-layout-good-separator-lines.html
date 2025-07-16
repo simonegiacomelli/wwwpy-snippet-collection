@@ -470,7 +470,7 @@
     function syncChildren() {
         let checkbox = document.getElementById('toggle-children-visible');
         container.innerHTML = ''; // Clear existing children
-        if(!checkbox.checked)
+        if (!checkbox.checked)
             return;
         const cols = document.getElementById('template-columns').value.trim().split(/\s+/).filter(Boolean).length;
         const rows = document.getElementById('template-rows').value.trim().split(/\s+/).filter(Boolean).length;
@@ -550,6 +550,48 @@
         }
 
         computedOutput.textContent = output;
+    }
+
+    function calculateGridLines(gridElement) {
+        // Get computed styles for accurate measurements
+        const computed = window.getComputedStyle(gridElement);
+        const paddingTop = parseFloat(computed.paddingTop);
+        const paddingLeft = parseFloat(computed.paddingLeft);
+        const columnGap = parseFloat(computed.columnGap) || 0;
+        const rowGap = parseFloat(computed.rowGap) || 0;
+
+        // Extract grid track information
+        const columnTracks = computed.gridTemplateColumns.split(' ');
+        const rowTracks = computed.gridTemplateRows.split(' ');
+
+        // Calculate vertical line positions (between columns)
+        const verticalLines = [];
+        if (columnTracks.length > 1 && columnTracks[0] !== 'none') {
+            const sizes = columnTracks.map(val => parseFloat(val));
+            for (let i = 1; i < sizes.length; i++) {
+                const sumBefore = sizes.slice(0, i).reduce((a, b) => a + b, 0);
+                const pos = paddingLeft + sumBefore + columnGap * (i - 0.5);
+                verticalLines.push(pos);
+            }
+        }
+
+        // Calculate horizontal line positions (between rows)
+        const horizontalLines = [];
+        if (rowTracks.length > 1 && rowTracks[0] !== 'none') {
+            const sizes = rowTracks.map(val => parseFloat(val));
+            for (let i = 1; i < sizes.length; i++) {
+                const sumBefore = sizes.slice(0, i).reduce((a, b) => a + b, 0);
+                const pos = paddingTop + sumBefore + rowGap * (i - 0.5);
+                horizontalLines.push(pos);
+            }
+        }
+
+        return {
+            container: gridElement.getBoundingClientRect(),
+            verticalLines,   // Positions for column separators
+            horizontalLines, // Positions for row separators
+            isGrid: computed.display === 'grid' || computed.display === 'inline-grid'
+        };
     }
 
     function updateGridOverlay() {
