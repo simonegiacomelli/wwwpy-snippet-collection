@@ -376,13 +376,17 @@
         </div>
     </div>
 </div>
-<div class="grid-overlay" id="grid-overlay"></div>
+<div class="grid-overlay" id="grid-overlay-canvas-wrapper" style="position:absolute;pointer-events:none;z-index:1;">
+    <canvas id="grid-overlay-canvas" style="width:100%;height:100%;display:block;"></canvas>
+</div>
 
 <script>
     // Initialize grid explorer functionality directly without a class
 
     const container = document.getElementById('grid-container');
-    const overlay = document.getElementById('grid-overlay');
+    const overlayWrapper = document.getElementById('grid-overlay-canvas-wrapper');
+    const overlayCanvas = document.getElementById('grid-overlay-canvas');
+    const overlayCtx = overlayCanvas.getContext('2d');
     const computedOutput = document.getElementById('computed-output');
     let updateScheduled = false;
 
@@ -597,12 +601,20 @@
     function updateGridOverlay() {
         // Position overlay over the actual grid container
         const containerRect = container.getBoundingClientRect();
-        overlay.style.top = `${containerRect.top}px`;
-        overlay.style.left = `${containerRect.left}px`;
-        overlay.style.width = `${containerRect.width}px`;
-        overlay.style.height = `${containerRect.height}px`;
-        // Clear any existing overlay lines
-        overlay.innerHTML = '';
+        overlayWrapper.style.top = `${containerRect.top}px`;
+        overlayWrapper.style.left = `${containerRect.left}px`;
+        overlayWrapper.style.width = `${containerRect.width}px`;
+        overlayWrapper.style.height = `${containerRect.height}px`;
+        overlayWrapper.style.position = 'absolute';
+        overlayWrapper.style.pointerEvents = 'none';
+        overlayWrapper.style.zIndex = 1;
+
+        // Set canvas size to match overlay
+        overlayCanvas.width = containerRect.width;
+        overlayCanvas.height = containerRect.height;
+        overlayCanvas.style.width = `${containerRect.width}px`;
+        overlayCanvas.style.height = `${containerRect.height}px`;
+        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
 
         // Use calculateGridLines to get the line positions
         const gridData = calculateGridLines(container);
@@ -611,21 +623,24 @@
             return console.log(`Grid display not set, skipping overlay update.`);
         }
 
-        // Create DOM elements for vertical lines
+        // Draw vertical lines
+        overlayCtx.save();
+        overlayCtx.strokeStyle = 'rgba(255,255,255,0.2)';
+        overlayCtx.lineWidth = 1;
         gridData.verticalLines.forEach(pos => {
-            const line = document.createElement('div');
-            line.className = 'grid-line vertical';
-            line.style.left = `${pos}px`;
-            overlay.appendChild(line);
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(pos, 0);
+            overlayCtx.lineTo(pos, overlayCanvas.height);
+            overlayCtx.stroke();
         });
-
-        // Create DOM elements for horizontal lines
+        // Draw horizontal lines
         gridData.horizontalLines.forEach(pos => {
-            const line = document.createElement('div');
-            line.className = 'grid-line horizontal';
-            line.style.top = `${pos}px`;
-            overlay.appendChild(line);
+            overlayCtx.beginPath();
+            overlayCtx.moveTo(0, pos);
+            overlayCtx.lineTo(overlayCanvas.width, pos);
+            overlayCtx.stroke();
         });
+        overlayCtx.restore();
     }
 
     function updateAll() {
