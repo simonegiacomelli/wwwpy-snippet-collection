@@ -385,6 +385,7 @@
     const overlayCtx = overlayCanvas.getContext('2d');
     const computedOutput = document.getElementById('computed-output');
     let updateScheduled = false;
+    let hoveredCell = null;
 
     function initializeControls() {
         // Display control
@@ -579,8 +580,78 @@
             container: gridElement.getBoundingClientRect(),
             verticalCorridors: buildCorridors(paddingLeft, colSizes, colGap),
             horizontalCorridors: buildCorridors(paddingTop, rowSizes, rowGap),
-            isGrid: c.display === 'grid' || c.display === 'inline-grid'
+            isGrid: c.display === 'grid' || c.display === 'inline-grid',
+            colSizes: colSizes,
+            rowSizes: rowSizes,
+            paddingLeft: paddingLeft,
+            paddingTop: paddingTop,
+            colGap: colGap,
+            rowGap: rowGap
         }
+    }
+
+    function getCellBounds(gridData, col, row) {
+        // Calculate the bounds of a specific cell
+        let x = gridData.paddingLeft;
+        let y = gridData.paddingTop;
+
+        // Add up column sizes and gaps to get to the start of our column
+        for (let i = 0; i < col; i++) {
+            x += gridData.colSizes[i];
+            if (i < col) x += gridData.colGap;
+        }
+
+        // Add up row sizes and gaps to get to the start of our row
+        for (let i = 0; i < row; i++) {
+            y += gridData.rowSizes[i];
+            if (i < row) y += gridData.rowGap;
+        }
+
+        return {
+            x: x,
+            y: y,
+            width: gridData.colSizes[col],
+            height: gridData.rowSizes[row]
+        };
+    }
+
+    function getHoveredCell(mouseX, mouseY, gridData) {
+        // Convert mouse position to grid container coordinates
+        const x = mouseX - gridData.container.left;
+        const y = mouseY - gridData.container.top;
+
+        // Check if we're outside the grid content area
+        if (x < gridData.paddingLeft || y < gridData.paddingTop) {
+            return null;
+        }
+
+        // Find which column we're in
+        let currentX = gridData.paddingLeft;
+        let col = -1;
+        for (let i = 0; i < gridData.colSizes.length; i++) {
+            if (x >= currentX && x < currentX + gridData.colSizes[i]) {
+                col = i;
+                break;
+            }
+            currentX += gridData.colSizes[i] + gridData.colGap;
+        }
+
+        // Find which row we're in
+        let currentY = gridData.paddingTop;
+        let row = -1;
+        for (let i = 0; i < gridData.rowSizes.length; i++) {
+            if (y >= currentY && y < currentY + gridData.rowSizes[i]) {
+                row = i;
+                break;
+            }
+            currentY += gridData.rowSizes[i] + gridData.rowGap;
+        }
+
+        if (col >= 0 && row >= 0) {
+            return { col, row };
+        }
+
+        return null;
     }
 
     function updateGridOverlay() {
@@ -629,6 +700,15 @@
             overlayCtx.lineTo(overlayCanvas.width, end);
             overlayCtx.stroke();
         });
+
+        // Draw highlight for hovered cell
+        if (hoveredCell) {
+            const cellBounds = getCellBounds(gridData, hoveredCell.col, hoveredCell.row);
+            overlayCtx.strokeStyle = '#00ff00';
+            overlayCtx.lineWidth = 3;
+            overlayCtx.strokeRect(cellBounds.x, cellBounds.y, cellBounds.width, cellBounds.height);
+        }
+
         overlayCtx.restore();
     }
 
@@ -643,6 +723,20 @@
 
         initializeControls();
         updateAll()
+
+        // Add mouse move event listener for cell highlighting
+        document.addEventListener('mousemove', (e) => {
+            const gridData = calculateGridLines(container);
+            if (!gridData.isGrid) return;
+
+            const newHoveredCell = getHoveredCell(e.clientX, e.clientY, gridData);
+
+            // Only update if the hovered cell changed
+            if (JSON.stringify(newHoveredCell) !== JSON.stringify(hoveredCell)) {
+                hoveredCell = newHoveredCell;
+                updateGridOverlay();
+            }
+        });
 
         // Resize observer setup
         if (window.ResizeObserver) {
