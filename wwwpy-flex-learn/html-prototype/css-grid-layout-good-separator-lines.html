@@ -553,57 +553,34 @@
     }
 
     function calculateGridLines(gridElement) {
-        // Get computed styles for accurate measurements
-        const computed = window.getComputedStyle(gridElement);
-        const paddingTop = parseFloat(computed.paddingTop);
-        const paddingLeft = parseFloat(computed.paddingLeft);
-        const columnGap = parseFloat(computed.columnGap) || 0;
-        const rowGap = parseFloat(computed.rowGap) || 0;
+        const c = window.getComputedStyle(gridElement)
+        const pt = parseFloat(c.paddingTop)
+        const pl = parseFloat(c.paddingLeft)
+        const cg = parseFloat(c.columnGap) || 0
+        const rg = parseFloat(c.rowGap) || 0
+        const colSizes = c.gridTemplateColumns.split(' ').map(s => parseFloat(s))
+        const rowSizes = c.gridTemplateRows.split(' ').map(s => parseFloat(s))
 
-        // Extract grid track information
-        const columnTracks = computed.gridTemplateColumns.split(' ');
-        const rowTracks = computed.gridTemplateRows.split(' ');
-
-        // Calculate vertical corridor line pairs (for gutters)
-        const verticalCorridors = [];
-        let x = paddingLeft;
-        // Always add the left perimeter line
-        verticalCorridors.push({start: x, end: x});
-        for (let i = 0; i < columnTracks.length; i++) {
-            const colSize = parseFloat(columnTracks[i]);
-            x += colSize;
-            // For all but the last track, add the gutter corridor
-            if (i < columnTracks.length - 1) {
-                verticalCorridors.push({start: x, end: x + columnGap});
-                x += columnGap;
-            }
+        const buildCorridors = (start, sizes, gap) => {
+            const corridors = [{start, end: start}]
+            let pos = start
+            sizes.forEach((size, i) => {
+                pos += size
+                if (i < sizes.length - 1) {
+                    corridors.push({start: pos, end: pos + gap})
+                    pos += gap
+                }
+            })
+            corridors.push({start: pos, end: pos})
+            return corridors
         }
-        // Always add the right perimeter line (after last track)
-        verticalCorridors.push({start: x, end: x});
-
-        // Calculate horizontal corridor line pairs (for gutters)
-        const horizontalCorridors = [];
-        let y = paddingTop;
-        // Always add the top perimeter line
-        horizontalCorridors.push({start: y, end: y});
-        for (let i = 0; i < rowTracks.length; i++) {
-            const rowSize = parseFloat(rowTracks[i]);
-            y += rowSize;
-            // For all but the last track, add the gutter corridor
-            if (i < rowTracks.length - 1) {
-                horizontalCorridors.push({start: y, end: y + rowGap});
-                y += rowGap;
-            }
-        }
-        // Always add the bottom perimeter line (after last track)
-        horizontalCorridors.push({start: y, end: y});
 
         return {
             container: gridElement.getBoundingClientRect(),
-            verticalCorridors,   // Array of {start, end} for each vertical gutter and perimeter
-            horizontalCorridors, // Array of {start, end} for each horizontal gutter and perimeter
-            isGrid: computed.display === 'grid' || computed.display === 'inline-grid'
-        };
+            verticalCorridors: buildCorridors(pl, colSizes, cg),
+            horizontalCorridors: buildCorridors(pt, rowSizes, rg),
+            isGrid: c.display === 'grid' || c.display === 'inline-grid'
+        }
     }
 
     function updateGridOverlay() {
