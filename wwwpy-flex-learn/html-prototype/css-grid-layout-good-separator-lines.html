@@ -378,376 +378,211 @@
 <canvas id="grid-overlay-canvas" style="position:absolute;pointer-events:none;z-index:1"></canvas>
 
 <script>
-    // Initialize grid explorer functionality directly without a class
+    const container = document.getElementById('grid-container')
+    const overlayCanvas = document.getElementById('grid-overlay-canvas')
+    const overlayCtx = overlayCanvas.getContext('2d')
+    const computedOutput = document.getElementById('computed-output')
+    let updateScheduled = false
+    let hoveredCell = null
 
-    const container = document.getElementById('grid-container');
-    const overlayCanvas = document.getElementById('grid-overlay-canvas');
-    const overlayCtx = overlayCanvas.getContext('2d');
-    const computedOutput = document.getElementById('computed-output');
-    let updateScheduled = false;
-    let hoveredCell = null;
+    const styleControls = [
+        ['display', 'display'],
+        ['template-columns', 'gridTemplateColumns'],
+        ['template-rows', 'gridTemplateRows'],
+        ['gap', 'gap'],
+        ['justify-content', 'justifyContent'],
+        ['align-content', 'alignContent'],
+        ['justify-items', 'justifyItems'],
+        ['align-items', 'alignItems']
+    ]
 
     function initializeControls() {
-        // Display control
-        document.getElementById('display').addEventListener('change', (e) => {
-            container.style.display = e.target.value;
-            scheduleUpdate();
-        });
-
-        // Template controls
-        document.getElementById('template-columns').addEventListener('input', (e) => {
-            container.style.gridTemplateColumns = e.target.value;
-            scheduleUpdate();
-        });
-
-        document.getElementById('template-rows').addEventListener('input', (e) => {
-            container.style.gridTemplateRows = e.target.value;
-            scheduleUpdate();
-        });
-
-        document.getElementById('toggle-children-visible').addEventListener('change', (e) => {
-            scheduleUpdate();
-        });
-
-        // Gap control
-        const gapSlider = document.getElementById('gap');
-        const gapValue = document.getElementById('gap-value');
-        gapSlider.addEventListener('input', (e) => {
-            const value = e.target.value + 'px';
-            gapValue.textContent = value;
-            container.style.gap = value;
-            scheduleUpdate();
-        });
-
-        // Alignment controls
-        ['justify-content', 'align-content', 'justify-items', 'align-items'].forEach(prop => {
-            document.getElementById(prop).addEventListener('change', (e) => {
-                container.style[prop.replace('-', '')] = e.target.value;
-                scheduleUpdate();
-            });
-        });
-
-        // Children visible toggle
+        styleControls.forEach(([id, prop]) => {
+            const el = document.getElementById(id)
+            const ev = el.tagName == 'INPUT' && el.type == 'range' ? 'input' : 'change'
+            el.addEventListener(ev, e => {
+                let v = e.target.value
+                if (id == 'gap') {
+                    document.getElementById('gap-value').textContent = v + 'px'
+                    v += 'px'
+                }
+                container.style[prop] = v
+                scheduleUpdate()
+            })
+        })
         document.getElementById('toggle-children-visible').addEventListener('change', e => {
-            Array.from(container.children).forEach(child => {
-                e.target.checked ? child.classList.add('grid-item') : child.classList.remove('grid-item');
-            });
-            scheduleUpdate();
-        });
+            Array.from(container.children).forEach(c =>
+                e.target.checked ? c.classList.add('grid-item') : c.classList.remove('grid-item')
+            )
+            scheduleUpdate()
+        })
+        document.getElementById('add-child').addEventListener('click', addChild)
+        document.getElementById('remove-child').addEventListener('click', deleteChild)
+        document.getElementById('add-column').addEventListener('click', () => adjustTracks('template-columns', 'gridTemplateColumns', 'add'))
+        document.getElementById('remove-column').addEventListener('click', () => adjustTracks('template-columns', 'gridTemplateColumns', 'remove'))
+        document.getElementById('add-row').addEventListener('click', () => adjustTracks('template-rows', 'gridTemplateRows', 'add'))
+        document.getElementById('remove-row').addEventListener('click', () => adjustTracks('template-rows', 'gridTemplateRows', 'remove'))
     }
 
     function addChild() {
-        const child = document.createElement('div');
-        if (document.getElementById('toggle-children-visible').checked)
-            child.className = 'grid-item';
-        container.appendChild(child);
-        scheduleUpdate();
+        const c = document.createElement('div')
+        document.getElementById('toggle-children-visible').checked && c.classList.add('grid-item')
+        container.appendChild(c)
+        scheduleUpdate()
     }
 
     function deleteChild() {
-        if (container.children.length > 1) {
-            container.removeChild(container.lastElementChild);
-            scheduleUpdate();
-        }
+        container.children.length > 1 && container.removeChild(container.lastElementChild)
+        scheduleUpdate()
     }
 
-    // Refactored common logic for adding or removing grid tracks
-    function adjustTracks(inputId, styleProp, operation) {
-        const input = document.getElementById(inputId);
-        const tracks = input.value.trim().split(/\s+/).filter(Boolean);
-        if (operation === 'add') {
-            tracks.push('1fr');
-        } else if (operation === 'remove' && tracks.length > 1) {
-            tracks.pop();
-        }
-        const newTemplate = tracks.join(' ');
-        input.value = newTemplate;
-        container.style[styleProp] = newTemplate;
-        scheduleUpdate();
-        syncChildren();
+    function adjustTracks(id, prop, op) {
+        const inp = document.getElementById(id)
+        const t = inp.value.trim().split(/\s+/)
+        op == 'add' ? t.push('1fr') : op == 'remove' && t.length > 1 && t.pop()
+        const tmpl = t.join(' ')
+        inp.value = tmpl
+        container.style[prop] = tmpl
+        scheduleUpdate()
+        syncChildren()
     }
 
-    // Ensure children count matches rows × columns
     function syncChildren() {
-        let checkbox = document.getElementById('toggle-children-visible');
-        container.innerHTML = ''; // Clear existing children
-        if (!checkbox.checked)
-            return;
-        const cols = document.getElementById('template-columns').value.trim().split(/\s+/).filter(Boolean).length;
-        const rows = document.getElementById('template-rows').value.trim().split(/\s+/).filter(Boolean).length;
-        const desired = cols * rows;
-        const items = container.querySelectorAll('.grid-item');
-        const current = items.length;
-        // add or remove children
-        if (current < desired) {
-            for (let i = current; i < desired; i++) {
-                const child = document.createElement('div');
-                if (checkbox.checked) {
-                    child.className = 'grid-item';
-                }
-                container.appendChild(child);
-            }
-        } else if (current > desired) {
-            for (let i = current; i > desired; i--) {
-                container.removeChild(container.lastElementChild);
-            }
+        const show = document.getElementById('toggle-children-visible').checked
+        container.innerHTML = ''
+        if (!show) return
+        const cols = document.getElementById('template-columns').value.trim().split(/\s+/).length
+        const rows = document.getElementById('template-rows').value.trim().split(/\s+/).length
+        for (let i = 0; i < cols * rows; i++) {
+            const c = document.createElement('div')
+            c.className = 'grid-item'
+            container.appendChild(c)
         }
-    }
-
-    function addColumn() {
-        adjustTracks('template-columns', 'gridTemplateColumns', 'add');
-    }
-
-    function removeColumn() {
-        adjustTracks('template-columns', 'gridTemplateColumns', 'remove');
-    }
-
-    function addRow() {
-        adjustTracks('template-rows', 'gridTemplateRows', 'add');
-    }
-
-    function removeRow() {
-        adjustTracks('template-rows', 'gridTemplateRows', 'remove');
     }
 
     function scheduleUpdate() {
-        if (updateScheduled) return;
-        updateScheduled = true;
-
+        if (updateScheduled) return
+        updateScheduled = true
         requestAnimationFrame(() => {
-            updateAll();
-            updateScheduled = false;
-        });
+            updateContainer()
+            updateComputedStyles()
+            updateGridOverlay()
+            syncChildren()
+            updateScheduled = false
+        })
     }
 
     function updateContainer() {
-        // Apply initial styles
-        container.style.display = document.getElementById('display').value;
-        container.style.gridTemplateColumns = document.getElementById('template-columns').value;
-        container.style.gridTemplateRows = document.getElementById('template-rows').value;
-        container.style.gap = document.getElementById('gap').value + 'px';
-        container.style.justifyContent = document.getElementById('justify-content').value;
-        container.style.alignContent = document.getElementById('align-content').value;
-        container.style.justifyItems = document.getElementById('justify-items').value;
-        container.style.alignItems = document.getElementById('align-items').value;
+        styleControls.forEach(([id, prop]) => {
+            let v = document.getElementById(id).value
+            id == 'gap' && (v += 'px')
+            container.style[prop] = v
+        })
     }
 
     function updateComputedStyles() {
-        const computed = window.getComputedStyle(container);
-        const styles = {
-            'display': computed.display,
-            'grid-template-columns': computed.gridTemplateColumns,
-            'grid-template-rows': computed.gridTemplateRows,
-            'gap': computed.gap,
-            'justify-content': computed.justifyContent,
-            'align-content': computed.alignContent,
-            'justify-items': computed.justifyItems,
-            'align-items': computed.alignItems
-        };
-
-        let output = '';
-        for (const [prop, value] of Object.entries(styles)) {
-            output += `${prop}: ${value}\n`;
-        }
-
-        computedOutput.textContent = output;
+        const s = window.getComputedStyle(container)
+        const props = ['display', 'gridTemplateColumns', 'gridTemplateRows', 'gap', 'justifyContent', 'alignContent', 'justifyItems', 'alignItems']
+        computedOutput.textContent = props.map(p => `${p.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${s[p]}`).join('\n')
     }
 
-    function calculateGridLines(gridElement) {
-        const c = window.getComputedStyle(gridElement)
-        const paddingTop = parseFloat(c.paddingTop)
-        const paddingLeft = parseFloat(c.paddingLeft)
-        const colGap = parseFloat(c.columnGap) || 0
-        const rowGap = parseFloat(c.rowGap) || 0
-        const colSizes = c.gridTemplateColumns.split(' ').map(s => parseFloat(s))
-        const rowSizes = c.gridTemplateRows.split(' ').map(s => parseFloat(s))
-
-        function buildCorridors(start, sizes, gap) {
-            const corridors = [{start: start, end: start}]
-            let pos = start
-            sizes.forEach((size, i) => {
-                pos += size
-                if (i < sizes.length - 1) {
-                    corridors.push({start: pos, end: pos + gap})
-                    pos += gap
-                }
+    function calculateGridLines(el) {
+        const s = window.getComputedStyle(el)
+        const padT = parseFloat(s.paddingTop), padL = parseFloat(s.paddingLeft)
+        const colGap = parseFloat(s.columnGap) || 0, rowGap = parseFloat(s.rowGap) || 0
+        const cols = s.gridTemplateColumns.split(' ').map(n => parseFloat(n))
+        const rows = s.gridTemplateRows.split(' ').map(n => parseFloat(n))
+        const build = (st, arr, g) => {
+            let pos = st, out = [{start: pos, end: pos}]
+            arr.forEach((v, i) => {
+                pos += v
+                out.push({start: pos, end: i < arr.length - 1 ? pos + g : pos})
+                pos += i < arr.length - 1 ? g : 0
             })
-            corridors.push({start: pos, end: pos})
-            return corridors
+            return out
         }
-
         return {
-            container: gridElement.getBoundingClientRect(),
-            verticalCorridors: buildCorridors(paddingLeft, colSizes, colGap),
-            horizontalCorridors: buildCorridors(paddingTop, rowSizes, rowGap),
-            isGrid: c.display === 'grid' || c.display === 'inline-grid',
-            colSizes: colSizes,
-            rowSizes: rowSizes,
-            paddingLeft: paddingLeft,
-            paddingTop: paddingTop,
-            colGap: colGap,
-            rowGap: rowGap
+            container: el.getBoundingClientRect(),
+            verticalCorridors: build(padL, cols, colGap),
+            horizontalCorridors: build(padT, rows, rowGap),
+            isGrid: ['grid', 'inline-grid'].includes(s.display),
+            colSizes: cols, rowSizes: rows, padL, padT: padT, colGap, rowGap
         }
     }
 
-    function getCellBounds(gridData, col, row) {
-        // Calculate the bounds of a specific cell
-        let x = gridData.paddingLeft;
-        let y = gridData.paddingTop;
-
-        // Add up column sizes and gaps to get to the start of our column
-        for (let i = 0; i < col; i++) {
-            x += gridData.colSizes[i];
-            if (i < col) x += gridData.colGap;
-        }
-
-        // Add up row sizes and gaps to get to the start of our row
-        for (let i = 0; i < row; i++) {
-            y += gridData.rowSizes[i];
-            if (i < row) y += gridData.rowGap;
-        }
-
-        return {
-            x: x,
-            y: y,
-            width: gridData.colSizes[col],
-            height: gridData.rowSizes[row]
-        };
+    function getCellBounds(g, c, r) {
+        let x = g.padL, y = g.padT
+        for (let i = 0; i < c; i++) x += g.colSizes[i] + g.colGap
+        for (let i = 0; i < r; i++) y += g.rowSizes[i] + g.rowGap
+        return {x, y, width: g.colSizes[c], height: g.rowSizes[r]}
     }
 
-    function getHoveredCell(mouseX, mouseY, gridData) {
-        // Convert mouse position to grid container coordinates
-        const x = mouseX - gridData.container.left;
-        const y = mouseY - gridData.container.top;
-
-        // Check if we're outside the grid content area
-        if (x < gridData.paddingLeft || y < gridData.paddingTop) {
-            return null;
-        }
-
-        // Find which column we're in
-        let currentX = gridData.paddingLeft;
-        let col = -1;
-        for (let i = 0; i < gridData.colSizes.length; i++) {
-            if (x >= currentX && x < currentX + gridData.colSizes[i]) {
+    function getHoveredCell(mx, my, g) {
+        const x = mx - g.container.left, y = my - g.container.top
+        if (x < g.padL || y < g.padT) return null
+        let col = -1, cx = g.padL
+        for (let i = 0; i < g.colSizes.length; i++) {
+            if (x >= cx && x < cx + g.colSizes[i]) {
                 col = i;
-                break;
+                break
             }
-            currentX += gridData.colSizes[i] + gridData.colGap;
+            cx += g.colSizes[i] + g.colGap
         }
-
-        // Find which row we're in
-        let currentY = gridData.paddingTop;
-        let row = -1;
-        for (let i = 0; i < gridData.rowSizes.length; i++) {
-            if (y >= currentY && y < currentY + gridData.rowSizes[i]) {
+        let row = -1, cy = g.padT
+        for (let i = 0; i < g.rowSizes.length; i++) {
+            if (y >= cy && y < cy + g.rowSizes[i]) {
                 row = i;
-                break;
+                break
             }
-            currentY += gridData.rowSizes[i] + gridData.rowGap;
+            cy += g.rowSizes[i] + g.rowGap
         }
-
-        if (col >= 0 && row >= 0) {
-            return { col, row };
-        }
-
-        return null;
+        return col >= 0 && row >= 0 ? {col, row} : null
     }
 
     function updateGridOverlay() {
-        // Position canvas over the actual grid container
-        const containerRect = container.getBoundingClientRect();
-        overlayCanvas.style.top = `${containerRect.top}px`;
-        overlayCanvas.style.left = `${containerRect.left}px`;
-        overlayCanvas.style.width = `${containerRect.width}px`;
-        overlayCanvas.style.height = `${containerRect.height}px`;
-        overlayCanvas.width = containerRect.width;
-        overlayCanvas.height = containerRect.height;
-        overlayCanvas.style.position = 'absolute';
-        overlayCanvas.style.pointerEvents = 'none';
-        overlayCanvas.style.zIndex = 1;
-        overlayCtx.clearRect(0, 0, overlayCanvas.width, overlayCanvas.height);
-
-        // Use calculateGridLines to get the corridor line pairs
-        const gridData = calculateGridLines(container);
-
-        if (!gridData.isGrid) {
-            return console.log(`Grid display not set, skipping overlay update.`);
-        }
-
-        // Draw vertical corridors (two lines for each gutter)
-        overlayCtx.save();
+        const {top, left, width, height} = container.getBoundingClientRect()
+        overlayCanvas.width = width;
+        overlayCanvas.height = height
+        overlayCanvas.style.top = `${top}px`;
+        overlayCanvas.style.left = `${left}px`
+        overlayCtx.clearRect(0, 0, width, height)
+        const g = calculateGridLines(container)
+        if (!g.isGrid) return
+        overlayCtx.save()
         overlayCtx.strokeStyle = 'rgba(255,255,255,0.25)';
-        overlayCtx.lineWidth = 1;
-        gridData.verticalCorridors.forEach(({start, end}) => {
-            overlayCtx.beginPath();
-            overlayCtx.moveTo(start, 0);
-            overlayCtx.lineTo(start, overlayCanvas.height);
-            overlayCtx.stroke();
-            overlayCtx.beginPath();
-            overlayCtx.moveTo(end, 0);
-            overlayCtx.lineTo(end, overlayCanvas.height);
-            overlayCtx.stroke();
-        });
-        // Draw horizontal corridors (two lines for each gutter)
-        gridData.horizontalCorridors.forEach(({start, end}) => {
-            overlayCtx.beginPath();
-            overlayCtx.moveTo(0, start);
-            overlayCtx.lineTo(overlayCanvas.width, start);
-            overlayCtx.stroke();
-            overlayCtx.beginPath();
-            overlayCtx.moveTo(0, end);
-            overlayCtx.lineTo(overlayCanvas.width, end);
-            overlayCtx.stroke();
-        });
-
-        // Draw highlight for hovered cell
+        overlayCtx.lineWidth = 1
+        g.verticalCorridors.forEach(({start, end}) =>
+            (overlayCtx.beginPath(), overlayCtx.moveTo(start, 0), overlayCtx.lineTo(start, height), overlayCtx.stroke(),
+                overlayCtx.beginPath(), overlayCtx.moveTo(end, 0), overlayCtx.lineTo(end, height), overlayCtx.stroke())
+        )
+        g.horizontalCorridors.forEach(({start, end}) =>
+            (overlayCtx.beginPath(), overlayCtx.moveTo(0, start), overlayCtx.lineTo(width, start), overlayCtx.stroke(),
+                overlayCtx.beginPath(), overlayCtx.moveTo(0, end), overlayCtx.lineTo(width, end), overlayCtx.stroke())
+        )
         if (hoveredCell) {
-            const cellBounds = getCellBounds(gridData, hoveredCell.col, hoveredCell.row);
-            overlayCtx.strokeStyle = '#00ff00';
-            overlayCtx.lineWidth = 3;
-            overlayCtx.strokeRect(cellBounds.x, cellBounds.y, cellBounds.width, cellBounds.height);
+            overlayCtx.strokeStyle = '#0f0';
+            overlayCtx.lineWidth = 3
+            const b = getCellBounds(g, hoveredCell.col, hoveredCell.row)
+            overlayCtx.strokeRect(b.x, b.y, b.width, b.height)
         }
-
-        overlayCtx.restore();
-    }
-
-    function updateAll() {
-        updateContainer();
-        updateComputedStyles();
-        updateGridOverlay();
-        syncChildren();
+        overlayCtx.restore()
     }
 
     document.addEventListener('DOMContentLoaded', () => {
-
-        initializeControls();
-        updateAll()
-
-        // Add mouse move event listener for cell highlighting
-        document.addEventListener('mousemove', (e) => {
-            const gridData = calculateGridLines(container);
-            if (!gridData.isGrid) return;
-
-            const newHoveredCell = getHoveredCell(e.clientX, e.clientY, gridData);
-
-            // Only update if the hovered cell changed
-            if (JSON.stringify(newHoveredCell) !== JSON.stringify(hoveredCell)) {
-                hoveredCell = newHoveredCell;
-                updateGridOverlay();
-            }
-        });
-
-        // Resize observer setup
+        initializeControls()
+        scheduleUpdate()
+        document.addEventListener('mousemove', e => {
+            const g = calculateGridLines(container)
+            const cell = getHoveredCell(e.clientX, e.clientY, g)
+            if (JSON.stringify(cell) !== JSON.stringify(hoveredCell)) hoveredCell = cell, updateGridOverlay()
+        })
         if (window.ResizeObserver) {
-            const resizeObserver = new ResizeObserver(() => scheduleUpdate());
-            resizeObserver.observe(container);
-            resizeObserver.observe(document.querySelector('.grid-container-wrapper'));
-        }
-
-        // Fallback for browsers without ResizeObserver
-        window.addEventListener('resize', () => scheduleUpdate());
-    });
+            const ro = new ResizeObserver(() => scheduleUpdate())
+            ro.observe(container);
+            ro.observe(document.querySelector('.grid-container-wrapper'))
+        } else window.addEventListener('resize', () => scheduleUpdate())
+    })
 </script>
+
 </body>
 </html>
