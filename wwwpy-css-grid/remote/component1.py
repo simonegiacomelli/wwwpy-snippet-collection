@@ -80,9 +80,6 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         # state for hovered cell
         self.hovered_cell: Any = None
 
-        ro = js.ResizeObserver.new(create_proxy(lambda e, x: self.update_grid_overlay()))
-        ro.observe(self._container)
-
         # initial draw
         self.update_grid_overlay()
 
@@ -105,9 +102,15 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
 
     def connectedCallback(self):
         eventlib.add_event_listeners(self)
+        ro = js.ResizeObserver.new(create_proxy(lambda e, x: self.update_grid_overlay()))
+        ro.observe(self._container)
+        self._ro = ro
 
     def disconnectedCallback(self):
         eventlib.remove_event_listeners(self)
+        # stop the ResizeObserver
+        self._ro.disconnect()
+        self._ro = None
 
 
 # get bounds of a cell
