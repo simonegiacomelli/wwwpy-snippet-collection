@@ -7,6 +7,8 @@ from typing import Any, cast
 
 import logging
 
+from wwwpy.remote import eventlib
+
 logger = logging.getLogger(__name__)
 
 
@@ -56,77 +58,23 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         # setup grid overlay canvas
         # type annotations for canvas and rendering context
         # cast created elements to specific types
-        self.overlay_canvas: js.HTMLCanvasElement = cast(js.HTMLCanvasElement, js.document.createElement('canvas'))
-        self.overlay_ctx: js.CanvasRenderingContext2D = cast(js.CanvasRenderingContext2D,
-                                                             self.overlay_canvas.getContext('2d'))
+        self.overlay_canvas = cast(js.HTMLCanvasElement, js.document.createElement('canvas'))
+        self.overlay_ctx = cast(js.CanvasRenderingContext2D, self.overlay_canvas.getContext('2d'))
         js.document.body.appendChild(self.overlay_canvas)
+
         # canvas overlay styling
         self.overlay_canvas.style.position = 'absolute'
         self.overlay_canvas.style.pointerEvents = 'none'
         self.overlay_canvas.style.zIndex = '1'
+
         # state for hovered cell
         self.hovered_cell: Any = None
 
-        # update grid overlay
-        def update_grid_overlay():
-            g = self.calculate_grid()
-            if not g:
-                return
-            rect = g['rect']
-            w, h = rect.width, rect.height
-            # canvas width/height expects int
-            self.overlay_canvas.width = int(w)
-            self.overlay_canvas.height = int(h)
-            self.overlay_canvas.style.top = f"{rect.top}px"
-            self.overlay_canvas.style.left = f"{rect.left}px"
-            self.overlay_ctx.clearRect(0, 0, w, h)
+        ro = js.ResizeObserver.new(create_proxy(lambda e, x: self.update_grid_overlay()))
+        ro.observe(self._container)
 
-            vert = g['vert']
-            hor = g['hor']
-            self.overlay_ctx.strokeStyle = 'rgba(255,255,255,0.25)'
-            self.overlay_ctx.lineWidth = 1
-            for start, end in vert:
-                self.overlay_ctx.beginPath()
-                self.overlay_ctx.moveTo(start, 0)
-                self.overlay_ctx.lineTo(start, h)
-                self.overlay_ctx.stroke()
-                self.overlay_ctx.beginPath()
-                self.overlay_ctx.moveTo(end, 0)
-                self.overlay_ctx.lineTo(end, h)
-                self.overlay_ctx.stroke()
-            for start, end in hor:
-                self.overlay_ctx.beginPath()
-                self.overlay_ctx.moveTo(0, start)
-                self.overlay_ctx.lineTo(w, start)
-                self.overlay_ctx.stroke()
-                self.overlay_ctx.beginPath()
-                self.overlay_ctx.moveTo(0, end)
-                self.overlay_ctx.lineTo(w, end)
-                self.overlay_ctx.stroke()
-            # highlight hovered cell
-            if self.hovered_cell:
-                b = get_cell_bounds(g, self.hovered_cell['col'], self.hovered_cell['row'])
-                self.overlay_ctx.strokeStyle = '#0f0'
-                self.overlay_ctx.lineWidth = 3
-                self.overlay_ctx.strokeRect(b['x'], b['y'], b['width'], b['height'])
-
-        self.update_grid_overlay = update_grid_overlay
-
-        # mouse move and resize listeners
-        # mouse move: update hovered cell and overlay
-        def on_mousemove(e):
-            self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, self.calculate_grid())
-            update_grid_overlay()
-
-        js.document.addEventListener('mousemove', create_proxy(on_mousemove))
-        if hasattr(js.window, 'ResizeObserver'):
-            pass
-            ro = js.ResizeObserver.new(create_proxy(lambda e, x: update_grid_overlay()))
-            ro.observe(self._container)
-        else:
-            js.window.addEventListener('resize', create_proxy(lambda e: update_grid_overlay()))
         # initial draw
-        update_grid_overlay()
+        self.update_grid_overlay()
 
     def log_clear(self):
         self.textarea1.innerHTML = ''
@@ -137,6 +85,19 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
 
     def calculate_grid(self):
         return calculate_grid(self._container)
+
+    def update_grid_overlay(self):
+        update_grid_overlay(self._container, self.overlay_canvas, self.overlay_ctx, self.hovered_cell)
+
+    def _js_window__mousemove(self, e):
+        self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, self.calculate_grid())
+        self.update_grid_overlay()
+
+    def connectedCallback(self):
+        eventlib.add_event_listeners(self)
+
+    def disconnectedCallback(self):
+        eventlib.remove_event_listeners(self)
 
 
 # get bounds of a cell
@@ -198,3 +159,46 @@ def calculate_grid(container):
             'col_gap': col_gap, 'row_gap': row_gap,
             # 'computed_style': s
             }
+
+
+# module-level overlay function
+def update_grid_overlay(container, overlay_canvas, overlay_ctx, hovered_cell):
+    g = calculate_grid(container)
+    if not g:
+        return
+    rect = g['rect']
+    w, h = rect.width, rect.height
+    # canvas width/height expects int
+    overlay_canvas.width = int(w)
+    overlay_canvas.height = int(h)
+    overlay_canvas.style.top = f"{rect.top}px"
+    overlay_canvas.style.left = f"{rect.left}px"
+    overlay_ctx.clearRect(0, 0, w, h)
+
+    vert = g['vert']
+    hor = g['hor']
+    overlay_ctx.strokeStyle = 'rgba(255,255,255,0.25)'
+    overlay_ctx.lineWidth = 1
+    for start, end in vert:
+        overlay_ctx.beginPath()
+        overlay_ctx.moveTo(start, 0)
+        overlay_ctx.lineTo(start, h)
+        overlay_ctx.stroke()
+        overlay_ctx.beginPath()
+        overlay_ctx.moveTo(end, 0)
+        overlay_ctx.lineTo(end, h)
+        overlay_ctx.stroke()
+    for start, end in hor:
+        overlay_ctx.beginPath()
+        overlay_ctx.moveTo(0, start)
+        overlay_ctx.lineTo(w, start)
+        overlay_ctx.stroke()
+        overlay_ctx.beginPath()
+        overlay_ctx.moveTo(0, end)
+        overlay_ctx.lineTo(w, end)
+        overlay_ctx.stroke()
+    if hovered_cell:
+        b = get_cell_bounds(g, hovered_cell['col'], hovered_cell['row'])
+        overlay_ctx.strokeStyle = '#0f0'
+        overlay_ctx.lineWidth = 3
+        overlay_ctx.strokeRect(b['x'], b['y'], b['width'], b['height'])
