@@ -16,8 +16,8 @@ logger = logging.getLogger(__name__)
 @dataclass
 class Grid:
     rect: Any
-    vert: List[Tuple[float, float]]
-    hor: List[Tuple[float, float]]
+    vert_corridors: List[Tuple[float, float]]
+    horiz_corridors: List[Tuple[float, float]]
     cols: List[float]
     rows: List[float]
     pad_top: float
@@ -166,8 +166,8 @@ def calculate_grid(container) -> Grid:
     rect = container.getBoundingClientRect()
     return Grid(
         rect=rect,
-        vert=build(pad_left, cols, col_gap),
-        hor=build(pad_top, rows, row_gap),
+        vert_corridors=build(pad_left, cols, col_gap),
+        horiz_corridors=build(pad_top, rows, row_gap),
         cols=cols,
         rows=rows,
         pad_top=pad_top,
@@ -192,11 +192,9 @@ def update_grid_overlay(container, overlay_canvas, hovered_cell):
     overlay_canvas.style.left = f"{rect.left}px"
     overlay_ctx.clearRect(0, 0, w, h)
 
-    vert = g.vert
-    hor = g.hor
     overlay_ctx.strokeStyle = 'rgba(255,255,255,0.25)'
     overlay_ctx.lineWidth = 1
-    for start, end in vert:
+    for start, end in g.vert_corridors:
         overlay_ctx.beginPath()
         overlay_ctx.moveTo(start, 0)
         overlay_ctx.lineTo(start, h)
@@ -205,7 +203,7 @@ def update_grid_overlay(container, overlay_canvas, hovered_cell):
         overlay_ctx.moveTo(end, 0)
         overlay_ctx.lineTo(end, h)
         overlay_ctx.stroke()
-    for start, end in hor:
+    for start, end in g.horiz_corridors:
         overlay_ctx.beginPath()
         overlay_ctx.moveTo(0, start)
         overlay_ctx.lineTo(w, start)
