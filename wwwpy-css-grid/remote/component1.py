@@ -69,7 +69,10 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
 
         # update grid overlay
         def update_grid_overlay():
-            rect = self._container.getBoundingClientRect()
+            g = self.calculate_grid()
+            if not g:
+                return
+            rect = g['rect']
             w, h = rect.width, rect.height
             # canvas width/height expects int
             self.overlay_canvas.width = int(w)
@@ -77,10 +80,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
             self.overlay_canvas.style.top = f"{rect.top}px"
             self.overlay_canvas.style.left = f"{rect.left}px"
             self.overlay_ctx.clearRect(0, 0, w, h)
-            g = self.calculate_grid()
-            # ensure grid data is available
-            if not g:
-                return
+
             vert = g['vert']
             hor = g['hor']
             self.overlay_ctx.strokeStyle = 'rgba(255,255,255,0.25)'
@@ -195,4 +195,6 @@ def calculate_grid(container):
     rect = container.getBoundingClientRect()
     return {'rect': rect, 'vert': build(pad_left, cols, col_gap), 'hor': build(pad_top, rows, row_gap),
             'cols': cols, 'rows': rows, 'pad_top': pad_top, 'pad_left': pad_left,
-            'col_gap': col_gap, 'row_gap': row_gap}
+            'col_gap': col_gap, 'row_gap': row_gap,
+            # 'computed_style': s
+            }
