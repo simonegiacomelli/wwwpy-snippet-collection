@@ -1,15 +1,29 @@
 import re
+from dataclasses import dataclass
+from typing import Any, List, Tuple, cast
 
 from pyodide.ffi import create_proxy
 import wwwpy.remote.component as wpc
 import js
-from typing import Any, cast
 
 import logging
 
 from wwwpy.remote import eventlib
 
 logger = logging.getLogger(__name__)
+
+
+@dataclass
+class Grid:
+    rect: Any
+    vert: List[Tuple[float, float]]
+    hor: List[Tuple[float, float]]
+    cols: List[float]
+    rows: List[float]
+    pad_top: float
+    pad_left: float
+    col_gap: float
+    row_gap: float
 
 
 class Component1(wpc.Component, tag_name='component-1'):
@@ -97,38 +111,38 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
 
 
 # get bounds of a cell
-def get_cell_bounds(g, col, row):
-    x = g['pad_left']
-    y = g['pad_top']
-    for i in range(col): x += g['cols'][i] + g['col_gap']
-    for i in range(row): y += g['rows'][i] + g['row_gap']
-    return {'x': x, 'y': y, 'width': g['cols'][col], 'height': g['rows'][row]}
+def get_cell_bounds(g: Grid, col, row):
+    x = g.pad_left
+    y = g.pad_top
+    for i in range(col): x += g.cols[i] + g.col_gap
+    for i in range(row): y += g.rows[i] + g.row_gap
+    return {'x': x, 'y': y, 'width': g.cols[col], 'height': g.rows[row]}
 
 
 # compute which cell is under mouse
-def get_hovered_cell(mx, my, g):
-    x = mx - g['rect'].left
-    y = my - g['rect'].top
-    if x < g['pad_left'] or y < g['pad_top']:
+def get_hovered_cell(mx, my, g: Grid):
+    x = mx - g.rect.left
+    y = my - g.rect.top
+    if x < g.pad_left or y < g.pad_top:
         return None
     col = -1
-    cx = g['pad_left']
-    for i, size in enumerate(g['cols']):
+    cx = g.pad_left
+    for i, size in enumerate(g.cols):
         if x >= cx and x < cx + size:
             col = i
             break
-        cx += size + g['col_gap']
+        cx += size + g.col_gap
     row = -1
-    cy = g['pad_top']
-    for i, size in enumerate(g['rows']):
+    cy = g.pad_top
+    for i, size in enumerate(g.rows):
         if y >= cy and y < cy + size:
             row = i
             break
-        cy += size + g['row_gap']
+        cy += size + g.row_gap
     return {'col': col, 'row': row} if col >= 0 and row >= 0 else None
 
 
-def calculate_grid(container):
+def calculate_grid(container) -> Grid:
     s = js.window.getComputedStyle(container)
     # parse CSS pixel values by stripping non-numeric chars
     parse = lambda x: float(re.sub(r'[^0-9.]', '', x)) if isinstance(x, str) else float(x)
@@ -150,11 +164,17 @@ def calculate_grid(container):
         return lines
 
     rect = container.getBoundingClientRect()
-    return {'rect': rect, 'vert': build(pad_left, cols, col_gap), 'hor': build(pad_top, rows, row_gap),
-            'cols': cols, 'rows': rows, 'pad_top': pad_top, 'pad_left': pad_left,
-            'col_gap': col_gap, 'row_gap': row_gap,
-            # 'computed_style': s
-            }
+    return Grid(
+        rect=rect,
+        vert=build(pad_left, cols, col_gap),
+        hor=build(pad_top, rows, row_gap),
+        cols=cols,
+        rows=rows,
+        pad_top=pad_top,
+        pad_left=pad_left,
+        col_gap=col_gap,
+        row_gap=row_gap
+    )
 
 
 # module-level overlay function
@@ -163,7 +183,7 @@ def update_grid_overlay(container, overlay_canvas, hovered_cell):
     if not g:
         return
     overlay_ctx = cast(js.CanvasRenderingContext2D, overlay_canvas.getContext('2d'))
-    rect = g['rect']
+    rect = g.rect
     w, h = rect.width, rect.height
     # canvas width/height expects int
     overlay_canvas.width = int(w)
@@ -172,8 +192,8 @@ def update_grid_overlay(container, overlay_canvas, hovered_cell):
     overlay_canvas.style.left = f"{rect.left}px"
     overlay_ctx.clearRect(0, 0, w, h)
 
-    vert = g['vert']
-    hor = g['hor']
+    vert = g.vert
+    hor = g.hor
     overlay_ctx.strokeStyle = 'rgba(255,255,255,0.25)'
     overlay_ctx.lineWidth = 1
     for start, end in vert:
