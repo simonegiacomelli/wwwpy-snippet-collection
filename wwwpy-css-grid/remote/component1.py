@@ -55,16 +55,13 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         self.log(f'grid-template-columns: {cs.gridTemplateColumns}')
         self.log(f'grid-template-rows: {cs.gridTemplateRows}')
 
-        # setup grid overlay canvas
-        # type annotations for canvas and rendering context
-        # cast created elements to specific types
-        self.overlay_canvas = cast(js.HTMLCanvasElement, js.document.createElement('canvas'))
-        js.document.body.appendChild(self.overlay_canvas)
+        oc = cast(js.HTMLCanvasElement, js.document.createElement('canvas'))
+        oc.style.position = 'absolute'
+        oc.style.pointerEvents = 'none'
+        oc.style.zIndex = '1'
 
-        # canvas overlay styling
-        self.overlay_canvas.style.position = 'absolute'
-        self.overlay_canvas.style.pointerEvents = 'none'
-        self.overlay_canvas.style.zIndex = '1'
+        self.overlay_canvas = oc
+        js.document.body.appendChild(oc)
 
         # state for hovered cell
         self.hovered_cell: Any = None
