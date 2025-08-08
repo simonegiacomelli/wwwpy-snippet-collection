@@ -59,7 +59,6 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         # type annotations for canvas and rendering context
         # cast created elements to specific types
         self.overlay_canvas = cast(js.HTMLCanvasElement, js.document.createElement('canvas'))
-        self.overlay_ctx = cast(js.CanvasRenderingContext2D, self.overlay_canvas.getContext('2d'))
         js.document.body.appendChild(self.overlay_canvas)
 
         # canvas overlay styling
@@ -87,7 +86,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         return calculate_grid(self._container)
 
     def update_grid_overlay(self):
-        update_grid_overlay(self._container, self.overlay_canvas, self.overlay_ctx, self.hovered_cell)
+        update_grid_overlay(self._container, self.overlay_canvas, self.hovered_cell)
 
     def _js_window__mousemove(self, e):
         self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, self.calculate_grid())
@@ -162,7 +161,7 @@ def calculate_grid(container):
 
 
 # module-level overlay function
-def update_grid_overlay(container, overlay_canvas, overlay_ctx, hovered_cell):
+def update_grid_overlay(container, overlay_canvas, hovered_cell):
     g = calculate_grid(container)
     if not g:
         return
