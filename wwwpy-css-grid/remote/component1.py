@@ -1,3 +1,5 @@
+import re
+
 from pyodide.ffi import create_proxy
 import wwwpy.remote.component as wpc
 import js
@@ -65,33 +67,6 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         # state for hovered cell
         self.hovered_cell: Any = None
 
-        # helper to calculate grid lines and sizes
-        def calculate_grid():
-            s = js.window.getComputedStyle(self._container)
-            parse = js.parseFloat
-            pad_top = parse(s.paddingTop) or 0
-            pad_left = parse(s.paddingLeft) or 0
-            col_gap = parse(s.columnGap) or 0
-            row_gap = parse(s.rowGap) or 0
-            cols = [parse(x) for x in s.gridTemplateColumns.split()] or []
-            rows = [parse(x) for x in s.gridTemplateRows.split()] or []
-
-            def build(start, sizes, gap):
-                pos = start
-                lines = [(pos, pos)]
-                for i, size in enumerate(sizes):
-                    pos += size
-                    end = pos + (gap if i < len(sizes) - 1 else 0)
-                    lines.append((pos, end))
-                    pos = end
-                return lines
-
-            rect = self._container.getBoundingClientRect()
-            return {'rect': rect, 'vert': build(pad_left, cols, col_gap), 'hor': build(pad_top, rows, row_gap),
-                    'cols': cols, 'rows': rows, 'pad_top': pad_top, 'pad_left': pad_left, 'col_gap': col_gap,
-                    'row_gap': row_gap}
-
-
         # update grid overlay
         def update_grid_overlay():
             rect = self._container.getBoundingClientRect()
@@ -102,7 +77,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
             self.overlay_canvas.style.top = f"{rect.top}px"
             self.overlay_canvas.style.left = f"{rect.left}px"
             self.overlay_ctx.clearRect(0, 0, w, h)
-            g = calculate_grid()
+            g = self.calculate_grid()
             # ensure grid data is available
             if not g:
                 return
@@ -140,7 +115,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         # mouse move and resize listeners
         # mouse move: update hovered cell and overlay
         def on_mousemove(e):
-            self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, calculate_grid())
+            self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, self.calculate_grid())
             update_grid_overlay()
 
         js.document.addEventListener('mousemove', create_proxy(on_mousemove))
@@ -160,6 +135,9 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         self.textarea1.innerHTML += f'{msg}\n'
         self.textarea1.scrollTop = self.textarea1.scrollHeight
 
+    def calculate_grid(self):
+        return calculate_grid(self._container)
+
 
 # get bounds of a cell
 def get_cell_bounds(g, col, row):
@@ -168,6 +146,7 @@ def get_cell_bounds(g, col, row):
     for i in range(col): x += g['cols'][i] + g['col_gap']
     for i in range(row): y += g['rows'][i] + g['row_gap']
     return {'x': x, 'y': y, 'width': g['cols'][col], 'height': g['rows'][row]}
+
 
 # compute which cell is under mouse
 def get_hovered_cell(mx, my, g):
@@ -191,3 +170,29 @@ def get_hovered_cell(mx, my, g):
         cy += size + g['row_gap']
     return {'col': col, 'row': row} if col >= 0 and row >= 0 else None
 
+
+def calculate_grid(container):
+    s = js.window.getComputedStyle(container)
+    # parse CSS pixel values by stripping non-numeric chars
+    parse = lambda x: float(re.sub(r'[^0-9.]', '', x)) if isinstance(x, str) else float(x)
+    pad_top = parse(s.padding) or 0
+    pad_left = parse(s.paddingLeft) or 0
+    col_gap = parse(s.columnGap) or 0
+    row_gap = parse(s.rowGap) or 0
+    cols = [parse(x) for x in s.gridTemplateColumns.split()] or []
+    rows = [parse(x) for x in s.gridTemplateRows.split()] or []
+
+    def build(start, sizes, gap):
+        pos = start
+        lines = [(pos, pos)]
+        for i, size in enumerate(sizes):
+            pos += size
+            end = pos + (gap if i < len(sizes) - 1 else 0)
+            lines.append((pos, end))
+            pos = end
+        return lines
+
+    rect = container.getBoundingClientRect()
+    return {'rect': rect, 'vert': build(pad_left, cols, col_gap), 'hor': build(pad_top, rows, row_gap),
+            'cols': cols, 'rows': rows, 'pad_top': pad_top, 'pad_left': pad_left,
+            'col_gap': col_gap, 'row_gap': row_gap}
