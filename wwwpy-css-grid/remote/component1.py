@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Grid:
-    rect: js.DOMRect
+    container_rect: js.DOMRect
     vertical_corridors: List[Tuple[float, float]]
     horizontal_corridors: List[Tuple[float, float]]
     col_sizes: List[float]
@@ -124,8 +124,8 @@ def get_cell_bounds(g: Grid, col, row):
 
 # compute which cell is under mouse
 def get_hovered_cell(mx, my, g: Grid):
-    x = mx - g.rect.left
-    y = my - g.rect.top
+    x = mx - g.container_rect.left
+    y = my - g.container_rect.top
     if x < g.pad_left or y < g.pad_top:
         return None
     col = -1
@@ -166,9 +166,8 @@ def calculate_grid(container: js.HTMLElement) -> Grid:
             pos = end
         return lines
 
-    rect = container.getBoundingClientRect()
     return Grid(
-        rect=rect,
+        container_rect=container.getBoundingClientRect(),
         vertical_corridors=build(pad_left, cols, col_gap),
         horizontal_corridors=build(pad_top, rows, row_gap),
         col_sizes=cols,
@@ -186,7 +185,7 @@ def update_grid_overlay(container, overlay_canvas, hovered_cell):
     if not g:
         return
     c2d = cast(js.CanvasRenderingContext2D, overlay_canvas.getContext('2d'))
-    rect = g.rect
+    rect = g.container_rect
     w, h = rect.width, rect.height
     # canvas width/height expects int
     overlay_canvas.width = int(w)
