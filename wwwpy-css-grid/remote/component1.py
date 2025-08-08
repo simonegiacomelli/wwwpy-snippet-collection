@@ -15,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 @dataclass
 class Grid:
-    rect: Any
+    rect: js.DOMRect
     vertical_corridors: List[Tuple[float, float]]
     horizontal_corridors: List[Tuple[float, float]]
     col_sizes: List[float]
@@ -145,7 +145,7 @@ def get_hovered_cell(mx, my, g: Grid):
     return {'col': col, 'row': row} if col >= 0 and row >= 0 else None
 
 
-def calculate_grid(container) -> Grid:
+def calculate_grid(container: js.HTMLElement) -> Grid:
     s = js.window.getComputedStyle(container)
     # parse CSS pixel values by stripping non-numeric chars
     parse = lambda x: float(re.sub(r'[^0-9.]', '', x)) if isinstance(x, str) else float(x)
