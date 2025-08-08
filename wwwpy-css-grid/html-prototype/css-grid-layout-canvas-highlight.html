@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Grid Container Explorer</title>
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #1e1e1e;
+            color: #ddd;
+            min-height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            gap: 20px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .controls-panel {
+            width: 300px;
+            background: #2b2b2b;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            height: fit-content;
+            position: sticky;
+            top: 20px;
+        }
+
+        .controls-panel h2 {
+            margin: 0 0 20px 0;
+            color: #ddd;
+            font-size: 18px;
+            font-weight: 600;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            color: #ccc;
+            font-weight: 500;
+            font-size: 14px;
+        }
+
+        .control-group select,
+        .control-group input[type="text"],
+        .control-group input[type="range"] {
+            width: 100%;
+            padding: 8px 12px;
+            background: #333;
+            color: #ddd;
+            border: 2px solid #555;
+            border-radius: 6px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .control-group select:focus,
+        .control-group input:focus {
+            outline: none;
+            border-color: #888;
+        }
+
+        .range-value {
+            display: inline-block;
+            margin-left: 10px;
+            color: #ccc;
+            font-size: 12px;
+            min-width: 30px;
+        }
+
+        .child-controls {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .child-controls button {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .add-child {
+            background: #444;
+            color: white;
+        }
+
+        .add-child:hover {
+            background: #555;
+        }
+
+        .remove-child {
+            background: #444;
+            color: white;
+        }
+
+        .remove-child:hover {
+            background: #555;
+        }
+
+        .computed-styles {
+            background: #2b2b2b;
+            border-radius: 6px;
+            padding: 15px;
+            margin-top: 20px;
+        }
+
+        .computed-styles h3 {
+            margin: 0 0 10px 0;
+            color: #ddd;
+            font-size: 14px;
+            font-weight: 600;
+        }
+
+        .computed-styles pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+            color: #ccc;
+            overflow-x: auto;
+        }
+
+        .grid-area {
+            flex: 1;
+            background: #2b2b2b;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.5);
+            position: relative;
+        }
+
+        .grid-container-wrapper {
+            position: relative;
+            background: #1e1e1e;
+            border: 2px solid #444;
+            border-radius: 8px;
+            min-height: 400px;
+            margin: 20px;
+        }
+
+        .grid-container {
+            padding: 20px;
+            min-height: 360px;
+            position: relative;
+        }
+
+        .grid-item {
+            background: linear-gradient(135deg, #444 0%, #666 100%);
+            border: 2px solid #555;
+            border-radius: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 600;
+            font-size: 14px;
+            min-height: 60px;
+            transition: all 0.2s;
+        }
+
+        .grid-item:hover {
+            background: linear-gradient(135deg, #555 0%, #777 100%);
+        }
+
+        .grid-controls {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+
+        .grid-controls button {
+            position: absolute;
+            width: 32px;
+            height: 32px;
+            border: none;
+            border-radius: 50%;
+            background: #444;
+            color: #ddd;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            pointer-events: all;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+        }
+
+        .grid-controls button:hover {
+            background: #555;
+            transform: scale(1.1);
+        }
+
+        .row-controls {
+            position: absolute;
+            bottom: -16px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 12px;
+            z-index: 15;
+        }
+
+        .column-controls {
+            position: absolute;
+            right: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            z-index: 15;
+        }
+
+        .column-controls button,
+        .row-controls button {
+            position: relative;
+            z-index: 16;
+        }
+
+        .grid-overlay {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .grid-line {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        .grid-line.vertical {
+            width: 1px;
+            height: 100%;
+        }
+
+        .grid-line.horizontal {
+            height: 1px;
+            width: 100%;
+        }
+    </style>
+</head>
+<body>
+<div class="app-container">
+    <div class="controls-panel">
+        <h2>Grid Container Controls</h2>
+
+        <div class="control-group">
+            <label for="display">Display</label>
+            <select id="display">
+                <option value="grid">grid</option>
+                <option value="inline-grid">inline-grid</option>
+                <option value="block">block</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="template-columns">Grid Template Columns</label>
+            <input type="text" id="template-columns" value="1fr" placeholder="e.g. 1fr 1fr 1fr or 3fr 2fr 1fr">
+        </div>
+
+        <div class="control-group">
+            <label for="template-rows">Grid Template Rows</label>
+            <input type="text" id="template-rows" value="1fr" placeholder="e.g. 1fr 1fr or 200px auto">
+        </div>
+
+        <div class="control-group">
+            <label for="gap">Gap <span class="range-value" id="gap-value">20px</span></label>
+            <input type="range" id="gap" min="0" max="50" value="20">
+        </div>
+
+        <div class="control-group">
+            <label for="justify-content">Justify Content</label>
+            <select id="justify-content">
+                <option value="stretch">stretch</option>
+                <option value="start">start</option>
+                <option value="end">end</option>
+                <option value="center">center</option>
+                <option value="space-between">space-between</option>
+                <option value="space-around">space-around</option>
+                <option value="space-evenly">space-evenly</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="align-content">Align Content</label>
+            <select id="align-content">
+                <option value="stretch">stretch</option>
+                <option value="start">start</option>
+                <option value="end">end</option>
+                <option value="center">center</option>
+                <option value="space-between">space-between</option>
+                <option value="space-around">space-around</option>
+                <option value="space-evenly">space-evenly</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="justify-items">Justify Items</label>
+            <select id="justify-items">
+                <option value="stretch">stretch</option>
+                <option value="start">start</option>
+                <option value="end">end</option>
+                <option value="center">center</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label for="align-items">Align Items</label>
+            <select id="align-items">
+                <option value="stretch">stretch</option>
+                <option value="start">start</option>
+                <option value="end">end</option>
+                <option value="center">center</option>
+            </select>
+        </div>
+
+        <div class="control-group">
+            <label><input type="checkbox" id="toggle-children-visible" checked> Children Visible</label>
+        </div>
+
+        <div class="control-group">
+            <label>Child Elements</label>
+            <div class="child-controls">
+                <button id="add-child" onclick="addChild()">Add Child</button>
+                <button id="remove-child" onclick="deleteChild()">Remove Child</button>
+            </div>
+        </div>
+
+        <div class="computed-styles">
+            <h3>Computed Styles</h3>
+            <pre id="computed-output"></pre>
+        </div>
+    </div>
+
+    <div class="grid-area">
+        <div class="grid-container-wrapper">
+            <div class="grid-container" id="grid-container">
+            </div>
+            <div class="grid-controls">
+                <div class="column-controls">
+                    <button id="remove-column" onclick="removeColumn()">−</button>
+                    <button id="add-column" onclick="addColumn()">+</button>
+                </div>
+                <div class="row-controls">
+                    <button id="remove-row" onclick="removeRow()">−</button>
+                    <button id="add-row" onclick="addRow()">+</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<canvas id="grid-overlay-canvas" style="position:absolute;pointer-events:none;z-index:1"></canvas>
+
+<script>
+    const container = document.getElementById('grid-container')
+    const overlayCanvas = document.getElementById('grid-overlay-canvas')
+    const overlayCtx = overlayCanvas.getContext('2d')
+    const computedOutput = document.getElementById('computed-output')
+    let updateScheduled = false
+    let hoveredCell = null
+
+    const styleControls = [
+        ['display', 'display'],
+        ['template-columns', 'gridTemplateColumns'],
+        ['template-rows', 'gridTemplateRows'],
+        ['gap', 'gap'],
+        ['justify-content', 'justifyContent'],
+        ['align-content', 'alignContent'],
+        ['justify-items', 'justifyItems'],
+        ['align-items', 'alignItems']
+    ]
+
+    function initializeControls() {
+        styleControls.forEach(([id, prop]) => {
+            const el = document.getElementById(id)
+            const ev = el.tagName == 'INPUT' && el.type == 'range' ? 'input' : 'change'
+            el.addEventListener(ev, e => {
+                let v = e.target.value
+                if (id == 'gap') {
+                    document.getElementById('gap-value').textContent = v + 'px'
+                    v += 'px'
+                }
+                container.style[prop] = v
+                scheduleUpdate()
+            })
+        })
+        document.getElementById('toggle-children-visible').addEventListener('change', e => {
+            Array.from(container.children).forEach(c =>
+                e.target.checked ? c.classList.add('grid-item') : c.classList.remove('grid-item')
+            )
+            scheduleUpdate()
+        })
+        document.getElementById('add-child').addEventListener('click', addChild)
+        document.getElementById('remove-child').addEventListener('click', deleteChild)
+        document.getElementById('add-column').addEventListener('click', () => adjustTracks('template-columns', 'gridTemplateColumns', 'add'))
+        document.getElementById('remove-column').addEventListener('click', () => adjustTracks('template-columns', 'gridTemplateColumns', 'remove'))
+        document.getElementById('add-row').addEventListener('click', () => adjustTracks('template-rows', 'gridTemplateRows', 'add'))
+        document.getElementById('remove-row').addEventListener('click', () => adjustTracks('template-rows', 'gridTemplateRows', 'remove'))
+    }
+
+    function addChild() {
+        const c = document.createElement('div')
+        document.getElementById('toggle-children-visible').checked && c.classList.add('grid-item')
+        container.appendChild(c)
+        scheduleUpdate()
+    }
+
+    function deleteChild() {
+        container.children.length > 1 && container.removeChild(container.lastElementChild)
+        scheduleUpdate()
+    }
+
+    function adjustTracks(id, prop, op) {
+        const inp = document.getElementById(id)
+        const t = inp.value.trim().split(/\s+/)
+        op == 'add' ? t.push('1fr') : op == 'remove' && t.length > 1 && t.pop()
+        const tmpl = t.join(' ')
+        inp.value = tmpl
+        container.style[prop] = tmpl
+        scheduleUpdate()
+        syncChildren()
+    }
+
+    function syncChildren() {
+        const show = document.getElementById('toggle-children-visible').checked
+        container.innerHTML = ''
+        if (!show) return
+        const cols = document.getElementById('template-columns').value.trim().split(/\s+/).length
+        const rows = document.getElementById('template-rows').value.trim().split(/\s+/).length
+        for (let i = 0; i < cols * rows; i++) {
+            const c = document.createElement('div')
+            c.className = 'grid-item'
+            container.appendChild(c)
+        }
+    }
+
+    function scheduleUpdate() {
+        if (updateScheduled) return
+        updateScheduled = true
+        requestAnimationFrame(() => {
+            updateContainer()
+            updateComputedStyles()
+            updateGridOverlay()
+            syncChildren()
+            updateScheduled = false
+        })
+    }
+
+    function updateContainer() {
+        styleControls.forEach(([id, prop]) => {
+            let v = document.getElementById(id).value
+            id == 'gap' && (v += 'px')
+            container.style[prop] = v
+        })
+    }
+
+    function updateComputedStyles() {
+        const s = window.getComputedStyle(container)
+        const props = ['display', 'gridTemplateColumns', 'gridTemplateRows', 'gap', 'justifyContent', 'alignContent', 'justifyItems', 'alignItems']
+        computedOutput.textContent = props.map(p => `${p.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${s[p]}`).join('\n')
+    }
+
+    function calculateGridLines(el) {
+        const s = window.getComputedStyle(el)
+        const padT = parseFloat(s.paddingTop), padL = parseFloat(s.paddingLeft)
+        const colGap = parseFloat(s.columnGap) || 0, rowGap = parseFloat(s.rowGap) || 0
+        const cols = s.gridTemplateColumns.split(' ').map(n => parseFloat(n))
+        const rows = s.gridTemplateRows.split(' ').map(n => parseFloat(n))
+        const build = (st, arr, g) => {
+            let pos = st, out = [{start: pos, end: pos}]
+            arr.forEach((v, i) => {
+                pos += v
+                out.push({start: pos, end: i < arr.length - 1 ? pos + g : pos})
+                pos += i < arr.length - 1 ? g : 0
+            })
+            return out
+        }
+        return {
+            container: el.getBoundingClientRect(),
+            verticalCorridors: build(padL, cols, colGap),
+            horizontalCorridors: build(padT, rows, rowGap),
+            isGrid: ['grid', 'inline-grid'].includes(s.display),
+            colSizes: cols, rowSizes: rows, padL, padT: padT, colGap, rowGap
+        }
+    }
+
+    function getCellBounds(g, c, r) {
+        let x = g.padL, y = g.padT
+        for (let i = 0; i < c; i++) x += g.colSizes[i] + g.colGap
+        for (let i = 0; i < r; i++) y += g.rowSizes[i] + g.rowGap
+        return {x, y, width: g.colSizes[c], height: g.rowSizes[r]}
+    }
+
+    function getHoveredCell(mx, my, g) {
+        const x = mx - g.container.left, y = my - g.container.top
+        if (x < g.padL || y < g.padT) return null
+        let col = -1, cx = g.padL
+        for (let i = 0; i < g.colSizes.length; i++) {
+            if (x >= cx && x < cx + g.colSizes[i]) {
+                col = i;
+                break
+            }
+            cx += g.colSizes[i] + g.colGap
+        }
+        let row = -1, cy = g.padT
+        for (let i = 0; i < g.rowSizes.length; i++) {
+            if (y >= cy && y < cy + g.rowSizes[i]) {
+                row = i;
+                break
+            }
+            cy += g.rowSizes[i] + g.rowGap
+        }
+        return col >= 0 && row >= 0 ? {col, row} : null
+    }
+
+    function updateGridOverlay() {
+        const {top, left, width, height} = container.getBoundingClientRect()
+        overlayCanvas.width = width;
+        overlayCanvas.height = height
+        overlayCanvas.style.top = `${top}px`;
+        overlayCanvas.style.left = `${left}px`
+        overlayCtx.clearRect(0, 0, width, height)
+        const g = calculateGridLines(container)
+        if (!g.isGrid) return
+        overlayCtx.save()
+        overlayCtx.strokeStyle = 'rgba(255,255,255,0.25)';
+        overlayCtx.lineWidth = 1
+        g.verticalCorridors.forEach(({start, end}) =>
+            (overlayCtx.beginPath(), overlayCtx.moveTo(start, 0), overlayCtx.lineTo(start, height), overlayCtx.stroke(),
+                overlayCtx.beginPath(), overlayCtx.moveTo(end, 0), overlayCtx.lineTo(end, height), overlayCtx.stroke())
+        )
+        g.horizontalCorridors.forEach(({start, end}) =>
+            (overlayCtx.beginPath(), overlayCtx.moveTo(0, start), overlayCtx.lineTo(width, start), overlayCtx.stroke(),
+                overlayCtx.beginPath(), overlayCtx.moveTo(0, end), overlayCtx.lineTo(width, end), overlayCtx.stroke())
+        )
+        if (hoveredCell) {
+            overlayCtx.strokeStyle = '#0f0';
+            overlayCtx.lineWidth = 3
+            const b = getCellBounds(g, hoveredCell.col, hoveredCell.row)
+            overlayCtx.strokeRect(b.x, b.y, b.width, b.height)
+        }
+        overlayCtx.restore()
+    }
+
+    document.addEventListener('DOMContentLoaded', () => {
+        initializeControls()
+        scheduleUpdate()
+        document.addEventListener('mousemove', e => {
+            const g = calculateGridLines(container)
+            const cell = getHoveredCell(e.clientX, e.clientY, g)
+            if (JSON.stringify(cell) !== JSON.stringify(hoveredCell)) hoveredCell = cell, updateGridOverlay()
+        })
+        if (window.ResizeObserver) {
+            const ro = new ResizeObserver(() => scheduleUpdate())
+            ro.observe(container);
+            ro.observe(document.querySelector('.grid-container-wrapper'))
+        } else window.addEventListener('resize', () => scheduleUpdate())
+    })
+</script>
+
+</body>
+</html>
