@@ -185,7 +185,7 @@ def update_grid_overlay(container, overlay_canvas, hovered_cell):
     g = calculate_grid(container)
     if not g:
         return
-    overlay_ctx = cast(js.CanvasRenderingContext2D, overlay_canvas.getContext('2d'))
+    c2d = cast(js.CanvasRenderingContext2D, overlay_canvas.getContext('2d'))
     rect = g.rect
     w, h = rect.width, rect.height
     # canvas width/height expects int
@@ -193,30 +193,31 @@ def update_grid_overlay(container, overlay_canvas, hovered_cell):
     overlay_canvas.height = int(h)
     overlay_canvas.style.top = f"{rect.top}px"
     overlay_canvas.style.left = f"{rect.left}px"
-    overlay_ctx.clearRect(0, 0, w, h)
+    c2d.clearRect(0, 0, w, h)
 
-    overlay_ctx.strokeStyle = 'rgba(255,255,255,0.25)'
-    overlay_ctx.lineWidth = 1
+    c2d.strokeStyle = 'rgba(255,255,255,0.25)'
+    c2d.lineWidth = 1
     for start, end in g.vertical_corridors:
-        overlay_ctx.beginPath()
-        overlay_ctx.moveTo(start, 0)
-        overlay_ctx.lineTo(start, h)
-        overlay_ctx.stroke()
-        overlay_ctx.beginPath()
-        overlay_ctx.moveTo(end, 0)
-        overlay_ctx.lineTo(end, h)
-        overlay_ctx.stroke()
+        c2d.beginPath()
+        c2d.moveTo(start, 0)
+        c2d.lineTo(start, h)
+        c2d.stroke()
+        c2d.beginPath()
+        c2d.moveTo(end, 0)
+        c2d.lineTo(end, h)
+        c2d.stroke()
     for start, end in g.horizontal_corridors:
-        overlay_ctx.beginPath()
-        overlay_ctx.moveTo(0, start)
-        overlay_ctx.lineTo(w, start)
-        overlay_ctx.stroke()
-        overlay_ctx.beginPath()
-        overlay_ctx.moveTo(0, end)
-        overlay_ctx.lineTo(w, end)
-        overlay_ctx.stroke()
+        c2d.beginPath()
+        c2d.moveTo(0, start)
+        c2d.lineTo(w, start)
+        c2d.stroke()
+        c2d.beginPath()
+        c2d.moveTo(0, end)
+        c2d.lineTo(w, end)
+        c2d.stroke()
+
     if hovered_cell:
         b = get_cell_bounds(g, hovered_cell['col'], hovered_cell['row'])
-        overlay_ctx.strokeStyle = '#0f0'
-        overlay_ctx.lineWidth = 3
-        overlay_ctx.strokeRect(b['x'], b['y'], b['width'], b['height'])
+        c2d.strokeStyle = '#0f0'
+        c2d.lineWidth = 3
+        c2d.strokeRect(b['x'], b['y'], b['width'], b['height'])
