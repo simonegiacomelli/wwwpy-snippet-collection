@@ -55,7 +55,8 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         # type annotations for canvas and rendering context
         # cast created elements to specific types
         self.overlay_canvas: js.HTMLCanvasElement = cast(js.HTMLCanvasElement, js.document.createElement('canvas'))
-        self.overlay_ctx: js.CanvasRenderingContext2D = cast(js.CanvasRenderingContext2D, self.overlay_canvas.getContext('2d'))
+        self.overlay_ctx: js.CanvasRenderingContext2D = cast(js.CanvasRenderingContext2D,
+                                                             self.overlay_canvas.getContext('2d'))
         js.document.body.appendChild(self.overlay_canvas)
         # canvas overlay styling
         self.overlay_canvas.style.position = 'absolute'
@@ -67,12 +68,14 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         # helper to calculate grid lines and sizes
         def calculate_grid():
             s = js.window.getComputedStyle(self._container)
-            pad_top = float(s.paddingTop)
-            pad_left = float(s.paddingLeft)
-            col_gap = float(s.columnGap) if s.columnGap else 0
-            row_gap = float(s.rowGap) if s.rowGap else 0
-            cols = [float(x) for x in s.gridTemplateColumns.split()] or []
-            rows = [float(x) for x in s.gridTemplateRows.split()] or []
+            parse = js.parseFloat
+            pad_top = parse(s.paddingTop) or 0
+            pad_left = parse(s.paddingLeft) or 0
+            col_gap = parse(s.columnGap) or 0
+            row_gap = parse(s.rowGap) or 0
+            cols = [parse(x) for x in s.gridTemplateColumns.split()] or []
+            rows = [parse(x) for x in s.gridTemplateRows.split()] or []
+
             def build(start, sizes, gap):
                 pos = start
                 lines = [(pos, pos)]
@@ -82,8 +85,11 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
                     lines.append((pos, end))
                     pos = end
                 return lines
+
             rect = self._container.getBoundingClientRect()
-            return {'rect': rect, 'vert': build(pad_left, cols, col_gap), 'hor': build(pad_top, rows, row_gap), 'cols': cols, 'rows': rows, 'pad_top': pad_top, 'pad_left': pad_left, 'col_gap': col_gap, 'row_gap': row_gap}
+            return {'rect': rect, 'vert': build(pad_left, cols, col_gap), 'hor': build(pad_top, rows, row_gap),
+                    'cols': cols, 'rows': rows, 'pad_top': pad_top, 'pad_left': pad_left, 'col_gap': col_gap,
+                    'row_gap': row_gap}
 
         # compute which cell is under mouse
         def get_hovered_cell(mx, my, g):
@@ -159,14 +165,17 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
                 self.overlay_ctx.strokeRect(b['x'], b['y'], b['width'], b['height'])
 
         self.update_grid_overlay = update_grid_overlay
+
         # mouse move and resize listeners
         # mouse move: update hovered cell and overlay
         def on_mousemove(e):
             self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, calculate_grid())
             update_grid_overlay()
-        js.document.addEventListener('mousemove',  create_proxy( on_mousemove))
+
+        js.document.addEventListener('mousemove', create_proxy(on_mousemove))
         if hasattr(js.window, 'ResizeObserver'):
-            ro = js.ResizeObserver.new(create_proxy(lambda e: update_grid_overlay()))
+            pass
+            ro = js.ResizeObserver.new(create_proxy(lambda e, x: update_grid_overlay()))
             ro.observe(self._container)
         else:
             js.window.addEventListener('resize', create_proxy(lambda e: update_grid_overlay()))
