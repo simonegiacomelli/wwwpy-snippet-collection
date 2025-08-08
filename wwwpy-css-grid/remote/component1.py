@@ -91,35 +91,6 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
                     'cols': cols, 'rows': rows, 'pad_top': pad_top, 'pad_left': pad_left, 'col_gap': col_gap,
                     'row_gap': row_gap}
 
-        # compute which cell is under mouse
-        def get_hovered_cell(mx, my, g):
-            x = mx - g['rect'].left
-            y = my - g['rect'].top
-            if x < g['pad_left'] or y < g['pad_top']:
-                return None
-            col = -1
-            cx = g['pad_left']
-            for i, size in enumerate(g['cols']):
-                if x >= cx and x < cx + size:
-                    col = i
-                    break
-                cx += size + g['col_gap']
-            row = -1
-            cy = g['pad_top']
-            for i, size in enumerate(g['rows']):
-                if y >= cy and y < cy + size:
-                    row = i
-                    break
-                cy += size + g['row_gap']
-            return {'col': col, 'row': row} if col >= 0 and row >= 0 else None
-
-        # get bounds of a cell
-        def get_cell_bounds(g, col, row):
-            x = g['pad_left']
-            y = g['pad_top']
-            for i in range(col): x += g['cols'][i] + g['col_gap']
-            for i in range(row): y += g['rows'][i] + g['row_gap']
-            return {'x': x, 'y': y, 'width': g['cols'][col], 'height': g['rows'][row]}
 
         # update grid overlay
         def update_grid_overlay():
@@ -188,3 +159,35 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
     def log(self, msg):
         self.textarea1.innerHTML += f'{msg}\n'
         self.textarea1.scrollTop = self.textarea1.scrollHeight
+
+
+# get bounds of a cell
+def get_cell_bounds(g, col, row):
+    x = g['pad_left']
+    y = g['pad_top']
+    for i in range(col): x += g['cols'][i] + g['col_gap']
+    for i in range(row): y += g['rows'][i] + g['row_gap']
+    return {'x': x, 'y': y, 'width': g['cols'][col], 'height': g['rows'][row]}
+
+# compute which cell is under mouse
+def get_hovered_cell(mx, my, g):
+    x = mx - g['rect'].left
+    y = my - g['rect'].top
+    if x < g['pad_left'] or y < g['pad_top']:
+        return None
+    col = -1
+    cx = g['pad_left']
+    for i, size in enumerate(g['cols']):
+        if x >= cx and x < cx + size:
+            col = i
+            break
+        cx += size + g['col_gap']
+    row = -1
+    cy = g['pad_top']
+    for i, size in enumerate(g['rows']):
+        if y >= cy and y < cy + size:
+            row = i
+            break
+        cy += size + g['row_gap']
+    return {'col': col, 'row': row} if col >= 0 and row >= 0 else None
+
