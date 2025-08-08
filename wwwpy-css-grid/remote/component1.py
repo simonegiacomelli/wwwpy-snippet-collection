@@ -166,6 +166,7 @@ def update_grid_overlay(container, overlay_canvas, overlay_ctx, hovered_cell):
     g = calculate_grid(container)
     if not g:
         return
+    overlay_ctx = cast(js.CanvasRenderingContext2D, overlay_canvas.getContext('2d'))
     rect = g['rect']
     w, h = rect.width, rect.height
     # canvas width/height expects int
