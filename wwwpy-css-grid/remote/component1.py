@@ -18,8 +18,8 @@ class Grid:
     rect: Any
     vertical_corridors: List[Tuple[float, float]]
     horizontal_corridors: List[Tuple[float, float]]
-    cols: List[float]
-    rows: List[float]
+    col_sizes: List[float]
+    row_sizes: List[float]
     pad_top: float
     pad_left: float
     col_gap: float
@@ -117,9 +117,9 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
 def get_cell_bounds(g: Grid, col, row):
     x = g.pad_left
     y = g.pad_top
-    for i in range(col): x += g.cols[i] + g.col_gap
-    for i in range(row): y += g.rows[i] + g.row_gap
-    return {'x': x, 'y': y, 'width': g.cols[col], 'height': g.rows[row]}
+    for i in range(col): x += g.col_sizes[i] + g.col_gap
+    for i in range(row): y += g.row_sizes[i] + g.row_gap
+    return {'x': x, 'y': y, 'width': g.col_sizes[col], 'height': g.row_sizes[row]}
 
 
 # compute which cell is under mouse
@@ -130,14 +130,14 @@ def get_hovered_cell(mx, my, g: Grid):
         return None
     col = -1
     cx = g.pad_left
-    for i, size in enumerate(g.cols):
+    for i, size in enumerate(g.col_sizes):
         if x >= cx and x < cx + size:
             col = i
             break
         cx += size + g.col_gap
     row = -1
     cy = g.pad_top
-    for i, size in enumerate(g.rows):
+    for i, size in enumerate(g.row_sizes):
         if y >= cy and y < cy + size:
             row = i
             break
@@ -171,8 +171,8 @@ def calculate_grid(container) -> Grid:
         rect=rect,
         vertical_corridors=build(pad_left, cols, col_gap),
         horizontal_corridors=build(pad_top, rows, row_gap),
-        cols=cols,
-        rows=rows,
+        col_sizes=cols,
+        row_sizes=rows,
         pad_top=pad_top,
         pad_left=pad_left,
         col_gap=col_gap,
