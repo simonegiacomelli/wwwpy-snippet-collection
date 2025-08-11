@@ -30,6 +30,8 @@ class Grid:
 class Component1(wpc.Component, tag_name='component-1'):
     textarea1: js.HTMLTextAreaElement = wpc.element()
     _container: js.HTMLDivElement = wpc.element()
+    div1: js.HTMLDivElement = wpc.element()
+    _btn_update: js.HTMLButtonElement = wpc.element()
 
     def init_component(self):
         # language=html
@@ -51,22 +53,27 @@ body {
 }
 
 </style>    
-<div class="container"  data-name="_container">
+<div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px;" data-name="_container"
+    class="container">
   <div>One</div>
   <div>Two</div>
   <div>Three</div>
   <div>Four</div>
-  <div>Five</div>
+  
+<div>Five</div>
   <div>Six</div>
   <div>Seven</div>
 </div>
-<textarea data-name="textarea1" placeholder="textarea1" rows="6" 
-style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
+
+<div data-name="div1"><br>div1</div>
+
+
+<button data-name="_btn_update">_btn_update</button><textarea data-name="textarea1" placeholder="textarea1" rows="12" 
+style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></textarea>
 
 """
 
-        self.log_clear()
-        self.log_css_grid(self._container, 'self._container')
+        self._update_css_grid_log()
 
         oc = cast(js.HTMLCanvasElement, js.document.createElement('canvas'))
         oc.style.position = 'absolute'
@@ -85,8 +92,10 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
     def log_css_grid(self, container, name):
         cs = js.window.getComputedStyle(container)
         self.log(f'{name} CSS:')
-        self.log(f'  grid-template-columns: {cs.gridTemplateColumns}')
-        self.log(f'  grid-template-rows: {cs.gridTemplateRows}')
+        self.log(f'  grid: {cs.grid} type={type(cs.grid)}')
+        self.log(f'  grid-template-rows: {cs.gridTemplateRows} type={type(cs.gridTemplateRows)}')
+        self.log(f'  grid-template-columns: {cs.gridTemplateColumns} type={type(cs.gridTemplateColumns)}')
+        self.log('')
 
     def log_clear(self):
         self.textarea1.innerHTML = ''
@@ -116,6 +125,15 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
         # stop the ResizeObserver
         self._ro.disconnect()
         self._ro = None
+    
+    async def _btn_update__click(self, event):
+        self._update_css_grid_log()
+
+    def _update_css_grid_log(self):
+        self.log_clear()
+        self.log_css_grid(self._container, 'self._container')
+        self.log_css_grid(self.div1, 'self.div1')
+    
 
 
 # get bounds of a cell
