@@ -1,3 +1,4 @@
+import inspect
 import re
 from dataclasses import dataclass
 from typing import Any, List, Tuple, cast
@@ -64,10 +65,8 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
 
 """
 
-        cs = js.window.getComputedStyle(self._container)
         self.log_clear()
-        self.log(f'grid-template-columns: {cs.gridTemplateColumns}')
-        self.log(f'grid-template-rows: {cs.gridTemplateRows}')
+        self.log_css_grid(self._container, 'self._container')
 
         oc = cast(js.HTMLCanvasElement, js.document.createElement('canvas'))
         oc.style.position = 'absolute'
@@ -82,6 +81,12 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em"></textarea>
 
         # initial draw
         self.update_grid_overlay()
+
+    def log_css_grid(self, container, name):
+        cs = js.window.getComputedStyle(container)
+        self.log(f'{name} CSS:')
+        self.log(f'  grid-template-columns: {cs.gridTemplateColumns}')
+        self.log(f'  grid-template-rows: {cs.gridTemplateRows}')
 
     def log_clear(self):
         self.textarea1.innerHTML = ''
