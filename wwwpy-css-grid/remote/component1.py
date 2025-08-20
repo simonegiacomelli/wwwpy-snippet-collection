@@ -28,6 +28,12 @@ class Grid:
     row_gap: float
 
 
+@dataclass
+class Cell:
+    col: int
+    row: int
+
+
 class Component1(wpc.Component, tag_name='component-1'):
     textarea1: js.HTMLTextAreaElement = wpc.element()
     _container: js.HTMLDivElement = wpc.element()
@@ -105,7 +111,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         self.textarea1.innerHTML += f'{msg}\n'
         self.textarea1.scrollTop = self.textarea1.scrollHeight
 
-    def calculate_grid(self)->Grid:
+    def calculate_grid(self) -> Grid:
         return calculate_grid(self._container)
 
     def update_grid_overlay(self):
@@ -146,7 +152,7 @@ def get_cell_bounds(g: Grid, col, row):
 
 
 # compute which cell is under mouse
-def get_hovered_cell(mx, my, g: Grid) -> dict[str, int] | None:
+def get_hovered_cell(mx, my, g: Grid) -> Cell | None:
     x = mx - g.container_rect.left
     y = my - g.container_rect.top
     if x < g.pad_left or y < g.pad_top:
@@ -165,7 +171,7 @@ def get_hovered_cell(mx, my, g: Grid) -> dict[str, int] | None:
             row = i
             break
         cy += size + g.row_gap
-    return {'col': col, 'row': row} if col >= 0 and row >= 0 else None
+    return Cell(col, row) if col >= 0 and row >= 0 else None
 
 
 def calculate_grid(container: js.HTMLElement) -> Grid:
@@ -206,8 +212,7 @@ def calculate_grid(container: js.HTMLElement) -> Grid:
 def update_grid_overlay(
         container: js.HTMLElement,
         overlay_canvas: js.HTMLCanvasElement | None,
-        hovered_cell: dict[str, int] | None):
-
+        cell: Cell | None):
     g = calculate_grid(container)
     if not g:
         return
@@ -242,8 +247,8 @@ def update_grid_overlay(
         c2d.lineTo(w, end)
         c2d.stroke()
 
-    if hovered_cell:
-        b = get_cell_bounds(g, hovered_cell['col'], hovered_cell['row'])
+    if cell:
+        b = get_cell_bounds(g, cell.col, cell.row)
         c2d.strokeStyle = '#0f0'
         c2d.lineWidth = 3
         c2d.strokeRect(b['x'], b['y'], b['width'], b['height'])
