@@ -1,15 +1,14 @@
 from __future__ import annotations
-import inspect
-import re
-from dataclasses import dataclass
-from typing import Any, List, Tuple, cast
-
-from pyodide.ffi import create_proxy
-import wwwpy.remote.component as wpc
-import js
 
 import logging
+import re
+from dataclasses import dataclass
+from random import randint
+from typing import Any, List, Tuple, cast
 
+import js
+import wwwpy.remote.component as wpc
+from pyodide.ffi import create_proxy
 from wwwpy.remote import eventlib
 
 logger = logging.getLogger(__name__)
@@ -37,8 +36,9 @@ class Cell:
 class Component1(wpc.Component, tag_name='component-1'):
     textarea1: js.HTMLTextAreaElement = wpc.element()
     _container: js.HTMLDivElement = wpc.element()
-    div1: js.HTMLDivElement = wpc.element()
+    dv_log: js.HTMLDivElement = wpc.element()
     _btn_update: js.HTMLButtonElement = wpc.element()
+    br1: js.HTMLBRElement = wpc.element()
 
     def init_component(self):
         # language=html
@@ -72,7 +72,8 @@ body {
   <div>Seven</div>
 </div>
 
-<div data-name="div1"><br>div1</div>
+
+<br><div data-name="dv_log">dv_log</div>
 
 
 <button data-name="_btn_update">_btn_update</button><textarea data-name="textarea1" placeholder="textarea1" rows="12" 
@@ -118,7 +119,25 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         update_grid_overlay(self._container, self.overlay_canvas, self.hovered_cell)
 
     def _js_window__mousemove(self, e):
+        self._handle_mouse_event(e)
+
+    def _js_window__mousedown(self, e):
+        self._handle_mouse_event(e)
+        hc = self.hovered_cell
+        if hc is None:
+            return
+
+        ch = cast(js.HTMLDivElement, js.document.createElement('div'))
+        ch.style.gridColumn = str(hc.col + 1)
+        ch.style.gridRow = str(hc.row + 1)
+        rnd_int = randint(10000, 99999)
+        ch.innerHTML = f'cell {hc.col},{hc.row} / {rnd_int}'
+
+        self._container.appendChild(ch)
+
+    def _handle_mouse_event(self, e):
         self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, self.calculate_grid())
+        self.dv_log.innerText = 'no cell hovered' if self.hovered_cell is None else f'{self.hovered_cell}'
         self.update_grid_overlay()
 
     def connectedCallback(self):
@@ -139,7 +158,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
     def _update_css_grid_log(self):
         self.log_clear()
         self.log_css_grid(self._container, 'self._container')
-        self.log_css_grid(self.div1, 'self.div1')
+        self.log_css_grid(self.dv_log, 'self.div1')
 
 
 # get bounds of a cell
