@@ -1,3 +1,4 @@
+from __future__ import annotations
 import inspect
 import re
 from dataclasses import dataclass
@@ -104,7 +105,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         self.textarea1.innerHTML += f'{msg}\n'
         self.textarea1.scrollTop = self.textarea1.scrollHeight
 
-    def calculate_grid(self):
+    def calculate_grid(self)->Grid:
         return calculate_grid(self._container)
 
     def update_grid_overlay(self):
@@ -125,7 +126,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         # stop the ResizeObserver
         self._ro.disconnect()
         self._ro = None
-    
+
     async def _btn_update__click(self, event):
         self._update_css_grid_log()
 
@@ -133,7 +134,6 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         self.log_clear()
         self.log_css_grid(self._container, 'self._container')
         self.log_css_grid(self.div1, 'self.div1')
-    
 
 
 # get bounds of a cell
@@ -146,7 +146,7 @@ def get_cell_bounds(g: Grid, col, row):
 
 
 # compute which cell is under mouse
-def get_hovered_cell(mx, my, g: Grid):
+def get_hovered_cell(mx, my, g: Grid) -> dict[str, int] | None:
     x = mx - g.container_rect.left
     y = my - g.container_rect.top
     if x < g.pad_left or y < g.pad_top:
@@ -154,14 +154,14 @@ def get_hovered_cell(mx, my, g: Grid):
     col = -1
     cx = g.pad_left
     for i, size in enumerate(g.col_sizes):
-        if x >= cx and x < cx + size:
+        if cx <= x < cx + size:
             col = i
             break
         cx += size + g.col_gap
     row = -1
     cy = g.pad_top
     for i, size in enumerate(g.row_sizes):
-        if y >= cy and y < cy + size:
+        if cy <= y < cy + size:
             row = i
             break
         cy += size + g.row_gap
@@ -203,7 +203,11 @@ def calculate_grid(container: js.HTMLElement) -> Grid:
 
 
 # module-level overlay function
-def update_grid_overlay(container, overlay_canvas, hovered_cell):
+def update_grid_overlay(
+        container: js.HTMLElement,
+        overlay_canvas: js.HTMLCanvasElement | None,
+        hovered_cell: dict[str, int] | None):
+
     g = calculate_grid(container)
     if not g:
         return
