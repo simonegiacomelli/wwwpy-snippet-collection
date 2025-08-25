@@ -35,7 +35,9 @@ class Cell:
 
 
 def _get_container_children(e) -> js.HTMLElement | None:
-    target = cast(js.HTMLElement, e.target)
+    target = cast(js.HTMLElement, js.document.elementFromPoint(e.clientX, e.clientY))
+    if target is None:
+        return None
     if target.getAttribute('data-name') == '_container':
         return None
     return target
@@ -138,13 +140,12 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         if self.container_children is not None:
             # remove
             self.container_children.remove()
-            self.container_children = None
         else:
             # add
             example_child = _create_example_child(hc)
             self._container.appendChild(example_child)
-            self.container_children = example_child
-        self.update_grid_overlay()
+
+        self._handle_mouse_event(e)
 
 
 
@@ -152,7 +153,8 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         grid = self.calculate_grid()
         self.hovered_cell = None if grid is None else get_hovered_cell(e.clientX, e.clientY, grid)
         self.container_children = _get_container_children(e)
-        self.dv_log.innerText = 'no cell hovered' if self.hovered_cell is None else f'{self.hovered_cell}'
+        ch_detected = '' if self.container_children is None else ' (children present)'
+        self.dv_log.innerText = 'no cell hovered' if self.hovered_cell is None else f'{self.hovered_cell} {ch_detected}'
         self.update_grid_overlay()
 
     def connectedCallback(self):
