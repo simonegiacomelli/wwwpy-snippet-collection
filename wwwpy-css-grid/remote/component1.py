@@ -92,7 +92,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         js.document.body.appendChild(oc)
 
         # state for hovered cell
-        self.hovered_cell: Any = None
+        self.hovered_cell: Cell | None = None
 
         # initial draw
         self.update_grid_overlay()
@@ -127,13 +127,8 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         if hc is None:
             return
 
-        ch = cast(js.HTMLDivElement, js.document.createElement('div'))
-        ch.style.gridColumn = str(hc.col + 1)
-        ch.style.gridRow = str(hc.row + 1)
-        rnd_int = randint(10000, 99999)
-        ch.innerHTML = f'cell {hc.col},{hc.row} / {rnd_int}'
-
-        self._container.appendChild(ch)
+        example_child = _create_example_child(hc)
+        self._container.appendChild(example_child)
 
     def _handle_mouse_event(self, e):
         self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, self.calculate_grid())
@@ -271,3 +266,11 @@ def update_grid_overlay(
         c2d.strokeStyle = '#0f0'
         c2d.lineWidth = 3
         c2d.strokeRect(b['x'], b['y'], b['width'], b['height'])
+
+
+def _create_example_child(cell: Cell):
+    # language=html
+    html = (f'<div style="grid-column: {cell.col + 1}; grid-row: {cell.row + 1};">'
+            f'cell {cell.col},{cell.row} / {randint(10000, 99999)}</div>')
+    ch = js.document.createRange().createContextualFragment(html)
+    return ch
