@@ -1,4 +1,5 @@
 from __future__ import annotations
+import inspect
 
 import logging
 import re
@@ -39,6 +40,7 @@ class Component1(wpc.Component, tag_name='component-1'):
     dv_log: js.HTMLDivElement = wpc.element()
     _btn_update: js.HTMLButtonElement = wpc.element()
     br1: js.HTMLBRElement = wpc.element()
+    btn_clear_container: js.HTMLButtonElement = wpc.element()
 
     def init_component(self):
         # language=html
@@ -53,27 +55,24 @@ body {
   background-color: gray;
   border: 2px solid rgb(79 185 227);
 }
-.container {
-  display: grid;
-  grid-template-columns: 2fr 1fr 1fr;
-  gap: 20px;
-}
+
 
 </style>    
-<div style="display: grid; grid-template-columns: 2fr 1fr 1fr; gap: 20px;" data-name="_container"
-    class="container">
-  <div>One</div>
-  <div>Two</div>
-  <div>Three</div>
-  <div>Four</div>
-  
-<div>Five</div>
-  <div>Six</div>
-  <div>Seven</div>
+<div 
+data-name="_container"
+style="display: grid; 
+grid-template-columns: 2fr 1fr 1fr; 
+grid-template-rows: 1fr 1fr 1fr;
+gap: 20px;
+min-height: 200px;
+"
+class='container'
+>
 </div>
 
 
-<br><div data-name="dv_log">dv_log</div>
+<br>
+<button data-name="btn_clear_container">btn_clear_container</button><div data-name="dv_log">dv_log</div>
 
 
 <button data-name="_btn_update">_btn_update</button><textarea data-name="textarea1" placeholder="textarea1" rows="12" 
@@ -112,7 +111,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         self.textarea1.innerHTML += f'{msg}\n'
         self.textarea1.scrollTop = self.textarea1.scrollHeight
 
-    def calculate_grid(self) -> Grid:
+    def calculate_grid(self) -> Grid | None:
         return calculate_grid(self._container)
 
     def update_grid_overlay(self):
@@ -131,7 +130,8 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         self._container.appendChild(example_child)
 
     def _handle_mouse_event(self, e):
-        self.hovered_cell = get_hovered_cell(e.clientX, e.clientY, self.calculate_grid())
+        grid = self.calculate_grid()
+        self.hovered_cell = None if grid is None else get_hovered_cell(e.clientX, e.clientY, grid)
         self.dv_log.innerText = 'no cell hovered' if self.hovered_cell is None else f'{self.hovered_cell}'
         self.update_grid_overlay()
 
@@ -154,6 +154,9 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         self.log_clear()
         self.log_css_grid(self._container, 'self._container')
         self.log_css_grid(self.dv_log, 'self.div1')
+
+    async def btn_clear_container__click(self, event):
+        self._container.innerHTML = ''
 
 
 # get bounds of a cell
@@ -188,9 +191,12 @@ def get_hovered_cell(mx, my, g: Grid) -> Cell | None:
     return Cell(col, row) if col >= 0 and row >= 0 else None
 
 
-def calculate_grid(container: js.HTMLElement) -> Grid:
+def calculate_grid(container: js.HTMLElement) -> Grid | None:
     s = js.window.getComputedStyle(container)
     # parse CSS pixel values by stripping non-numeric chars
+    if s.gridTemplateRows == 'none' or s.gridTemplateColumns == 'none':
+        return None
+
     parse = lambda x: float(re.sub(r'[^0-9.]', '', x)) if isinstance(x, str) else float(x)
     pad_top = parse(s.padding) or 0
     pad_left = parse(s.paddingLeft) or 0
@@ -228,9 +234,12 @@ def update_grid_overlay(
         overlay_canvas: js.HTMLCanvasElement | None,
         cell: Cell | None):
     g = calculate_grid(container)
-    if not g:
-        return
     c2d = cast(js.CanvasRenderingContext2D, overlay_canvas.getContext('2d'))
+    if not g:
+        # set canvas size to 0
+        overlay_canvas.width = 0
+        overlay_canvas.height = 0
+        return
     rect = g.container_rect
     w, h = rect.width, rect.height
     # canvas width/height expects int
