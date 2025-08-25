@@ -34,6 +34,13 @@ class Cell:
     row: int
 
 
+def _get_container_children(e) -> js.HTMLElement | None:
+    target = cast(js.HTMLElement, e.target)
+    if target.getAttribute('data-name') == '_container':
+        return None
+    return target
+
+
 class Component1(wpc.Component, tag_name='component-1'):
     textarea1: js.HTMLTextAreaElement = wpc.element()
     _container: js.HTMLDivElement = wpc.element()
@@ -92,6 +99,7 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
 
         # state for hovered cell
         self.hovered_cell: Cell | None = None
+        self.container_children: js.HTMLElement | None = None
 
         # initial draw
         self.update_grid_overlay()
@@ -115,7 +123,8 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         return calculate_grid(self._container)
 
     def update_grid_overlay(self):
-        update_grid_overlay(self._container, self.overlay_canvas, self.hovered_cell)
+        stroke_style = '#0f0' if self.container_children is None else '#f00'
+        update_grid_overlay(self._container, self.overlay_canvas, self.hovered_cell,stroke_style)
 
     def _js_window__mousemove(self, e):
         self._handle_mouse_event(e)
@@ -126,12 +135,23 @@ style="width: 100%; box-sizing: border-box; margin-top: 1em; font-size: 10px"></
         if hc is None:
             return
 
-        example_child = _create_example_child(hc)
-        self._container.appendChild(example_child)
+        if self.container_children is not None:
+            # remove
+            self.container_children.remove()
+            self.container_children = None
+        else:
+            # add
+            example_child = _create_example_child(hc)
+            self._container.appendChild(example_child)
+            self.container_children = example_child
+        self.update_grid_overlay()
+
+
 
     def _handle_mouse_event(self, e):
         grid = self.calculate_grid()
         self.hovered_cell = None if grid is None else get_hovered_cell(e.clientX, e.clientY, grid)
+        self.container_children = _get_container_children(e)
         self.dv_log.innerText = 'no cell hovered' if self.hovered_cell is None else f'{self.hovered_cell}'
         self.update_grid_overlay()
 
@@ -232,7 +252,9 @@ def calculate_grid(container: js.HTMLElement) -> Grid | None:
 def update_grid_overlay(
         container: js.HTMLElement,
         overlay_canvas: js.HTMLCanvasElement | None,
-        cell: Cell | None):
+        cell: Cell | None,
+        stroke_style: str
+):
     g = calculate_grid(container)
     c2d = cast(js.CanvasRenderingContext2D, overlay_canvas.getContext('2d'))
     if not g:
@@ -272,7 +294,7 @@ def update_grid_overlay(
 
     if cell:
         b = get_cell_bounds(g, cell.col, cell.row)
-        c2d.strokeStyle = '#0f0'
+        c2d.strokeStyle = stroke_style
         c2d.lineWidth = 3
         c2d.strokeRect(b['x'], b['y'], b['width'], b['height'])
 
